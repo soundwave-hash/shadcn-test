@@ -550,7 +550,7 @@ export default function App() {
       <div style={{ padding:'12px 14px' }}>
 
         {/* KPI cards — draggable */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:6, marginBottom:6 }}>
+        <div className="kpi-grid">
           {kpiCards.map((kpi, i) => (
             <KpiCard
               key={kpi.label + kpi.primary}
@@ -576,7 +576,7 @@ export default function App() {
         </div>
 
         {/* Charts — draggable 2-column grid */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        <div className="chart-grid">
           {chartOrder.map((id, ci) => {
             const isChartDragging = chartDragIdx === ci
             const isChartOver    = (chartOverIdx === ci && chartDragIdx !== ci) || chartPressedIdx === ci
