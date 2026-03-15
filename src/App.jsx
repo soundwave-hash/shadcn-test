@@ -7,6 +7,34 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Sun } from 'lucide-react'
+import KpiDetailPage from './KpiDetailPage'
+
+// ── Theme tokens ───────────────────────────────────────────────────────────────
+const THEME = {
+  dark: {
+    bg: '#111', navBg: '#161616', panelBg: '#1c1c1c',
+    border: '#2a2a2a', borderLight: '#1a1a1a',
+    text: '#fff', textMuted: '#aaa', textDim: '#555', textFaint: '#444',
+    inputBg: '#252525', inputBorder: '#3a3a3a', inputText: '#ddd',
+    dropdownBg: '#1e1e1e', dropdownBorder: '#333',
+    rowHover: '#1e2a2a', chartMask: '#1c1c1c', chartGrid: '#1e1e1e',
+    cardBg: '#181818', cardBorder: '#222',
+    axTick: '#666', tooltipBg: '#1a1a1a', tooltipBorder: '#3a3a3a',
+    activeItemBg: '#1a2a2a', sep: '#555',
+  },
+  light: {
+    bg: '#f0f2f5', navBg: '#ffffff', panelBg: '#ffffff',
+    border: '#e0e0e0', borderLight: '#eeeeee',
+    text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
+    inputBg: '#f5f5f5', inputBorder: '#d0d0d0', inputText: '#333',
+    dropdownBg: '#ffffff', dropdownBorder: '#e0e0e0',
+    rowHover: '#e8f5f5', chartMask: '#f0f2f5', chartGrid: '#e8e8e8',
+    cardBg: '#ffffff', cardBorder: '#e0e0e0',
+    axTick: '#888', tooltipBg: '#ffffff', tooltipBorder: '#d0d0d0',
+    activeItemBg: '#e0f7fa', sep: '#bbb',
+  },
+}
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 const C = {
@@ -28,7 +56,7 @@ const COUNTRY_DATA = {
   'United States': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'8.64',   secondary:'21.54' },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'3.62',   secondary:'0.47'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'3.62',   secondary:'0.47'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'17.41K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'95.76K', secondary:'756'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'604.8K', secondary:''      },
@@ -80,7 +108,7 @@ const COUNTRY_DATA = {
   'Canada': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'6.21',   secondary:'14.80' },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'2.94',   secondary:'0.38'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'2.94',   secondary:'0.38'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'11.20K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'42.30K', secondary:'312'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'298.4K', secondary:''      },
@@ -128,7 +156,7 @@ const COUNTRY_DATA = {
   'Mexico': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'11.40',  secondary:'28.60' },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'5.10',   secondary:'0.82'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'5.10',   secondary:'0.82'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'22.80K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'31.50K', secondary:'218'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'412.1K', secondary:''      },
@@ -176,7 +204,7 @@ const COUNTRY_DATA = {
   'Germany': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.80',   secondary:'12.40' },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'2.10',   secondary:'0.31'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'2.10',   secondary:'0.31'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'9.60K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'68.20K', secondary:'480'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'521.3K', secondary:''      },
@@ -224,7 +252,7 @@ const COUNTRY_DATA = {
   'Japan': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'4.20',   secondary:'9.10'  },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'1.80',   secondary:'0.22'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'1.80',   secondary:'0.22'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'7.30K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'112.4K', secondary:'620'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'680.2K', secondary:''      },
@@ -272,7 +300,7 @@ const COUNTRY_DATA = {
   'Korea': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'3.90',   secondary:'8.40'  },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'1.60',   secondary:'0.19'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'1.60',   secondary:'0.19'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'6.80K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'88.60K', secondary:'510'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'544.9K', secondary:''      },
@@ -320,7 +348,7 @@ const COUNTRY_DATA = {
   'China': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.10',   secondary:'13.80' },
-      { label:'Processing Time (hrs) - Avg', sublabel:'Median',        primary:'2.40',   secondary:'0.34'  },
+      { label:'Unit Sales', sublabel:'Median',        primary:'2.40',   secondary:'0.34'  },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'24.60K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'284.3K', secondary:'1,240' },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'1.82M',  secondary:''      },
@@ -368,10 +396,61 @@ const COUNTRY_DATA = {
 
 const COUNTRIES = Object.keys(COUNTRY_DATA)
 
+// ── City lists & scale factors ────────────────────────────────────────────────
+const CITY_LISTS = {
+  'United States': ['All', 'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia'],
+  'Canada':        ['All', 'Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton'],
+  'Mexico':        ['All', 'Mexico City', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana', 'León'],
+  'Germany':       ['All', 'Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne', 'Stuttgart'],
+  'Japan':         ['All', 'Tokyo', 'Osaka', 'Nagoya', 'Sapporo', 'Fukuoka', 'Kyoto'],
+  'Korea':         ['All', 'Seoul', 'Busan', 'Incheon', 'Daegu', 'Gwangju', 'Daejeon'],
+  'China':         ['All', 'Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Wuhan'],
+}
+
+const CITY_SCALES = {
+  'United States': { 'New York': 1.18, 'Los Angeles': 1.08, 'Chicago': 0.96, 'Houston': 0.88, 'Phoenix': 0.82, 'Philadelphia': 0.94 },
+  'Canada':        { 'Toronto': 1.12, 'Vancouver': 1.05, 'Montreal': 0.95, 'Calgary': 0.88, 'Ottawa': 0.82, 'Edmonton': 0.86 },
+  'Mexico':        { 'Mexico City': 1.22, 'Guadalajara': 1.08, 'Monterrey': 0.98, 'Puebla': 0.88, 'Tijuana': 0.92, 'León': 0.82 },
+  'Germany':       { 'Berlin': 1.10, 'Munich': 1.05, 'Hamburg': 0.98, 'Frankfurt': 0.95, 'Cologne': 0.88, 'Stuttgart': 0.85 },
+  'Japan':         { 'Tokyo': 1.15, 'Osaka': 1.05, 'Nagoya': 0.95, 'Sapporo': 0.85, 'Fukuoka': 0.88, 'Kyoto': 0.90 },
+  'Korea':         { 'Seoul': 1.18, 'Busan': 1.02, 'Incheon': 0.95, 'Daegu': 0.85, 'Gwangju': 0.80, 'Daejeon': 0.82 },
+  'China':         { 'Beijing': 1.12, 'Shanghai': 1.18, 'Guangzhou': 1.08, 'Shenzhen': 1.05, 'Chengdu': 0.85, 'Wuhan': 0.88 },
+}
+
+function parseNum(str) {
+  if (!str) return 0
+  const s = String(str).replace(/,/g, '').trim()
+  if (s.endsWith('M')) return parseFloat(s) * 1e6
+  if (s.endsWith('K')) return parseFloat(s) * 1e3
+  return parseFloat(s) || 0
+}
+
+function fmtNum(n, template) {
+  const t = String(template || n).replace(/,/g, '').trim()
+  if (t.endsWith('M')) return `${(n / 1e6).toFixed(2)}M`
+  if (t.endsWith('K')) return `${(n / 1e3).toFixed(2)}K`
+  const dec = t.includes('.') ? t.split('.')[1].length : 0
+  return n.toFixed(dec)
+}
+
+function scaleStr(str, scale) {
+  if (!str || scale === 1) return str
+  return fmtNum(parseNum(str) * scale, str)
+}
+
+function getCityScale(country, location) {
+  if (location === 'All') return 1
+  return CITY_SCALES[country]?.[location] ?? 1
+}
+
+function scaleRowData(data, scale) {
+  if (scale === 1) return data
+  return data.map(row => Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * scale) : v])
+  ))
+}
+
 // ── Shared styles ─────────────────────────────────────────────────────────────
-const panel  = { backgroundColor:'#1c1c1c', border:'1px solid #2a2a2a', padding:'14px 16px' }
-const ttip   = { backgroundColor:'#1a1a1a', border:'1px solid #3a3a3a', color:'#eee', fontSize:11 }
-const axTick = { fill:'#777', fontSize:10 }
 const fmtK   = v => v >= 1000000 ? `${(v/1000000).toFixed(2)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}K` : v
 
 const CARRIER_KEYS  = ['express','ground','priority','sameDay','standard','freight','returns','unknown']
@@ -396,12 +475,12 @@ function SwatchLegend({ items, col }) {
   )
 }
 
-function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, dragHandlers }) {
+function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, dragHandlers, T }) {
   return (
     <div
       {...dragHandlers}
       style={{
-        ...panel,
+        backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, padding:'14px 16px',
         display:'flex', flexDirection:'column',
         cursor:'grab',
         opacity: isDragging ? 0.35 : 1,
@@ -410,7 +489,7 @@ function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, drag
         userSelect:'none',
       }}
     >
-      <div style={{ color:'#fff', fontSize:26, fontWeight:700, lineHeight:1.1 }}>{primary}</div>
+      <div style={{ color: T.text, fontSize:26, fontWeight:700, lineHeight:1.1 }}>{primary}</div>
       {secondary && <div style={{ color:'#ffb74d', fontSize:11, marginTop:2 }}>{secondary}</div>}
       <div style={{ flex:1 }} />
       <div style={{ color:'#80cbc4', fontSize:12, fontWeight:500, lineHeight:1.3, marginTop:6 }}>{label}</div>
@@ -422,6 +501,14 @@ function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, drag
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [country, setCountry] = useState('United States')
+  const [location, setLocation] = useState('All')
+  const [view, setView] = useState('dashboard')
+  const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
+  const [theme, setTheme] = useState('dark')
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  const T = THEME[theme]
+  const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px' }
+  const ttip  = { backgroundColor: T.tooltipBg, border: `1px solid ${T.tooltipBorder}`, color: T.text, fontSize:11 }
   const d = COUNTRY_DATA[country]
 
   // ── KPI drag-and-drop ──
@@ -498,44 +585,73 @@ export default function App() {
     setChartPressedIdx(null)
   }
 
-  const carrierData = d.carriers.map(r => ({
+  const cityScale = getCityScale(country, location)
+  const displayKpiCards = cityScale === 1
+    ? kpiCards
+    : kpiCards.map(k => ({ ...k, primary: scaleStr(k.primary, cityScale), secondary: scaleStr(k.secondary, cityScale) }))
+
+  const scaledCarriers = scaleRowData(d.carriers, cityScale)
+  const scaledTime     = scaleRowData(d.time, cityScale)
+  const scaledFailure  = scaleRowData(d.failure, cityScale)
+
+  const carrierData = scaledCarriers.map(r => ({
     ...r,
     _total: CARRIER_KEYS.reduce((s, k) => s + (r[k] || 0), 0),
   }))
 
+  if (view === 'detail' && selectedKpiLabel) {
+    const currentKpi = [...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2]
+      .find(k => k.label === selectedKpiLabel) || kpiCards[0]
+    return (
+      <KpiDetailPage
+        kpi={currentKpi}
+        country={country}
+        location={location}
+        cities={CITY_LISTS[country]}
+        cityScales={CITY_SCALES}
+        countries={COUNTRIES}
+        onBack={() => setView('dashboard')}
+        onCountryChange={c => { setCountry(c); setLocation('All') }}
+        onLocationChange={setLocation}
+        theme={theme}
+        onThemeToggle={toggleTheme}
+      />
+    )
+  }
+
   return (
-    <div style={{ backgroundColor:'#111', minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color:'#fff' }}>
+    <div style={{ backgroundColor: T.bg, minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color: T.text }}>
 
       {/* ── Menu bar ── */}
-      <div style={{ backgroundColor:'#161616', borderBottom:'1px solid #2a2a2a', height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:24 }}>
-        <span style={{ fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'0.02em' }}>
+      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:24 }}>
+        <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>
           WarehouseIQ
         </span>
-        <span style={{ color:'#555', fontSize:12 }}>|</span>
-        <span style={{ fontSize:12, color:'#aaa' }}>Shipping Dashboard</span>
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <span style={{ fontSize:12, color: T.textMuted }}>Shipping Dashboard</span>
 
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
-          <span style={{ fontSize:11, color:'#666' }}>Country:</span>
+          <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={{
-                backgroundColor:'#252525', border:'1px solid #3a3a3a', color:'#ddd',
+                backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
                 fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer',
                 display:'flex', alignItems:'center', gap:6,
               }}>
                 {country}
-                <span style={{ color:'#666', fontSize:10 }}>▼</span>
+                <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent style={{ backgroundColor:'#1e1e1e', border:'1px solid #333', minWidth:160 }}>
+            <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:160 }}>
               {COUNTRIES.map(c => (
                 <DropdownMenuItem
                   key={c}
-                  onClick={() => setCountry(c)}
+                  onClick={() => { setCountry(c); setLocation('All') }}
                   style={{
-                    color: c === country ? '#00bcd4' : '#ccc',
+                    color: c === country ? '#00bcd4' : T.textMuted,
                     fontSize:12, cursor:'pointer',
-                    backgroundColor: c === country ? '#1a2a2a' : 'transparent',
+                    backgroundColor: c === country ? T.activeItemBg : 'transparent',
                   }}
                 >
                   {c}
@@ -543,6 +659,43 @@ export default function App() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <span style={{ fontSize:11, color: T.textDim }}>Location:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                {location}
+                <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:160 }}>
+              {CITY_LISTS[country].map(c => (
+                <DropdownMenuItem
+                  key={c}
+                  onClick={() => setLocation(c)}
+                  style={{
+                    color: c === location ? '#00bcd4' : T.textMuted,
+                    fontSize:12, cursor:'pointer',
+                    backgroundColor: c === location ? T.activeItemBg : 'transparent',
+                  }}
+                >
+                  {c}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{
+              width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+              backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              marginLeft:4,
+            }}
+          >
+            <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+          </button>
         </div>
       </div>
 
@@ -551,12 +704,13 @@ export default function App() {
 
         {/* KPI cards — draggable */}
         <div className="kpi-grid">
-          {kpiCards.map((kpi, i) => (
+          {displayKpiCards.map((kpi, i) => (
             <KpiCard
               key={kpi.label + kpi.primary}
               {...kpi}
               isDragging={dragIdx === i}
               isOver={(overIdx === i && dragIdx !== i) || pressedIdx === i}
+              T={T}
               dragHandlers={{
                 draggable: true,
                 onMouseDown: () => setPressedIdx(i),
@@ -565,13 +719,14 @@ export default function App() {
                 onDragOver:  e => handleDragOver(e, i),
                 onDrop:      e => handleDrop(e, i),
                 onDragEnd:   handleDragEnd,
+                onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
               }}
             />
           ))}
         </div>
 
         {/* Section header */}
-        <div style={{ fontSize:15, fontWeight:600, margin:'18px 0 12px', paddingBottom:8, borderBottom:'1px solid #2a2a2a' }}>
+        <div style={{ fontSize:15, fontWeight:600, margin:'18px 0 12px', paddingBottom:8, borderBottom:`1px solid ${T.border}`, color: T.text }}>
           Warehouse Operations Charts — {country}
         </div>
 
@@ -600,14 +755,14 @@ export default function App() {
 
             if (id === 'carrier') return (
               <div key={id} style={chartPanelStyle} {...dragProps}>
-                <div style={{ fontSize:12, fontWeight:600, marginBottom:10 }}>Orders by Carrier &amp; Type</div>
+                <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Orders by Carrier &amp; Type</div>
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={360}>
                       <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:0 }} barSize={12}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" horizontal={false} />
-                        <XAxis type="number" stroke="#444" tick={axTick} tickFormatter={fmtK} />
-                        <YAxis type="category" dataKey="carrier" stroke="#444" tick={axTick} width={120} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
+                        <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
+                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} width={120} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
@@ -615,7 +770,7 @@ export default function App() {
                               <LabelList dataKey="_total" position="right"
                                 content={({ x, y, width, height, value }) =>
                                   value > 0
-                                    ? <text x={x+width+4} y={y+height/2} fill="#aaa" fontSize={10} dominantBaseline="middle">{value.toLocaleString()}</text>
+                                    ? <text x={x+width+4} y={y+height/2} fill={T.textMuted} fontSize={10} dominantBaseline="middle">{value.toLocaleString()}</text>
                                     : null
                                 }
                               />
@@ -632,16 +787,16 @@ export default function App() {
 
             if (id === 'time') return (
               <div key={id} style={chartPanelStyle} {...dragProps}>
-                <div style={{ fontSize:12, fontWeight:600, marginBottom:10 }}>Shipment Count Over Time</div>
+                <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Shipment Count Over Time</div>
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={360}>
-                      <BarChart data={d.time} margin={{ top:10, right:10, bottom:28, left:14 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" vertical={false} />
-                        <XAxis dataKey="date" stroke="#444" tick={axTick}
-                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill:'#555', fontSize:10 }} />
-                        <YAxis stroke="#444" tick={axTick} tickFormatter={fmtK}
-                          label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill:'#555', fontSize:10 }} />
+                      <BarChart data={scaledTime} margin={{ top:10, right:10, bottom:28, left:14 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
+                        <XAxis dataKey="date" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
+                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
+                          label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
@@ -664,12 +819,12 @@ export default function App() {
 
             if (id === 'failure') return (
               <div key={id} style={chartPanelStyle} {...dragProps}>
-                <div style={{ fontSize:12, fontWeight:600, marginBottom:10 }}>Order Failure Rate</div>
+                <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Order Failure Rate</div>
                 <ResponsiveContainer width="100%" height={110}>
-                  <BarChart layout="vertical" data={d.failure} margin={{ left:10, right:20 }} barSize={30}>
-                    <XAxis type="number" stroke="#444" tick={axTick}
+                  <BarChart layout="vertical" data={scaledFailure} margin={{ left:10, right:20 }} barSize={30}>
+                    <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
                       tickFormatter={v => {
-                        const total = d.failure[0].delivered + d.failure[0].failed + d.failure[0].canceled
+                        const total = scaledFailure[0].delivered + scaledFailure[0].failed + scaledFailure[0].canceled
                         return `${Math.round((v / total) * 100)}%`
                       }}
                     />
@@ -686,7 +841,7 @@ export default function App() {
                     <Bar dataKey="canceled" stackId="a" fill={C.canceled} name="CANCELED" />
                   </BarChart>
                 </ResponsiveContainer>
-                <div style={{ display:'flex', justifyContent:'space-between', color:'#666', fontSize:10, marginTop:2 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', color: T.textDim, fontSize:10, marginTop:2 }}>
                   <span>0%</span><span>% of Orders</span><span>100%</span>
                 </div>
                 <SwatchLegend items={[['CANCELED',C.canceled],['FAILED',C.failed],['DELIVERED',C.delivered]]} />
@@ -695,15 +850,15 @@ export default function App() {
 
             if (id === 'status') return (
               <div key={id} style={chartPanelStyle} {...dragProps}>
-                <div style={{ fontSize:12, fontWeight:600, marginBottom:10 }}>Orders By Status (Failure Rate)</div>
+                <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Orders By Status (Failure Rate)</div>
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={180}>
                       <BarChart data={d.status} margin={{ top:4, right:10, bottom:28, left:14 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" vertical={false} />
-                        <XAxis dataKey="date" stroke="#444" tick={axTick}
-                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill:'#555', fontSize:10 }} />
-                        <YAxis stroke="#444" tick={axTick} tickFormatter={v => `${v}%`} domain={[0,100]} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
+                        <XAxis dataKey="date" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
+                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
                         <Tooltip contentStyle={ttip} formatter={v => `${v}%`} />
                         <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
                         <Bar dataKey="failed"    stackId="a" fill={C.failed}    name="FAILED" />
