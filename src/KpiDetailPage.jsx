@@ -289,8 +289,6 @@ function MetricGauge({ period, invScale, checked, T }) {
         <path d={arc(0,1)} fill="none" stroke={T.border} strokeWidth={sw+4} strokeLinecap="round"/>
         {/* Filled */}
         <path d={arc(0,pct)} fill="none" stroke={arcColor} strokeWidth={sw} strokeLinecap="round"/>
-        {/* Tick */}
-        <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke={T.text} strokeWidth={2.5} strokeLinecap="round"/>
         {/* Min / Max labels */}
         <text x={cx-r-2} y={cy+18} fill="#fff" fontSize={10} textAnchor="middle">0%</text>
         <text x={cx+r+2} y={cy+18} fill="#fff" fontSize={10} textAnchor="middle">100%</text>
