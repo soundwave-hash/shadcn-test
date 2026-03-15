@@ -82,6 +82,17 @@ const COUNTRY_INV_SCALE = {
   'China':         0.65,  // ~0%  Critical
 }
 
+// Country-level unit sales scale relative to US baseline
+const COUNTRY_SALES_SCALE = {
+  'United States': 1.00,  // baseline
+  'Canada':        0.20,  // -80%
+  'Mexico':        0.10,  // -110%
+  'Germany':       0.10,  // -110%
+  'Japan':         0.05,  // -200%
+  'Korea':         0.02,  // -300%
+  'China':         3.50,  // +250%
+}
+
 // City-level multiplier on top of country scale
 const CITY_INV_SCALE = {
   'United States': { All:1.0, 'New York':1.30, 'Los Angeles':1.00, 'Chicago':0.70, 'Houston':1.60, 'Phoenix':0.55, 'Philadelphia':0.85 },
@@ -99,10 +110,10 @@ function getInvScale(country, location) {
   return c * l
 }
 
-function buildLeaderboard(period, asc, invScale = 1) {
+function buildLeaderboard(period, asc, invScale = 1, salesScale = 1) {
   const days = PERIOD_DAYS[period] || 1
   const rows = BASE_ITEMS.map(item => {
-    const avgSales = Math.round(item.dailyAvg * days)
+    const avgSales = Math.round(item.dailyAvg * days * salesScale)
     const scaledInv = item.inventory * invScale
     // WoS always uses daily rate regardless of selected period
     const wos      = parseFloat((scaledInv / (item.dailyAvg * 7)).toFixed(1))
@@ -164,35 +175,36 @@ const LEADERBOARD_DAILY_TOTAL = BASE_ITEMS.reduce((s, item) => s + item.dailyAvg
 // Per-period base: scale daily total to the unit of each period bucket
 const PERIOD_BUCKET = { '1D': 1/24, '5D': 1, '1M': 1, '6M': 7, 'YTD': 30 }
 
-// LY/TY ratio per data point — designed so LY sometimes beats TY and vice versa
-const LY_RATIOS = {
-  '1D':  [1.12,1.09,1.06,1.03,1.00,0.96,0.92,0.88,0.91,0.95,0.98,1.02,
-          1.05,1.08,1.03,0.97,0.93,0.89,0.86,0.84,0.88,0.93,1.00,1.07],
-  '5D':  [1.14, 1.06, 0.97, 0.88, 0.81],
-  '1M':  [1.10,1.08,1.05,1.02,1.00,0.97,0.94,0.91,0.88,0.86,
-          0.84,0.87,0.91,0.95,0.99,1.03,1.07,1.04,1.00,0.96,
-          0.92,0.88,0.85,0.83,0.87,0.91,0.96,1.01,1.05,1.09],
-  '6M':  [1.06,1.09,1.11,1.08,1.04,1.00,0.96,0.91,0.87,0.83,0.80,0.83,
-          0.87,0.91,0.96,1.01,1.05,1.09,1.05,0.99,0.93,0.88,0.84,0.87,0.93,0.99],
-  'YTD': [1.13,1.09,1.04,0.98,0.92,0.87,0.83,0.89,0.96,1.03],
+// Per-country wave parameters — each country gets a distinct TY shape and LY relationship
+// trend: linear slope per step | f1/f2: wave frequencies | p1/p2: phases | a1/a2: amplitudes
+// lyBias: LY multiplier base (>1 = LY > TY = declining; <1 = TY > LY = growing)
+const COUNTRY_WAVE_PARAMS = {
+  'United States': { trend: 0.000, f1:0.50, p1:0.0, a1:0.08, f2:1.30, p2:0.8, a2:0.04, lyBias:1.03, lyAmp:0.05, lyF:0.70 },
+  'China':         { trend: 0.055, f1:0.20, p1:2.0, a1:0.35, f2:0.60, p2:1.5, a2:0.18, lyBias:0.68, lyAmp:0.12, lyF:0.35 },
+  'Japan':         { trend:-0.045, f1:1.40, p1:0.5, a1:0.18, f2:2.80, p2:1.2, a2:0.10, lyBias:1.22, lyAmp:0.08, lyF:1.20 },
+  'Korea':         { trend: 0.015, f1:2.20, p1:1.0, a1:0.28, f2:3.80, p2:0.3, a2:0.16, lyBias:0.92, lyAmp:0.22, lyF:2.00 },
+  'Germany':       { trend:-0.025, f1:0.90, p1:3.2, a1:0.13, f2:1.80, p2:0.6, a2:0.07, lyBias:1.14, lyAmp:0.04, lyF:0.85 },
+  'Canada':        { trend: 0.008, f1:0.65, p1:1.5, a1:0.11, f2:1.90, p2:2.8, a2:0.06, lyBias:1.06, lyAmp:0.09, lyF:0.55 },
+  'Mexico':        { trend:-0.035, f1:1.60, p1:0.8, a1:0.22, f2:3.20, p2:2.1, a2:0.14, lyBias:1.28, lyAmp:0.17, lyF:1.50 },
 }
 
-// Small TY variation to give natural texture
-const TY_JITTER = [0.03,-0.02,0.05,-0.01,0.04,-0.03,0.06,0.02,-0.02,0.03,
-                   -0.04,0.02,0.05,-0.01,0.03,-0.02,0.04,0.01,-0.03,0.02,
-                    0.04,-0.01,0.02,0.03,-0.02,0.05,-0.01,0.03,-0.03,0.04]
-
-function buildUnitSalesSeries(period, cityScale, dailyTotal = LEADERBOARD_DAILY_TOTAL) {
+function buildUnitSalesSeries(period, cityScale, dailyTotal = LEADERBOARD_DAILY_TOTAL, country = 'United States') {
   const { count, lbl } = PERIOD_CFG[period] || PERIOD_CFG['1D']
   if (!dailyTotal) {
     return Array.from({ length:count }, (_, i) => ({ label:lbl(i), thisYear:0, lastYear:0, upper:0, lower:0 }))
   }
-  // Base = full period total, matching the leaderboard scale exactly
-  const base = Math.round(dailyTotal * (PERIOD_DAYS[period] || 1) * (cityScale || 1))
-  const lyR   = LY_RATIOS[period] || LY_RATIOS['1D']
+  // Keep shapeBase as float (no early rounding) so LY precision is preserved at small scales
+  const shapeBase = dailyTotal * (PERIOD_BUCKET[period] ?? 1)
+  const scale = cityScale || 1
+  const p = COUNTRY_WAVE_PARAMS[country] || COUNTRY_WAVE_PARAMS['United States']
   return Array.from({ length:count }, (_, i) => {
-    const ty = Math.round(base * (1 + (TY_JITTER[i % TY_JITTER.length] || 0)))
-    const ly = Math.round(ty * lyR[i])
+    const trend  = Math.max(0.15, 1 + p.trend * i)   // floor at 0.15 prevents negative collapse
+    const wave   = 1 + Math.sin(i * p.f1 + p.p1) * p.a1 + Math.cos(i * p.f2 + p.p2) * p.a2
+    const tyRaw  = shapeBase * trend * wave
+    const lyR    = p.lyBias + Math.sin(i * p.lyF + 1.0) * p.lyAmp
+    const lyRaw  = tyRaw * lyR                        // derive LY from float tyRaw, not rounded ty
+    const ty     = Math.max(1, Math.round(tyRaw * scale))
+    const ly     = Math.max(1, Math.round(lyRaw * scale))
     return { label:lbl(i), thisYear:ty, lastYear:ly, upper:Math.max(ty,ly), lower:Math.min(ty,ly) }
   })
 }
@@ -316,12 +328,12 @@ function ChartTooltip({ active, payload, label, template, ttipStyle }) {
 }
 
 // ── Leaderboard ────────────────────────────────────────────────────────────────
-function Leaderboard({ period, invScale, checked, onCheckedChange, T }) {
+function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T }) {
   const setChecked = onCheckedChange
   const [asc, setAsc]         = useState(false)
   const [hovered, setHovered] = useState(null)
 
-  const rows = useMemo(()=>buildLeaderboard(period, asc, invScale), [period, asc, invScale])
+  const rows = useMemo(()=>buildLeaderboard(period, asc, invScale, salesScale), [period, asc, invScale, salesScale])
   const maxSales = Math.max(...rows.map(r=>r.avgSales))
 
   const allChecked  = rows.length > 0 && rows.every(r => checked.has(r.name))
@@ -440,10 +452,12 @@ export default function KpiDetailPage({
   const ttip   = { backgroundColor:T.tooltipBg, border:`1px solid ${T.tooltipBorder}`, color:T.text, fontSize:11, borderRadius:6 }
   const axTick = { fill:T.axTick, fontSize:10 }
 
-  const [period, setPeriod]           = useState('1D')
+  const [period, setPeriod]           = useState('1M')
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [checked, setChecked] = useState(() => new Set(BASE_ITEMS.map(i => i.name)))
-  const cityScale = (country==='All' || location==='All') ? 1 : (cityScales[country]?.[location] ?? 1)
+  const countrySalesScale = COUNTRY_SALES_SCALE[country] ?? 1
+  const citySalesScale    = location === 'All' ? 1 : (cityScales[country]?.[location] ?? 1)
+  const cityScale         = countrySalesScale * citySalesScale
   const invScale  = getInvScale(country, location)
   const baseValue = parseNum(kpi.primary) * cityScale
 
@@ -461,9 +475,9 @@ export default function KpiDetailPage({
 
   const series = useMemo(() =>
     kpi.label === 'Unit Sales'
-      ? buildUnitSalesSeries(period, cityScale, selectedDailyTotal)
+      ? buildUnitSalesSeries(period, cityScale, selectedDailyTotal, country)
       : buildSeries(baseValue, period),
-  [kpi.label, period, cityScale, selectedDailyTotal, baseValue])
+  [kpi.label, period, cityScale, selectedDailyTotal, baseValue, country])
 
   // Tight Y-axis domain so line separation is always visible
   const yDomain = useMemo(() => {
@@ -573,7 +587,7 @@ export default function KpiDetailPage({
 
         {/* LEFT: Leaderboard */}
         <div style={{ width:340, flexShrink:0, display:'flex', flexDirection:'column' }}>
-          <Leaderboard period={period} invScale={invScale} checked={checked} onCheckedChange={setChecked} T={T}/>
+          <Leaderboard period={period} invScale={invScale} salesScale={cityScale} checked={checked} onCheckedChange={setChecked} T={T}/>
         </div>
 
         {/* RIGHT: Meter + Chart */}
