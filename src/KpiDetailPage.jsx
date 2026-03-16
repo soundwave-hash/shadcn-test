@@ -592,7 +592,7 @@ export default function KpiDetailPage({
         <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, minWidth:0 }}>
 
           {/* Metric Meter */}
-          <div style={{ ...panel, display:'flex', alignItems:'center', gap:24, flexShrink:0, padding:'12px 20px' }}>
+          <div style={{ ...panel, display:'flex', alignItems:'flex-start', gap:24, flexShrink:0, padding:'12px 20px' }}>
             <div style={{ flex:'0 0 auto' }}>
               <MetricGauge period={period} invScale={invScale} checked={checked} T={T}/>
             </div>
@@ -601,7 +601,7 @@ export default function KpiDetailPage({
 
               {/* Score badge + TL;DR */}
               <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:10 }}>
-                <div style={{ flexShrink:0, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:6, padding:'4px 10px', textAlign:'center' }}>
+                <div style={{ flexShrink:0, width:60, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:6, padding:'4px 10px', textAlign:'center' }}>
                   <div style={{ fontSize:18, fontWeight:700, color: healthColor }}>{healthPct}%</div>
                   <div style={{ fontSize:9, color: healthColor, fontWeight:600 }}>{healthZone}</div>
                 </div>
@@ -624,6 +624,26 @@ export default function KpiDetailPage({
                   </div>
                 </div>
               )}
+
+              {/* Health range legend */}
+              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Health Ranges</div>
+                <div style={{ display:'grid', gridTemplateColumns:'60px auto 1fr', gap:'4px 8px', alignItems:'center' }}>
+                  {[
+                    ['#4caf50', 'Healthy',  '≥ 67%', 'Most items adequately stocked'],
+                    ['#ff9800', 'At Risk',  '34–66%', 'Multiple items running low'],
+                    ['#f44336', 'Critical', '< 34%',  'Immediate restocking required'],
+                  ].map(([color, label, range, desc]) => (
+                    <>
+                      <div key={label+'-badge'} style={{ width:60, backgroundColor: label === healthZone ? color+'66' : color+'22', border:`1px solid ${color}`, borderRadius:6, padding:'4px 10px', textAlign:'left' }}>
+                        <div style={{ fontSize:9, fontWeight:700, color, lineHeight:1.2 }}>{range}</div>
+                      </div>
+                      <span key={label+'-label'} style={{ fontSize:10, color, fontWeight:600 }}>{label}</span>
+                      <span key={label+'-desc'} style={{ fontSize:10, color: T.textFaint }}>{desc}</span>
+                    </>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
