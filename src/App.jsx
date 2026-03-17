@@ -56,7 +56,7 @@ const COUNTRY_DATA = {
   'United States': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'8.64',   secondary:'21.54' },
-      { label:'Unit Sales', sublabel:'Median',        primary:'3.62',   secondary:'0.47'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'12.93K', secondary:'1.68K' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'17.41K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'95.76K', secondary:'756'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'604.8K', secondary:''      },
@@ -108,7 +108,7 @@ const COUNTRY_DATA = {
   'Canada': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'6.21',   secondary:'14.80' },
-      { label:'Unit Sales', sublabel:'Median',        primary:'2.94',   secondary:'0.38'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'2.59K',  secondary:'334'   },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'11.20K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'42.30K', secondary:'312'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'298.4K', secondary:''      },
@@ -156,7 +156,7 @@ const COUNTRY_DATA = {
   'Mexico': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'11.40',  secondary:'28.60' },
-      { label:'Unit Sales', sublabel:'Median',        primary:'5.10',   secondary:'0.82'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'208'   },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'22.80K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'31.50K', secondary:'218'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'412.1K', secondary:''      },
@@ -204,7 +204,7 @@ const COUNTRY_DATA = {
   'Germany': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.80',   secondary:'12.40' },
-      { label:'Unit Sales', sublabel:'Median',        primary:'2.10',   secondary:'0.31'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'191'   },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'9.60K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'68.20K', secondary:'480'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'521.3K', secondary:''      },
@@ -252,7 +252,7 @@ const COUNTRY_DATA = {
   'Japan': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'4.20',   secondary:'9.10'  },
-      { label:'Unit Sales', sublabel:'Median',        primary:'1.80',   secondary:'0.22'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'647',    secondary:'79'    },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'7.30K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'112.4K', secondary:'620'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'680.2K', secondary:''      },
@@ -300,7 +300,7 @@ const COUNTRY_DATA = {
   'Korea': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'3.90',   secondary:'8.40'  },
-      { label:'Unit Sales', sublabel:'Median',        primary:'1.60',   secondary:'0.19'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'259',    secondary:'31'    },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'6.80K',  secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'88.60K', secondary:'510'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'544.9K', secondary:''      },
@@ -348,7 +348,7 @@ const COUNTRY_DATA = {
   'China': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.10',   secondary:'13.80' },
-      { label:'Unit Sales', sublabel:'Median',        primary:'2.40',   secondary:'0.34'  },
+      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'45.26K', secondary:'6.41K' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'24.60K', secondary:''      },
       { label:'Order Count',                 sublabel:'Carrier Count', primary:'284.3K', secondary:'1,240' },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'1.82M',  secondary:''      },
@@ -721,6 +721,11 @@ export default function App() {
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </button>
+          <img
+            src="/avatar.jpg"
+            alt="User account"
+            style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:8, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
+          />
         </div>
       </div>
 

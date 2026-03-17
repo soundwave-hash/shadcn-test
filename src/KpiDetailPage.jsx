@@ -149,12 +149,25 @@ function scaleStr(str, scale) {
 }
 
 // ── Time-series data ───────────────────────────────────────────────────────────
+const _MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const _TODAY  = new Date()
+function _daysBack(n) { const d = new Date(_TODAY); d.setDate(d.getDate() - n); return d }
+function _fmtDate(d)  { return `${_MONTHS[d.getMonth()]} ${d.getDate()}` }
+function _fmt12h(i)   { if (i === 0) return '12 AM'; if (i < 12) return `${i} AM`; if (i === 12) return '12 PM'; return `${i - 12} PM` }
+
 const PERIOD_CFG = {
-  '1D':  { count:24, lbl: i=>`${String(i).padStart(2,'0')}:00` },
-  '5D':  { count: 5, lbl: i=>['Mon','Tue','Wed','Thu','Fri'][i] },
-  '1M':  { count:30, lbl: i=>`Day ${i+1}` },
-  '6M':  { count:26, lbl: i=>`Wk ${i+1}` },
-  'YTD': { count:10, lbl: i=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'][i] },
+  '1D':  { count:24, lbl: i => _fmt12h(i) },
+  '5D':  { count: 5, lbl: i => _fmtDate(_daysBack(4 - i)) },
+  '1M':  { count:30, lbl: i => i % 2 === 0 ? _fmtDate(_daysBack(29 - i)) : '' },
+  '6M':  {
+    count: 26,
+    lbl: i => {
+      const d    = _daysBack((25 - i) * 7)
+      const prev = _daysBack((26 - i) * 7)
+      return (i === 0 || prev.getMonth() !== d.getMonth()) ? _MONTHS[d.getMonth()] : ''
+    },
+  },
+  'YTD': { count:10, lbl: i => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'][i] },
 }
 
 function buildSeries(baseValue, period) {
@@ -452,6 +465,7 @@ export default function KpiDetailPage({
 
   const [period, setPeriod]           = useState('1M')
   const [activeTooltip, setActiveTooltip] = useState(null)
+  const chartContainerRef = useRef(null)
   const [checked, setChecked] = useState(() => new Set(BASE_ITEMS.map(i => i.name)))
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
 
@@ -503,29 +517,31 @@ export default function KpiDetailPage({
     const all = buildLeaderboard(period, false, invScale)
     return checked.size === 0 ? [] : allItemsChecked ? all : all.filter(r => checked.has(r.name))
   }, [period, invScale, checked, allItemsChecked])
-  const goodItems  = healthRows.filter(r => r.status === 'good')
-  const lowItems   = healthRows.filter(r => r.status === 'low').sort((a,b) => a.wos - b.wos)
-  const healthPct  = Math.round((goodItems.length / healthRows.length) * 100)
+  const goodItems   = healthRows.filter(r => r.status === 'good')
+  const lowItems    = healthRows.filter(r => r.status === 'low').sort((a,b) => a.wos - b.wos)
+  const totalSales  = healthRows.reduce((s, r) => s + r.avgSales, 0)
+  const _rawPct     = totalSales === 0 ? 0 : goodItems.reduce((s, r) => s + r.avgSales, 0) / totalSales * 100
+  const healthPct   = isNaN(_rawPct) ? 0 : Math.round(_rawPct)
   const healthZone = healthPct >= 67 ? 'Healthy' : healthPct >= 34 ? 'At Risk' : 'Critical'
   const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
   const HEALTH_MESSAGES = {
     Healthy: [
-      `Carrier on-time performance is tracking at 94%+ this period. Express and ground routes are running on schedule with no significant delay events across the network.`,
-      `Fuel surcharges have stabilized at 12.5%, down from 14.2% last quarter. Unit shipping costs are within budget and no carrier rate increases are expected this period.`,
-      `No active weather advisories affecting distribution lanes. All major corridors are operating normally with seasonal conditions well within standard parameters.`,
-      `Warehouse throughput is running at 78% utilization — well within optimal range. Dock scheduling is clear and pick-pack cycle times are meeting SLA targets across all active SKUs.`,
+      `Carrier on-time performance is tracking at 94%+ this period. Express and ground routes are running on schedule with no significant delay events across the network. Recommendation: Maintain current replenishment cadence and consider opportunistic forward-buying on top 5 SKUs to lock in favorable freight rates before Q3 peak season.`,
+      `Fuel surcharges have stabilized at 12.5%, down from 14.2% last quarter. Unit shipping costs are within budget and no carrier rate increases are expected this period. Recommendation: Reallocate $18K in freight savings toward safety stock builds for high-velocity perishables ahead of the summer demand surge.`,
+      `No active weather advisories affecting distribution lanes. All major corridors are operating normally with seasonal conditions well within standard parameters. Recommendation: Advance next week's replenishment orders by 2 days to take advantage of open lane capacity and reduce weekend stockout risk on dairy and produce.`,
+      `Warehouse throughput is running at 78% utilization — well within optimal range. Dock scheduling is clear and pick-pack cycle times are meeting SLA targets across all active SKUs. Recommendation: Use available dock capacity to pull forward inbound receipts for Eggs and Whole Milk, both trending toward Watch status within 10 days at current velocity.`,
     ],
     'At Risk': [
-      `Express carrier capacity is tightening due to elevated regional demand. 12% of shipments are experiencing 1–2 day delays; ground routes are absorbing overflow but slowing last-mile delivery.`,
-      `Diesel prices spiked 8% this month, triggering fuel surcharge adjustments from two major carriers. Average shipping cost per unit is up $0.43 versus the prior period.`,
-      `A cold front moving through the region is causing intermittent delays on key distribution corridors. 3–5% of shipments are flagged for weather holds; monitoring in progress.`,
-      `Inbound freight volumes are running 18% above forecast, stressing dock scheduling. Overtime has been authorized but throughput delays of 6–12 hours are expected during peak windows.`,
+      `Express carrier capacity is tightening due to elevated regional demand. 12% of shipments are experiencing 1–2 day delays; ground routes are absorbing overflow but slowing last-mile delivery. Recommendation: Expedite replenishment for the 4 lowest WoS items via secondary carrier and notify store ops of likely 48-hour shelf gap on Bananas and Baby Spinach.`,
+      `Diesel prices spiked 8% this month, triggering fuel surcharge adjustments from two major carriers. Average shipping cost per unit is up $0.43 versus the prior period. Recommendation: Consolidate the next 3 replenishment runs into 2 combined loads to offset surcharge impact — estimated savings of $2,100 per cycle at current volume.`,
+      `A cold front moving through the region is causing intermittent delays on key distribution corridors. 3–5% of shipments are flagged for weather holds; monitoring in progress. Recommendation: Pre-position 3-day buffer stock for OJ and Butter at the regional DC now — both items have less than 4 weeks of supply and are most exposed to delay-driven stockouts.`,
+      `Inbound freight volumes are running 18% above forecast, stressing dock scheduling. Overtime has been authorized but throughput delays of 6–12 hours are expected during peak windows. Recommendation: Prioritize dock slots for Russet Potatoes, Greek Yogurt, and OJ — all three are below 4 WoS and cannot absorb further receipt delays without hitting zero stock.`,
     ],
     Critical: [
-      `Major carrier disruptions across two primary lanes are resulting in 24–48 hour delays. Priority rerouting has been activated but backlog is growing — 22% of orders are past SLA.`,
-      `Emergency freight surcharges are in effect due to capacity shortfalls. Air freight has been authorized for critical SKUs, increasing shipping costs by an estimated 34% above budget.`,
-      `Severe weather conditions have suspended ground delivery across key corridors. Recovery is estimated at 4–7 business days pending clearance — expedited routing is strongly advised.`,
-      `Warehouse is operating at 97% capacity with inbound receipts exceeding available storage. Replenishment shipments are staged in overflow facilities, adding 1–2 days to put-away lead times.`,
+      `Major carrier disruptions across two primary lanes are resulting in 24–48 hour delays. Priority rerouting has been activated but backlog is growing — 22% of orders are past SLA. Recommendation: Activate emergency replenishment protocol for the 6 items below 2 WoS. Approve air freight for Butter and Baby Spinach immediately — combined SKU revenue at risk exceeds $340K over the next 7 days.`,
+      `Emergency freight surcharges are in effect due to capacity shortfalls. Air freight has been authorized for critical SKUs, increasing shipping costs by an estimated 34% above budget. Recommendation: Restrict promotional activity on all low-WoS items this week to slow velocity and extend runway. Coordinate with merchandising to pull circular features on OJ and Greek Yogurt until supply stabilizes.`,
+      `Severe weather conditions have suspended ground delivery across key corridors. Recovery is estimated at 4–7 business days pending clearance — expedited routing is strongly advised. Recommendation: Issue a store-level allocation cap of 60% on Bananas, Butter, and Baby Spinach effective immediately to distribute remaining inventory across locations and prevent single-store sellouts.`,
+      `Warehouse is operating at 97% capacity with inbound receipts exceeding available storage. Replenishment shipments are staged in overflow facilities, adding 1–2 days to put-away lead times. Recommendation: Escalate to supply chain leadership — current capacity constraints will cause 8 of 20 tracked SKUs to breach zero stock within 5 days without emergency sourcing or demand-side intervention.`,
     ],
   }
   const msgIdx = (country.length + period.length) % 4
@@ -624,6 +640,11 @@ export default function KpiDetailPage({
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </button>
+          <img
+            src="/avatar.jpg"
+            alt="User account"
+            style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:8, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
+          />
         </div>
       </div>
 
@@ -654,11 +675,19 @@ export default function KpiDetailPage({
 
               {/* Score badge + TL;DR */}
               <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:10 }}>
-                <div style={{ flexShrink:0, width:60, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:6, padding:'4px 10px', textAlign:'center' }}>
-                  <div style={{ fontSize:18, fontWeight:700, color: healthColor }}>{healthPct}%</div>
+                <div style={{ flexShrink:0, width:60, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:6, padding:'4px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' }}>
+                  <div style={{ fontSize:18, fontWeight:700, color: healthColor }}>{isNaN(healthPct) ? 0 : healthPct}%</div>
                   <div style={{ fontSize:9, color: healthColor, fontWeight:600 }}>{healthZone}</div>
                 </div>
-                <div style={{ fontSize:12, color: T.textMuted, lineHeight:1.7 }}>{healthTldr}</div>
+                <div style={{ fontSize:12, color: T.textMuted, lineHeight:1.7 }}>
+                  {healthTldr.includes('Recommendation:') ? (
+                    <>
+                      {healthTldr.split('Recommendation:')[0]}
+                      <span style={{ fontWeight:700, color: healthColor }}>Recommendation:</span>
+                      {healthTldr.split('Recommendation:')[1]}
+                    </>
+                  ) : healthTldr}
+                </div>
               </div>
 
               {/* At-risk items */}
@@ -671,7 +700,7 @@ export default function KpiDetailPage({
                     {lowItems.slice(0,3).map(item => (
                       <div key={item.name} style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
                         <span style={{ color: T.textMuted }}>{item.name}</span>
-                        <span style={{ color:'#f44336', fontWeight:600 }}>{item.wos} wks</span>
+                        <span style={{ color:'#f44336', fontWeight:600 }}>{item.wos} WOS</span>
                       </div>
                     ))}
                   </div>
@@ -735,7 +764,7 @@ export default function KpiDetailPage({
             </div>
 
             {/* Chart */}
-            <div style={{ flex:1, minHeight:0, position:'relative' }}>
+            <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={series}
@@ -767,13 +796,19 @@ export default function KpiDetailPage({
                 </ComposedChart>
               </ResponsiveContainer>
 
-              {/* Inline overlay labels — float above cursor line */}
+              {/* Inline overlay labels — float above the highest line at the hovered point */}
               {activeTooltip?.x != null && (() => {
                 const { ty, ly, x } = activeTooltip
                 const delta = ty != null && ly != null ? ty - ly : null
+                const containerH = chartContainerRef.current?.clientHeight ?? 200
+                const plotH      = containerH - 8 - 8        // top + bottom margin
+                const maxVal     = Math.max(ty ?? 0, ly ?? 0)
+                const yFrac      = (maxVal - yDomain[0]) / (yDomain[1] - yDomain[0])
+                const yPx        = 8 + plotH * (1 - yFrac)  // pixel Y of the highest line
+                const topPx      = Math.max(2, yPx - 58)    // 58px above it; clamp to top
                 return (
                   <div style={{
-                    position:'absolute', top:8, left:x,
+                    position:'absolute', top: topPx, left:x,
                     transform:'translateX(-50%)',
                     pointerEvents:'none',
                     display:'flex', flexDirection:'column', alignItems:'center', gap:1,
