@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   ComposedChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -93,15 +93,15 @@ const COUNTRY_SALES_SCALE = {
   'China':         3.50,  // +250%
 }
 
-// City-level multiplier on top of country scale
+// City-level fraction of country inventory (values sum to ~1.0 per country)
 const CITY_INV_SCALE = {
-  'United States': { All:1.0, 'New York':1.30, 'Los Angeles':1.00, 'Chicago':0.70, 'Houston':1.60, 'Phoenix':0.55, 'Philadelphia':0.85 },
-  'Canada':        { All:1.0, 'Toronto':0.70,  'Vancouver':1.10,   'Montreal':0.85,'Calgary':1.30,  'Ottawa':0.60,   'Edmonton':1.00  },
-  'Mexico':        { All:1.0, 'Mexico City':1.40,'Guadalajara':0.80,'Monterrey':1.10,'Puebla':0.70, 'Tijuana':1.30,  'León':0.90      },
-  'Germany':       { All:1.0, 'Berlin':0.75,   'Munich':1.20,      'Hamburg':0.90, 'Frankfurt':1.30,'Cologne':0.65,  'Stuttgart':1.10 },
-  'Japan':         { All:1.0, 'Tokyo':0.60,    'Osaka':0.85,       'Nagoya':1.10,  'Sapporo':0.70,  'Fukuoka':1.30,  'Kyoto':0.50    },
-  'Korea':         { All:1.0, 'Seoul':1.50,    'Busan':0.70,       'Incheon':1.20, 'Daegu':0.80,    'Gwangju':1.60,  'Daejeon':0.60  },
-  'China':         { All:1.0, 'Beijing':1.80,  'Shanghai':1.20,    'Guangzhou':0.85,'Shenzhen':1.50,'Chengdu':0.70,  'Wuhan':1.00    },
+  'United States': { All:1.0, 'New York':0.20, 'Los Angeles':0.17, 'Chicago':0.16, 'Houston':0.19, 'Phoenix':0.14, 'Philadelphia':0.14 },
+  'Canada':        { All:1.0, 'Toronto':0.30,  'Vancouver':0.20,   'Montreal':0.22,'Calgary':0.12,  'Ottawa':0.09,   'Edmonton':0.07  },
+  'Mexico':        { All:1.0, 'Mexico City':0.32,'Guadalajara':0.22,'Monterrey':0.16,'Puebla':0.14, 'Tijuana':0.09,  'León':0.07      },
+  'Germany':       { All:1.0, 'Berlin':0.20,   'Munich':0.22,      'Hamburg':0.17, 'Frankfurt':0.19,'Cologne':0.12,  'Stuttgart':0.10 },
+  'Japan':         { All:1.0, 'Tokyo':0.35,    'Osaka':0.26,       'Nagoya':0.13,  'Sapporo':0.11,  'Fukuoka':0.09,  'Kyoto':0.06    },
+  'Korea':         { All:1.0, 'Seoul':0.42,    'Busan':0.22,       'Incheon':0.14, 'Daegu':0.11,    'Gwangju':0.06,  'Daejeon':0.05  },
+  'China':         { All:1.0, 'Beijing':0.19,  'Shanghai':0.22,    'Guangzhou':0.18,'Shenzhen':0.15,'Chengdu':0.15,  'Wuhan':0.11    },
 }
 
 function getInvScale(country, location) {
@@ -441,7 +441,7 @@ function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function KpiDetailPage({
-  kpi, country, location, cities, cityScales, countries,
+  kpi, country, selectedCities = [], cities, cityScales, countries,
   onBack, onCountryChange, onLocationChange,
   theme = 'dark', onThemeToggle,
 }) {
@@ -453,10 +453,20 @@ export default function KpiDetailPage({
   const [period, setPeriod]           = useState('1M')
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [checked, setChecked] = useState(() => new Set(BASE_ITEMS.map(i => i.name)))
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false)
+
+  const locationLabel = selectedCities.length === 0
+    ? 'All'
+    : selectedCities.length === 1 ? selectedCities[0] : 'Multiple'
+
   const countrySalesScale = COUNTRY_SALES_SCALE[country] ?? 1
-  const citySalesScale    = location === 'All' ? 1 : (cityScales[country]?.[location] ?? 1)
-  const cityScale         = countrySalesScale * citySalesScale
-  const invScale  = getInvScale(country, location)
+  const citySalesScale = selectedCities.length === 0
+    ? 1
+    : selectedCities.reduce((sum, city) => sum + (cityScales[country]?.[city] ?? 0), 0)
+  const cityScale = countrySalesScale * citySalesScale
+  const invScale = selectedCities.length === 0
+    ? getInvScale(country, 'All')
+    : selectedCities.reduce((sum, city) => sum + getInvScale(country, city), 0)
   const baseValue = parseNum(kpi.primary) * cityScale
 
   // When items are checked, sum only those items' daily averages
@@ -498,11 +508,28 @@ export default function KpiDetailPage({
   const healthPct  = Math.round((goodItems.length / healthRows.length) * 100)
   const healthZone = healthPct >= 67 ? 'Healthy' : healthPct >= 34 ? 'At Risk' : 'Critical'
   const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
-  const healthTldr = healthPct >= 67
-    ? `Stock levels are in good shape. Most products have at least 8 weeks of supply, reducing the risk of stockouts in the near term.`
-    : healthPct >= 34
-    ? `Stock levels need attention. Several products are running low and may face stockouts within 4 weeks if replenishment isn't actioned soon.`
-    : `Stock levels are critically low across a significant portion of the assortment. Immediate replenishment action is recommended to avoid lost sales.`
+  const HEALTH_MESSAGES = {
+    Healthy: [
+      `Carrier on-time performance is tracking at 94%+ this period. Express and ground routes are running on schedule with no significant delay events across the network.`,
+      `Fuel surcharges have stabilized at 12.5%, down from 14.2% last quarter. Unit shipping costs are within budget and no carrier rate increases are expected this period.`,
+      `No active weather advisories affecting distribution lanes. All major corridors are operating normally with seasonal conditions well within standard parameters.`,
+      `Warehouse throughput is running at 78% utilization — well within optimal range. Dock scheduling is clear and pick-pack cycle times are meeting SLA targets across all active SKUs.`,
+    ],
+    'At Risk': [
+      `Express carrier capacity is tightening due to elevated regional demand. 12% of shipments are experiencing 1–2 day delays; ground routes are absorbing overflow but slowing last-mile delivery.`,
+      `Diesel prices spiked 8% this month, triggering fuel surcharge adjustments from two major carriers. Average shipping cost per unit is up $0.43 versus the prior period.`,
+      `A cold front moving through the region is causing intermittent delays on key distribution corridors. 3–5% of shipments are flagged for weather holds; monitoring in progress.`,
+      `Inbound freight volumes are running 18% above forecast, stressing dock scheduling. Overtime has been authorized but throughput delays of 6–12 hours are expected during peak windows.`,
+    ],
+    Critical: [
+      `Major carrier disruptions across two primary lanes are resulting in 24–48 hour delays. Priority rerouting has been activated but backlog is growing — 22% of orders are past SLA.`,
+      `Emergency freight surcharges are in effect due to capacity shortfalls. Air freight has been authorized for critical SKUs, increasing shipping costs by an estimated 34% above budget.`,
+      `Severe weather conditions have suspended ground delivery across key corridors. Recovery is estimated at 4–7 business days pending clearance — expedited routing is strongly advised.`,
+      `Warehouse is operating at 97% capacity with inbound receipts exceeding available storage. Replenishment shipments are staged in overflow facilities, adding 1–2 days to put-away lead times.`,
+    ],
+  }
+  const msgIdx = (country.length + period.length) % 4
+  const healthTldr = (HEALTH_MESSAGES[healthZone] ?? HEALTH_MESSAGES.Healthy)[msgIdx]
 
   const fmtAxis = v => {
     if (v>=1e6) return `${(v/1e6).toFixed(1)}M`
@@ -546,17 +573,43 @@ export default function KpiDetailPage({
             </DropdownMenuContent>
           </DropdownMenu>
           <span style={{ fontSize:11, color: T.textDim }}>Location:</span>
-          <DropdownMenu>
+          <DropdownMenu open={locationMenuOpen} onOpenChange={setLocationMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button style={dropBtn}>{location}<span style={{ color: T.textDim, fontSize:10 }}>▼</span></button>
+              <button style={dropBtn}>{locationLabel}<span style={{ color: T.textDim, fontSize:10 }}>▼</span></button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, minWidth:160 }}>
-              {cities.map(c=>(
-                <DropdownMenuItem key={c} onClick={()=>onLocationChange(c)}
-                  style={{ color:c===location?'#00bcd4': T.textMuted, fontSize:12, cursor:'pointer', backgroundColor:c===location? T.activeItemBg:'transparent' }}>
-                  {c}
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuItem
+                key="All"
+                closeOnClick={false}
+                onClick={() => { onLocationChange([]); setLocationMenuOpen(false) }}
+                style={{ color: selectedCities.length === 0 ? '#00bcd4' : T.textMuted, fontSize:12, cursor:'pointer', backgroundColor: selectedCities.length === 0 ? T.activeItemBg : 'transparent' }}
+              >
+                All
+              </DropdownMenuItem>
+              {cities.filter(c => c !== 'All').map(c => {
+                const isSelected = selectedCities.includes(c)
+                return (
+                  <DropdownMenuItem
+                    key={c}
+                    closeOnClick={false}
+                    onClick={(e) => {
+                      if (e.ctrlKey || e.metaKey) {
+                        onLocationChange(prev => {
+                          const next = prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]
+                          const allCities = cities.filter(x => x !== 'All')
+                          return next.length === allCities.length ? [] : next
+                        })
+                      } else {
+                        onLocationChange([c])
+                        setLocationMenuOpen(false)
+                      }
+                    }}
+                    style={{ color: isSelected ? '#00bcd4' : T.textMuted, fontSize:12, cursor:'pointer', backgroundColor: isSelected ? T.activeItemBg : 'transparent' }}
+                  >
+                    {c}
+                  </DropdownMenuItem>
+                )
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
           <button
@@ -576,7 +629,7 @@ export default function KpiDetailPage({
 
       {/* ── Title bar ── */}
       <div style={{ padding:'8px 16px', borderBottom:`1px solid ${T.borderLight}`, flexShrink:0 }}>
-        <div style={{ fontSize:11, color: T.textFaint }}>{country} › {location==='All'?'All Locations':location}</div>
+        <div style={{ fontSize:11, color: T.textFaint }}>{selectedCities.length === 0 ? country : selectedCities.length === 1 ? `${country} › ${selectedCities[0]}` : `${country} +${selectedCities.length}`}</div>
         <div style={{ fontSize:16, fontWeight:700, marginTop:1 }}>{kpi.label}</div>
       </div>
 
@@ -634,13 +687,13 @@ export default function KpiDetailPage({
                     ['#ff9800', 'At Risk',  '34–66%', 'Multiple items running low'],
                     ['#f44336', 'Critical', '< 34%',  'Immediate restocking required'],
                   ].map(([color, label, range, desc]) => (
-                    <>
-                      <div key={label+'-badge'} style={{ width:60, backgroundColor: label === healthZone ? color+'66' : color+'22', border:`1px solid ${color}`, borderRadius:6, padding:'4px 10px', textAlign:'left' }}>
+                    <React.Fragment key={label}>
+                      <div style={{ width:60, backgroundColor: label === healthZone ? color+'66' : color+'22', border:`1px solid ${color}`, borderRadius:6, padding:'4px 10px', textAlign:'left' }}>
                         <div style={{ fontSize:9, fontWeight:700, color, lineHeight:1.2 }}>{range}</div>
                       </div>
-                      <span key={label+'-label'} style={{ fontSize:10, color, fontWeight:600 }}>{label}</span>
-                      <span key={label+'-desc'} style={{ fontSize:10, color: T.textFaint }}>{desc}</span>
-                    </>
+                      <span style={{ fontSize:10, color, fontWeight:600 }}>{label}</span>
+                      <span style={{ fontSize:10, color: T.textFaint }}>{desc}</span>
+                    </React.Fragment>
                   ))}
                 </div>
               </div>
@@ -653,7 +706,7 @@ export default function KpiDetailPage({
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, marginBottom:8 }}>
               <div>
                 <span style={{ fontSize:12, fontWeight:600 }}>
-                  {kpi.label} — Trend {location==='All'?'All Locations':location}
+                  {kpi.label} — Trend {locationLabel}
                   {checked.size === 1
                     ? `, ${[...checked][0]}`
                     : !allItemsChecked && checked.size > 1

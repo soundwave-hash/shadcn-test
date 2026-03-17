@@ -408,13 +408,13 @@ const CITY_LISTS = {
 }
 
 const CITY_SCALES = {
-  'United States': { 'New York': 1.18, 'Los Angeles': 1.08, 'Chicago': 0.96, 'Houston': 0.88, 'Phoenix': 0.82, 'Philadelphia': 0.94 },
-  'Canada':        { 'Toronto': 1.12, 'Vancouver': 1.05, 'Montreal': 0.95, 'Calgary': 0.88, 'Ottawa': 0.82, 'Edmonton': 0.86 },
-  'Mexico':        { 'Mexico City': 1.22, 'Guadalajara': 1.08, 'Monterrey': 0.98, 'Puebla': 0.88, 'Tijuana': 0.92, 'León': 0.82 },
-  'Germany':       { 'Berlin': 1.10, 'Munich': 1.05, 'Hamburg': 0.98, 'Frankfurt': 0.95, 'Cologne': 0.88, 'Stuttgart': 0.85 },
-  'Japan':         { 'Tokyo': 1.15, 'Osaka': 1.05, 'Nagoya': 0.95, 'Sapporo': 0.85, 'Fukuoka': 0.88, 'Kyoto': 0.90 },
-  'Korea':         { 'Seoul': 1.18, 'Busan': 1.02, 'Incheon': 0.95, 'Daegu': 0.85, 'Gwangju': 0.80, 'Daejeon': 0.82 },
-  'China':         { 'Beijing': 1.12, 'Shanghai': 1.18, 'Guangzhou': 1.08, 'Shenzhen': 1.05, 'Chengdu': 0.85, 'Wuhan': 0.88 },
+  'United States': { 'New York': 0.22, 'Los Angeles': 0.19, 'Chicago': 0.15, 'Houston': 0.17, 'Phoenix': 0.13, 'Philadelphia': 0.14 },
+  'Canada':        { 'Toronto': 0.32, 'Vancouver': 0.22, 'Montreal': 0.20, 'Calgary': 0.12, 'Ottawa': 0.08, 'Edmonton': 0.06 },
+  'Mexico':        { 'Mexico City': 0.36, 'Guadalajara': 0.20, 'Monterrey': 0.18, 'Puebla': 0.12, 'Tijuana': 0.08, 'León': 0.06 },
+  'Germany':       { 'Berlin': 0.22, 'Munich': 0.20, 'Hamburg': 0.18, 'Frankfurt': 0.17, 'Cologne': 0.13, 'Stuttgart': 0.10 },
+  'Japan':         { 'Tokyo': 0.38, 'Osaka': 0.24, 'Nagoya': 0.14, 'Sapporo': 0.10, 'Fukuoka': 0.08, 'Kyoto': 0.06 },
+  'Korea':         { 'Seoul': 0.45, 'Busan': 0.20, 'Incheon': 0.15, 'Daegu': 0.10, 'Gwangju': 0.06, 'Daejeon': 0.04 },
+  'China':         { 'Beijing': 0.18, 'Shanghai': 0.24, 'Guangzhou': 0.17, 'Shenzhen': 0.16, 'Chengdu': 0.14, 'Wuhan': 0.11 },
 }
 
 function parseNum(str) {
@@ -438,9 +438,9 @@ function scaleStr(str, scale) {
   return fmtNum(parseNum(str) * scale, str)
 }
 
-function getCityScale(country, location) {
-  if (location === 'All') return 1
-  return CITY_SCALES[country]?.[location] ?? 1
+function getMultiCityScale(country, selectedCities) {
+  if (!selectedCities || selectedCities.length === 0) return 1
+  return selectedCities.reduce((s, city) => s + (CITY_SCALES[country]?.[city] ?? 0), 0)
 }
 
 function scaleRowData(data, scale) {
@@ -501,7 +501,8 @@ function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, drag
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [country, setCountry] = useState('United States')
-  const [location, setLocation] = useState('All')
+  const [selectedCities, setSelectedCities] = useState([])   // [] = "All"
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false)
   const [view, setView] = useState('dashboard')
   const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
   const [theme, setTheme] = useState('dark')
@@ -585,7 +586,12 @@ export default function App() {
     setChartPressedIdx(null)
   }
 
-  const cityScale = getCityScale(country, location)
+  const cityScale = getMultiCityScale(country, selectedCities)
+  const locationLabel = selectedCities.length === 0
+    ? 'All'
+    : selectedCities.length === 1
+      ? selectedCities[0]
+      : 'Multiple'
   const displayKpiCards = cityScale === 1
     ? kpiCards
     : kpiCards.map(k => ({ ...k, primary: scaleStr(k.primary, cityScale), secondary: scaleStr(k.secondary, cityScale) }))
@@ -606,13 +612,13 @@ export default function App() {
       <KpiDetailPage
         kpi={currentKpi}
         country={country}
-        location={location}
+        selectedCities={selectedCities}
         cities={CITY_LISTS[country]}
         cityScales={CITY_SCALES}
         countries={COUNTRIES}
         onBack={() => setView('dashboard')}
-        onCountryChange={c => { setCountry(c); setLocation('All') }}
-        onLocationChange={setLocation}
+        onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
+        onLocationChange={setSelectedCities}
         theme={theme}
         onThemeToggle={toggleTheme}
       />
@@ -647,7 +653,7 @@ export default function App() {
               {COUNTRIES.map(c => (
                 <DropdownMenuItem
                   key={c}
-                  onClick={() => { setCountry(c); setLocation('All') }}
+                  onClick={() => { setCountry(c); setSelectedCities([]) }}
                   style={{
                     color: c === country ? '#00bcd4' : T.textMuted,
                     fontSize:12, cursor:'pointer',
@@ -661,27 +667,46 @@ export default function App() {
           </DropdownMenu>
 
           <span style={{ fontSize:11, color: T.textDim }}>Location:</span>
-          <DropdownMenu>
+          <DropdownMenu open={locationMenuOpen} onOpenChange={setLocationMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-                {location}
+                {locationLabel}
                 <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:160 }}>
-              {CITY_LISTS[country].map(c => (
-                <DropdownMenuItem
-                  key={c}
-                  onClick={() => setLocation(c)}
-                  style={{
-                    color: c === location ? '#00bcd4' : T.textMuted,
-                    fontSize:12, cursor:'pointer',
-                    backgroundColor: c === location ? T.activeItemBg : 'transparent',
-                  }}
-                >
-                  {c}
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuItem
+                key="All"
+                closeOnClick={false}
+                onClick={() => { setSelectedCities([]); setLocationMenuOpen(false) }}
+                style={{ color: selectedCities.length === 0 ? '#00bcd4' : T.textMuted, fontSize:12, cursor:'pointer', backgroundColor: selectedCities.length === 0 ? T.activeItemBg : 'transparent' }}
+              >
+                All
+              </DropdownMenuItem>
+              {CITY_LISTS[country].filter(c => c !== 'All').map(c => {
+                const isSelected = selectedCities.includes(c)
+                return (
+                  <DropdownMenuItem
+                    key={c}
+                    closeOnClick={false}
+                    onClick={(e) => {
+                      if (e.ctrlKey || e.metaKey) {
+                        setSelectedCities(prev => {
+                          const next = prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]
+                          const allCities = CITY_LISTS[country].filter(x => x !== 'All')
+                          return next.length === allCities.length ? [] : next
+                        })
+                      } else {
+                        setSelectedCities([c])
+                        setLocationMenuOpen(false)
+                      }
+                    }}
+                    style={{ color: isSelected ? '#00bcd4' : T.textMuted, fontSize:12, cursor:'pointer', backgroundColor: isSelected ? T.activeItemBg : 'transparent' }}
+                  >
+                    {c}
+                  </DropdownMenuItem>
+                )
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
           <button
@@ -727,7 +752,7 @@ export default function App() {
 
         {/* Section header */}
         <div style={{ fontSize:15, fontWeight:600, margin:'18px 0 12px', paddingBottom:8, borderBottom:`1px solid ${T.border}`, color: T.text }}>
-          Warehouse Operations Charts — {country}
+          Warehouse Operations Charts — {selectedCities.length === 0 ? country : selectedCities.length === 1 ? `${country} › ${selectedCities[0]}` : `${country} +${selectedCities.length}`}
         </div>
 
         {/* Charts — draggable 2-column grid */}
