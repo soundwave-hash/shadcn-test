@@ -130,11 +130,21 @@ body {
   box-sizing: border-box;
 }
 
+@keyframes kpi-fade-in {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+
+.kpi-flip {
+  display: inline-block;
+  animation: kpi-fade-in 1.8s ease-out;
+}
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .chart-grid {

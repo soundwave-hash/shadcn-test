@@ -6,7 +6,10 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ArrowUpDown, Sun } from 'lucide-react'
+import { ArrowUpDown, Sun, Download } from 'lucide-react'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 // ── Theme tokens ───────────────────────────────────────────────────────────────
 const THEME = {
@@ -22,15 +25,15 @@ const THEME = {
     activeItemBg: '#1a2a2a', sep: '#555',
   },
   light: {
-    bg: '#f0f2f5', navBg: '#ffffff', panelBg: '#ffffff',
-    border: '#e0e0e0', borderLight: '#eeeeee',
+    bg: '#dcdfe3', navBg: '#f9fafb', panelBg: '#f9fafb',
+    border: '#dde1e7', borderLight: '#e4e7eb',
     text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#f5f5f5', inputBorder: '#d0d0d0', inputText: '#333',
-    dropdownBg: '#ffffff', dropdownBorder: '#e0e0e0',
-    rowHover: '#e8f5f5', chartMask: '#f0f2f5', chartGrid: '#e8e8e8',
-    cardBg: '#ffffff', cardBorder: '#e0e0e0',
-    axTick: '#888', tooltipBg: '#ffffff', tooltipBorder: '#d0d0d0',
-    activeItemBg: '#e0f7fa', sep: '#bbb',
+    inputBg: '#eef0f3', inputBorder: '#dde1e7', inputText: '#333',
+    dropdownBg: '#f9fafb', dropdownBorder: '#dde1e7',
+    rowHover: '#e0eff5', chartMask: '#f4f5f7', chartGrid: '#e4e7eb',
+    cardBg: '#f9fafb', cardBorder: '#dde1e7',
+    axTick: '#888', tooltipBg: '#f9fafb', tooltipBorder: '#dde1e7',
+    activeItemBg: '#d8eef4', sep: '#bbb',
   },
 }
 
@@ -110,19 +113,17 @@ function getInvScale(country, location) {
   return c * l
 }
 
-function buildLeaderboard(period, asc, invScale = 1, salesScale = 1) {
+function buildLeaderboard(period, sortField, sortAsc, invScale = 1, salesScale = 1) {
   const days = PERIOD_DAYS[period] || 1
   const rows = BASE_ITEMS.map(item => {
-    const avgSales = Math.round(item.dailyAvg * days * salesScale)
+    const avgSales  = Math.round(item.dailyAvg * days * salesScale)
     const scaledInv = item.inventory * invScale
-    // WoS always uses daily rate regardless of selected period
-    const wos      = parseFloat((scaledInv / (item.dailyAvg * 7)).toFixed(1))
-    const status   = wos >= 8 ? 'good' : wos >= 4 ? 'watch' : 'low'
+    const wos       = parseFloat((scaledInv / (item.dailyAvg * 7)).toFixed(1))
+    const status    = wos >= 8 ? 'good' : wos >= 4 ? 'watch' : 'low'
     return { name:item.name, avgSales, inventory:Math.round(scaledInv), wos, status }
   })
-  return asc
-    ? [...rows].sort((a,b) => a.avgSales - b.avgSales)
-    : [...rows].sort((a,b) => b.avgSales - a.avgSales)
+  const key = sortField === 'wos' ? 'wos' : sortField === 'inventory' ? 'inventory' : 'avgSales'
+  return [...rows].sort((a, b) => sortAsc ? a[key] - b[key] : b[key] - a[key])
 }
 
 // ── Number helpers ─────────────────────────────────────────────────────────────
@@ -154,6 +155,10 @@ const _TODAY  = new Date()
 function _daysBack(n) { const d = new Date(_TODAY); d.setDate(d.getDate() - n); return d }
 function _fmtDate(d)  { return `${_MONTHS[d.getMonth()]} ${d.getDate()}` }
 function _fmt12h(i)   { if (i === 0) return '12 AM'; if (i < 12) return `${i} AM`; if (i === 12) return '12 PM'; return `${i - 12} PM` }
+
+// Current-position labels used for axis highlight
+const CURRENT_LABEL_1D  = _fmt12h(_TODAY.getHours())
+const CURRENT_LABEL_YTD = _MONTHS[_TODAY.getMonth()]
 
 const PERIOD_CFG = {
   '1D':  { count:24, lbl: i => _fmt12h(i) },
@@ -188,6 +193,17 @@ const LEADERBOARD_DAILY_TOTAL = BASE_ITEMS.reduce((s, item) => s + item.dailyAvg
 // Per-period base: scale daily total to the unit of each period bucket
 const PERIOD_BUCKET = { '1D': 1/24, '5D': 1, '1M': 1, '6M': 7, 'YTD': 30 }
 
+// Realistic hourly sales shape — low overnight, peak midday, wind-down evening
+// Values normalized so their sum = 24 (daily total is preserved)
+const _HOURLY_RAW = [
+  0.05, 0.03, 0.02, 0.02, 0.04, 0.10,  // 12 AM – 5 AM  (near-zero)
+  0.28, 0.55, 0.78, 0.90, 0.97, 1.00,  // 6 AM – 11 AM  (ramp up)
+  1.00, 0.98, 0.94, 0.88, 0.84, 0.80,  // 12 PM – 5 PM  (peak, gentle decline)
+  0.72, 0.62, 0.48, 0.34, 0.20, 0.11,  // 6 PM – 11 PM  (evening wind-down)
+]
+const _HOURLY_SUM = _HOURLY_RAW.reduce((s, v) => s + v, 0)
+const HOURLY_SHAPE = _HOURLY_RAW.map(v => v / _HOURLY_SUM * 24)
+
 // Per-country wave parameters — each country gets a distinct TY shape and LY relationship
 // trend: linear slope per step | f1/f2: wave frequencies | p1/p2: phases | a1/a2: amplitudes
 // lyBias: LY multiplier base (>1 = LY > TY = declining; <1 = TY > LY = growing)
@@ -211,13 +227,14 @@ function buildUnitSalesSeries(period, cityScale, dailyTotal = LEADERBOARD_DAILY_
   const scale = cityScale || 1
   const p = COUNTRY_WAVE_PARAMS[country] || COUNTRY_WAVE_PARAMS['United States']
   return Array.from({ length:count }, (_, i) => {
-    const trend  = Math.max(0.15, 1 + p.trend * i)   // floor at 0.15 prevents negative collapse
-    const wave   = 1 + Math.sin(i * p.f1 + p.p1) * p.a1 + Math.cos(i * p.f2 + p.p2) * p.a2
-    const tyRaw  = shapeBase * trend * wave
-    const lyR    = p.lyBias + Math.sin(i * p.lyF + 1.0) * p.lyAmp
-    const lyRaw  = tyRaw * lyR                        // derive LY from float tyRaw, not rounded ty
-    const ty     = Math.max(1, Math.round(tyRaw * scale))
-    const ly     = Math.max(1, Math.round(lyRaw * scale))
+    const trend   = Math.max(0.15, 1 + p.trend * i)   // floor at 0.15 prevents negative collapse
+    const wave    = 1 + Math.sin(i * p.f1 + p.p1) * p.a1 + Math.cos(i * p.f2 + p.p2) * p.a2
+    const diurnal = period === '1D' ? HOURLY_SHAPE[i] : 1  // realistic hourly shape for 1D
+    const tyRaw   = shapeBase * trend * wave * diurnal
+    const lyR     = p.lyBias + Math.sin(i * p.lyF + 1.0) * p.lyAmp
+    const lyRaw   = tyRaw * lyR                        // derive LY from float tyRaw, not rounded ty
+    const ty      = Math.max(0, Math.round(tyRaw * scale))
+    const ly      = Math.max(0, Math.round(lyRaw * scale))
     return { label:lbl(i), thisYear:ty, lastYear:ly, upper:Math.max(ty,ly), lower:Math.min(ty,ly) }
   })
 }
@@ -246,12 +263,13 @@ function MetricGauge({ period, invScale, checked, T }) {
   const cx=130, cy=130, r=90, sw=22
 
   const rows = useMemo(() => {
-    const all = buildLeaderboard(period, false, invScale)
+    const all = buildLeaderboard(period, 'wos', true, invScale)
     return checked.size === 0 ? [] : checked.size === BASE_ITEMS.length ? all : all.filter(r => checked.has(r.name))
   }, [period, invScale, checked])
-  const goodCount  = rows.filter(r => r.status === 'good').length
-  const total      = rows.length
-  const targetPct  = total === 0 ? 0.06 : Math.min(0.94, Math.max(0.06, goodCount / total))
+  const totalSales = rows.reduce((s, r) => s + r.avgSales, 0)
+  const goodSales  = rows.filter(r => r.status === 'good').reduce((s, r) => s + r.avgSales, 0)
+  const weightedPct = totalSales === 0 ? 0 : goodSales / totalSales
+  const targetPct  = rows.length === 0 ? 0.06 : Math.min(0.94, Math.max(0.06, weightedPct))
 
   // Arc color: red → amber → green based on health score
   const arcColor = targetPct >= 0.67 ? '#4caf50' : targetPct >= 0.34 ? '#ff9800' : '#f44336'
@@ -307,7 +325,7 @@ function MetricGauge({ period, invScale, checked, T }) {
         <text x={cx+r+2} y={cy+18} fill="#fff" fontSize={10} textAnchor="middle">100%</text>
         {/* Score */}
         <text x={cx} y={cy-14} fill={arcColor} fontSize={34} fontWeight={700} textAnchor="middle" dominantBaseline="middle">
-          {total === 0 ? '—' : `${Math.round(pct*100)}%`}
+          {rows.length === 0 ? '—' : `${Math.round(pct*100)}%`}
         </text>
         <text x={cx} y={cy+12} fill="#fff" fontSize={11} textAnchor="middle">Inventory Health</text>
       </svg>
@@ -341,32 +359,37 @@ function ChartTooltip({ active, payload, label, template, ttipStyle }) {
 // ── Leaderboard ────────────────────────────────────────────────────────────────
 function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T }) {
   const setChecked = onCheckedChange
-  const [asc, setAsc]         = useState(false)
-  const [hovered, setHovered] = useState(null)
+  const [sortField, setSortField] = useState('wos')
+  const [sortAsc, setSortAsc]     = useState(true)   // WOS asc = worst first by default
+  const [hovered, setHovered]     = useState(null)   // row hover
+  const [hovCol, setHovCol]       = useState(null)   // column header hover
 
-  const rows = useMemo(()=>buildLeaderboard(period, asc, invScale, salesScale), [period, asc, invScale, salesScale])
-  const maxSales = Math.max(...rows.map(r=>r.avgSales))
+  const rows     = useMemo(() => buildLeaderboard(period, sortField, sortAsc, invScale, salesScale), [period, sortField, sortAsc, invScale, salesScale])
+  const maxSales = Math.max(...rows.map(r => r.avgSales))
 
   const allChecked  = rows.length > 0 && rows.every(r => checked.has(r.name))
   const someChecked = !allChecked && rows.some(r => checked.has(r.name))
 
-  const toggle = name => setChecked(prev=>{
-    const next=new Set(prev); next.has(name)?next.delete(name):next.add(name); return next
-  })
-  const toggleAll = () => setChecked(allChecked ? new Set() : new Set(rows.map(r=>r.name)))
+  const toggle    = name => setChecked(prev => { const next = new Set(prev); next.has(name) ? next.delete(name) : next.add(name); return next })
+  const toggleAll = () => setChecked(allChecked ? new Set() : new Set(rows.map(r => r.name)))
+
+  function handleColSort(field) {
+    if (sortField === field) setSortAsc(a => !a)
+    else { setSortField(field); setSortAsc(field === 'wos') } // WOS defaults asc, others desc
+  }
+
+  const colHeaders = [
+    { label:'Items',      field: null },
+    { label:'Unit Sales', field:'sales' },
+    { label:'Inventory',  field:'inventory' },
+    { label:'WoS',        field:'wos' },
+  ]
 
   return (
     <div style={{ backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'12px 10px', display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10, flexShrink:0 }}>
+      <div style={{ marginBottom:10, flexShrink:0 }}>
         <span style={{ fontSize:12, fontWeight:700, color: T.text }}>Product Leaderboard</span>
-        <button
-          onClick={()=>setAsc(a=>!a)}
-          title={asc?'Sort descending':'Sort ascending'}
-          style={{ background:'none', border:`1px solid ${T.dropdownBorder}`, color: T.textMuted, borderRadius:4, padding:'2px 6px', cursor:'pointer', display:'flex', alignItems:'center', gap:3, fontSize:10 }}
-        >
-          <ArrowUpDown size={11}/>{asc?'Asc':'Desc'}
-        </button>
       </div>
 
       {/* Column headers */}
@@ -380,9 +403,32 @@ function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T
             style={{ cursor:'pointer', width:12, height:12 }}
           />
         </div>
-        {['Items','Unit Sales','Inventory','WoS'].map(h=>(
-          <span key={h} style={{ fontSize:9, color: T.text, textTransform:'uppercase', letterSpacing:'0.04em', textAlign: h==='Items'?'left':'center', display:'block', position:'relative', left: h==='Items'?0:-30 }}>{h}</span>
-        ))}
+        {colHeaders.map(({ label, field }) => {
+          const active  = field && sortField === field
+          const isHov   = field && hovCol === field
+          const color   = active ? '#00bcd4' : isHov ? '#80cbc4' : T.textDim
+          return field ? (
+            <button
+              key={label}
+              onClick={() => handleColSort(field)}
+              onMouseEnter={() => setHovCol(field)}
+              onMouseLeave={() => setHovCol(null)}
+              style={{
+                background:'none', border:'none', cursor:'pointer', padding:'0 0 2px 0',
+                fontSize:9, color,
+                textTransform:'uppercase', letterSpacing:'0.04em',
+                textAlign:'center', display:'block', position:'relative', left:-30,
+                fontWeight: active ? 700 : 400,
+                borderBottom: active ? '1px solid #00bcd4' : '1px solid transparent',
+                transition:'color 0.15s',
+              }}
+            >
+              {label}
+            </button>
+          ) : (
+            <span key={label} style={{ fontSize:9, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</span>
+          )
+        })}
       </div>
 
       {/* Scrollable rows — paddingRight reserves space so scrollbar never overlaps content */}
@@ -466,6 +512,36 @@ export default function KpiDetailPage({
   const [period, setPeriod]           = useState('1M')
   const [activeTooltip, setActiveTooltip] = useState(null)
   const chartContainerRef = useRef(null)
+  const pageRef = useRef(null)
+
+  // ── Export helpers ──
+  function exportCSV() {
+    const s = buildUnitSalesSeries(period, cityScale, selectedDailyTotal, country)
+    const rows = [
+      ['Unit Sales Export', `${kpi.label} | ${country} | ${period} | ${new Date().toLocaleString()}`],
+      [],
+      ['Label', 'This Year', 'Last Year'],
+      ...s.map(pt => [pt.label, pt.thisYear ?? '', pt.lastYear ?? '']),
+    ]
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    saveAs(blob, `warehouseiq-unitsales-${country.replace(/\s+/g, '-').toLowerCase()}-${period}.csv`)
+  }
+
+  async function exportPDF() {
+    if (!pageRef.current) return
+    const canvas = await html2canvas(pageRef.current, { scale: 2, backgroundColor: T.bg, useCORS: true })
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] })
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2)
+    pdf.save(`warehouseiq-unitsales-${country.replace(/\s+/g, '-').toLowerCase()}-${period}.pdf`)
+  }
+
+  async function exportChartPNG() {
+    if (!chartContainerRef.current) return
+    const canvas = await html2canvas(chartContainerRef.current, { scale: 2, backgroundColor: T.panelBg, useCORS: true })
+    canvas.toBlob(blob => saveAs(blob, `warehouseiq-unitsales-chart-${country.replace(/\s+/g, '-').toLowerCase()}-${period}.png`))
+  }
   const [checked, setChecked] = useState(() => new Set(BASE_ITEMS.map(i => i.name)))
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
 
@@ -495,11 +571,13 @@ export default function KpiDetailPage({
     ? [...checked][0]
     : !allItemsChecked && checked.size > 1 ? `${checked.size} items selected` : null
 
-  const series = useMemo(() =>
-    kpi.label === 'Unit Sales'
+  const series = useMemo(() => {
+    const s = kpi.label === 'Unit Sales'
       ? buildUnitSalesSeries(period, cityScale, selectedDailyTotal, country)
-      : buildSeries(baseValue, period),
-  [kpi.label, period, cityScale, selectedDailyTotal, baseValue, country])
+      : buildSeries(baseValue, period)
+    if (period === '1D') console.log('1D series[0..3]:', s.slice(0,4).map(p => ({label:p.label, ty:p.thisYear, ly:p.lastYear})), '...noon:', {label:s[12]?.label, ty:s[12]?.thisYear})
+    return s
+  }, [kpi.label, period, cityScale, selectedDailyTotal, baseValue, country])
 
   // Tight Y-axis domain so line separation is always visible
   const yDomain = useMemo(() => {
@@ -512,9 +590,30 @@ export default function KpiDetailPage({
     return [Math.max(0, Math.floor(lo - pad)), Math.ceil(hi + pad)]
   }, [series])
 
+  // Split thisYear into actual (solid) and forecast (dashed) for periods with a meaningful "now" cutoff
+  const seriesDisplay = useMemo(() => {
+    if (period === 'YTD') {
+      const cutIdx = _TODAY.getMonth()
+      return series.map((pt, i) => ({
+        ...pt,
+        actual:   i <= cutIdx ? pt.thisYear : null,
+        forecast: i >= cutIdx ? pt.thisYear : null,
+      }))
+    }
+    if (period === '1D') {
+      const cutIdx = _TODAY.getHours()
+      return series.map((pt, i) => ({
+        ...pt,
+        actual:   i <= cutIdx ? pt.thisYear : null,
+        forecast: i >= cutIdx ? pt.thisYear : null,
+      }))
+    }
+    return series
+  }, [period, series])
+
   // Inventory health stats for context panel
   const healthRows = useMemo(() => {
-    const all = buildLeaderboard(period, false, invScale)
+    const all = buildLeaderboard(period, 'wos', true, invScale)
     return checked.size === 0 ? [] : allItemsChecked ? all : all.filter(r => checked.has(r.name))
   }, [period, invScale, checked, allItemsChecked])
   const goodItems   = healthRows.filter(r => r.status === 'good')
@@ -560,7 +659,7 @@ export default function KpiDetailPage({
   }
 
   return (
-    <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
+    <div ref={pageRef} style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Nav bar ── */}
       <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
@@ -640,6 +739,33 @@ export default function KpiDetailPage({
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                title="Export data"
+                style={{
+                  width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}
+              >
+                <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
+              <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportChartPNG} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Save Chart as PNG
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <img
             src="/avatar.jpg"
             alt="User account"
@@ -745,12 +871,16 @@ export default function KpiDetailPage({
               </div>
               <div style={{ display:'flex', gap:14, alignItems:'center' }}>
                 <div style={{ display:'flex', gap:12 }}>
-                  {[['This Year','#00bcd4','solid'],['Last Year','#ff9800','dashed']].map(([l,c,d])=>(
+                  {[
+                    ['This Year','#00bcd4','solid'],
+                    ['Last Year','#ff9800','dashed'],
+                    ...(['YTD','1D'].includes(period) ? [['Forecast','#00bcd4','dotted']] : []),
+                  ].map(([l,c,d])=>(
                     <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:c }}>
                       <svg width={22} height={10}>
-                        <line x1={0} y1={5} x2={22} y2={5} stroke={c} strokeWidth={d==='dashed'?1.5:2}
-                          strokeDasharray={d==='dashed'?'4 3':undefined}/>
-                        <circle cx={11} cy={5} r={3} fill={c}/>
+                        <line x1={0} y1={5} x2={22} y2={5} stroke={c} strokeWidth={d==='solid'?2:1.5}
+                          strokeDasharray={d==='dashed'?'4 3':d==='dotted'?'3 3':undefined} strokeOpacity={d==='dotted'?0.6:1}/>
+                        {d !== 'dotted' && <circle cx={11} cy={5} r={3} fill={c}/>}
                       </svg>
                       {l}
                     </span>
@@ -767,18 +897,34 @@ export default function KpiDetailPage({
             <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
-                  data={series}
-                  margin={{ top:8, right:16, bottom:8, left:8 }}
+                  data={seriesDisplay}
+                  margin={{ top:18, right:16, bottom: period === '1D' ? 40 : 8, left:8 }}
                   onMouseMove={e => {
                     if (e?.activePayload?.length) {
-                      const ty = e.activePayload.find(p=>p.dataKey==='thisYear')?.value
+                      const ty = e.activePayload.find(p => ['thisYear','actual','forecast'].includes(p.dataKey))?.value
                       const ly = e.activePayload.find(p=>p.dataKey==='lastYear')?.value
                       setActiveTooltip({ label: e.activeLabel, ty, ly, x: e.activeCoordinate?.x })
                     }
                   }}
                   onMouseLeave={() => setActiveTooltip(null)}
                 >
-                  <XAxis dataKey="label" stroke={T.border} tick={axTick}/>
+                  <XAxis dataKey="label" stroke={T.border} interval={0} tick={({ x, y, payload }) => {
+                    const isNow = (period === '1D'  && payload.value === CURRENT_LABEL_1D)
+                               || (period === 'YTD' && payload.value === CURRENT_LABEL_YTD)
+                    const angled = period === '1D'
+                    return (
+                      <text
+                        x={x} y={y + 4}
+                        textAnchor={angled ? 'end' : 'middle'}
+                        fontSize={9}
+                        fill={isNow ? '#00bcd4' : T.axTick}
+                        fontWeight={isNow ? 700 : 400}
+                        transform={angled ? `rotate(-35, ${x}, ${y + 4})` : undefined}
+                      >
+                        {payload.value}
+                      </text>
+                    )
+                  }}/>
                   <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
                   <Tooltip content={() => null} cursor={{ stroke:'#444', strokeWidth:1, strokeDasharray:'4 3' }}/>
                   {/* Shading band — drawn before grid so grid renders on top */}
@@ -787,9 +933,19 @@ export default function KpiDetailPage({
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>
                   {/* Lines */}
-                  <Line type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
-                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                    animationDuration={700} animationEasing="ease-in-out"/>
+                  {['YTD','1D'].includes(period) ? <>
+                    <Line type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
+                      dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
+                      connectNulls={false} animationDuration={700} animationEasing="ease-in-out"/>
+                    <Line type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
+                      strokeDasharray="4 4" strokeOpacity={0.55}
+                      dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
+                      connectNulls={false} animationDuration={700} animationEasing="ease-in-out"/>
+                  </> :
+                    <Line type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
+                      dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
+                      animationDuration={700} animationEasing="ease-in-out"/>
+                  }
                   <Line type="monotone" dataKey="lastYear" stroke="#ff9800" strokeWidth={1.5}
                     dot={{ r:2.5, fill:'#ff9800', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
                     animationDuration={700} animationEasing="ease-in-out"/>

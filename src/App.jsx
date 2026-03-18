@@ -7,8 +7,11 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Sun } from 'lucide-react'
+import { Sun, Download } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 // ── Theme tokens ───────────────────────────────────────────────────────────────
 const THEME = {
@@ -24,15 +27,15 @@ const THEME = {
     activeItemBg: '#1a2a2a', sep: '#555',
   },
   light: {
-    bg: '#f0f2f5', navBg: '#ffffff', panelBg: '#ffffff',
-    border: '#e0e0e0', borderLight: '#eeeeee',
+    bg: '#dcdfe3', navBg: '#f9fafb', panelBg: '#f9fafb',
+    border: '#dde1e7', borderLight: '#e4e7eb',
     text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#f5f5f5', inputBorder: '#d0d0d0', inputText: '#333',
-    dropdownBg: '#ffffff', dropdownBorder: '#e0e0e0',
-    rowHover: '#e8f5f5', chartMask: '#f0f2f5', chartGrid: '#e8e8e8',
-    cardBg: '#ffffff', cardBorder: '#e0e0e0',
-    axTick: '#888', tooltipBg: '#ffffff', tooltipBorder: '#d0d0d0',
-    activeItemBg: '#e0f7fa', sep: '#bbb',
+    inputBg: '#eef0f3', inputBorder: '#dde1e7', inputText: '#333',
+    dropdownBg: '#f9fafb', dropdownBorder: '#dde1e7',
+    rowHover: '#e0eff5', chartMask: '#f4f5f7', chartGrid: '#e4e7eb',
+    cardBg: '#f9fafb', cardBorder: '#dde1e7',
+    axTick: '#888', tooltipBg: '#f9fafb', tooltipBorder: '#dde1e7',
+    activeItemBg: '#d8eef4', sep: '#bbb',
   },
 }
 
@@ -55,20 +58,20 @@ const C = {
 const COUNTRY_DATA = {
   'United States': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'8.64',   secondary:'21.54' },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'12.93K', secondary:'1.68K' },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'8.64',   secondary:'21.54' },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'12.93K', secondary:'1.68K', secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'17.41K', secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'95.76K', secondary:'756'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'95.76K', secondary:'756'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'604.8K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.03',   secondary:'0'     },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.03',   secondary:'0'     },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'14.85', secondary:'0'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'30',    secondary:'4'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.17',  secondary:'0.32' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.03',  secondary:'0.16' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.27',  secondary:'0.29' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.02',  secondary:'0'    },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.27',  secondary:'0.29' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.02',  secondary:'0'    },
     ],
     carriers: [
       { carrier:'FedEx Express',    express:38541, ground:2500,  priority:1000, sameDay:500,  standard:0,   freight:0, returns:0,   unknown:0     },
@@ -107,20 +110,20 @@ const COUNTRY_DATA = {
 
   'Canada': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'6.21',   secondary:'14.80' },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'2.59K',  secondary:'334'   },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'6.21',   secondary:'14.80' },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'2.59K',  secondary:'334',  secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'11.20K', secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'42.30K', secondary:'312'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'42.30K', secondary:'312'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'298.4K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.02',   secondary:'0'     },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.02',   secondary:'0'     },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'9.40',  secondary:'0'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'18',    secondary:'2'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.12',  secondary:'0.24' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.05',  secondary:'0.22' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.19',  secondary:'0.21' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.03',  secondary:'0'    },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.19',  secondary:'0.21' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.03',  secondary:'0'    },
     ],
     carriers: [
       { carrier:'Purolator',       express:14200, ground:3100, priority:800,  sameDay:400,  standard:0,   freight:0, returns:0,   unknown:0    },
@@ -155,20 +158,20 @@ const COUNTRY_DATA = {
 
   'Mexico': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'11.40',  secondary:'28.60' },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'208'   },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'11.40',  secondary:'28.60' },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'208',  secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'22.80K', secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'31.50K', secondary:'218'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'31.50K', secondary:'218'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'412.1K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.07',   secondary:'0.01'  },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.07',   secondary:'0.01'  },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'18.20', secondary:'2'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'22',    secondary:'5'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.31',  secondary:'0.58' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.09',  secondary:'0.28' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.41',  secondary:'0.44' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.06',  secondary:'0.01' },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.41',  secondary:'0.44' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.06',  secondary:'0.01' },
     ],
     carriers: [
       { carrier:'Estafeta',        express:9800,  ground:2100, priority:600,  sameDay:300,  standard:0,   freight:100, returns:0,   unknown:0    },
@@ -203,20 +206,20 @@ const COUNTRY_DATA = {
 
   'Germany': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.80',   secondary:'12.40' },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'191'   },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'5.80',   secondary:'12.40' },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'1.29K',  secondary:'191',  secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'9.60K',  secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'68.20K', secondary:'480'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'68.20K', secondary:'480'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'521.3K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.01',   secondary:'0'     },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.01',   secondary:'0'     },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'11.20', secondary:'1'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'26',    secondary:'3'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.09',  secondary:'0.18' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.02',  secondary:'0.10' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.33',  secondary:'0.35' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.04',  secondary:'0'    },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.33',  secondary:'0.35' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.04',  secondary:'0'    },
     ],
     carriers: [
       { carrier:'DHL Germany',     express:22000, ground:4200, priority:1800, sameDay:900,  standard:0,   freight:200, returns:0,   unknown:0    },
@@ -251,20 +254,20 @@ const COUNTRY_DATA = {
 
   'Japan': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'4.20',   secondary:'9.10'  },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'647',    secondary:'79'    },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'4.20',   secondary:'9.10'  },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'647',    secondary:'79',   secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'7.30K',  secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'112.4K', secondary:'620'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'112.4K', secondary:'620'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'680.2K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.01',   secondary:'0'     },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.01',   secondary:'0'     },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'8.60',  secondary:'0'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'42',    secondary:'6'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.07',  secondary:'0.14' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.01',  secondary:'0.06' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.48',  secondary:'0.51' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.01',  secondary:'0'    },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.48',  secondary:'0.51' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.01',  secondary:'0'    },
     ],
     carriers: [
       { carrier:'Yamato Transport', express:32000, ground:5200, priority:2400, sameDay:1800, standard:0,   freight:400, returns:0,   unknown:0    },
@@ -299,20 +302,20 @@ const COUNTRY_DATA = {
 
   'Korea': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'3.90',   secondary:'8.40'  },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'259',    secondary:'31'    },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'3.90',   secondary:'8.40'  },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'259',    secondary:'31',   secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'6.80K',  secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'88.60K', secondary:'510'   },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'88.60K', secondary:'510'   },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'544.9K', secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.01',   secondary:'0'     },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.01',   secondary:'0'     },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'7.80',  secondary:'0'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'38',    secondary:'5'    },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.06',  secondary:'0.12' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.01',  secondary:'0.05' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.44',  secondary:'0.46' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.02',  secondary:'0'    },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.44',  secondary:'0.46' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.02',  secondary:'0'    },
     ],
     carriers: [
       { carrier:'CJ Logistics',    express:28000, ground:4800, priority:2200, sameDay:2400, standard:0,   freight:300, returns:0,   unknown:0    },
@@ -347,20 +350,20 @@ const COUNTRY_DATA = {
 
   'China': {
     kpi1: [
-      { label:'Shipment Time (hrs) - P95',   sublabel:'P99',           primary:'5.10',   secondary:'13.80' },
-      { label:'Unit Sales', sublabel:'Daily Avg',      primary:'45.26K', secondary:'6.41K' },
+      { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'5.10',   secondary:'13.80' },
+      { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'45.26K', secondary:'6.41K', secondaryLabel:'Std Dev' },
       { label:'Max Shipment Delay (hrs)',     sublabel:'',              primary:'24.60K', secondary:''      },
-      { label:'Order Count',                 sublabel:'Carrier Count', primary:'284.3K', secondary:'1,240' },
+      { label:'Order Count (All Carriers)',   sublabel:'Carrier Count', primary:'284.3K', secondary:'1,240' },
       { label:'Total Dock Time (s)',          sublabel:'',              primary:'1.82M',  secondary:''      },
-      { label:'Damage Rate - Avg',           sublabel:'P99',           primary:'0.04',   secondary:'0.01'  },
+      { label:'Damage Rate - Avg',           sublabel:'',           primary:'0.04',   secondary:'0.01'  },
     ],
     kpi2: [
       { label:'Peak Queue (#) - P95',     sublabel:'P50', primary:'22.40', secondary:'3'    },
       { label:'Peak Pickers (#) - P95',   sublabel:'P50', primary:'86',    secondary:'12'   },
       { label:'Dock Wait Time (s) - Avg', sublabel:'P95', primary:'0.14',  secondary:'0.29' },
       { label:'% Idle Time - Avg',        sublabel:'P95', primary:'0.02',  secondary:'0.11' },
-      { label:'Pallets Loaded - Avg',     sublabel:'P99', primary:'0.62',  secondary:'0.66' },
-      { label:'Returns Processed - Avg',  sublabel:'P99', primary:'0.05',  secondary:'0.01' },
+      { label:'Pallets Loaded - Avg',     sublabel:'', primary:'0.62',  secondary:'0.66' },
+      { label:'Returns Processed - Avg',  sublabel:'', primary:'0.05',  secondary:'0.01' },
     ],
     carriers: [
       { carrier:'SF Express',      express:88000, ground:12000,priority:6400, sameDay:8200, standard:0,    freight:800, returns:0,    unknown:0     },
@@ -443,11 +446,173 @@ function getMultiCityScale(country, selectedCities) {
   return selectedCities.reduce((s, city) => s + (CITY_SCALES[country]?.[city] ?? 0), 0)
 }
 
+// Animates a formatted number string (e.g. "12.93K") from its previous value to the new one
+function useAnimatedValue(target) {
+  const [display, setDisplay] = useState(target)
+  const fromRef = useRef(parseNum(target))
+  const rafRef  = useRef(null)
+
+  useEffect(() => {
+    const from = fromRef.current
+    const to   = parseNum(target)
+    if (from === to) { setDisplay(target); return }
+
+    const duration = 1800
+    const start    = performance.now()
+
+    function tick(now) {
+      const t      = Math.min((now - start) / duration, 1)
+      const eased  = 1 - Math.pow(1 - t, 3)          // ease-out cubic
+      const cur    = from + (to - from) * eased
+      setDisplay(fmtNum(cur, target))
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        fromRef.current = to
+        setDisplay(target)
+      }
+    }
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [target])
+
+  return display
+}
+
 function scaleRowData(data, scale) {
   if (scale === 1) return data
   return data.map(row => Object.fromEntries(
     Object.entries(row).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * scale) : v])
   ))
+}
+
+// ── Date range helpers ────────────────────────────────────────────────────────
+const _D_MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const _D_TODAY   = new Date()
+const _TIME_KEYS = ['express','ground','priority','sameDay','standard']
+
+function buildTimeData(baseData, range) {
+  const weeklyTotals = _TIME_KEYS.reduce((acc, k) => {
+    acc[k] = baseData.reduce((s, r) => s + (r[k] || 0), 0)
+    return acc
+  }, {})
+  const dailyAvg = _TIME_KEYS.reduce((acc, k) => { acc[k] = weeklyTotals[k] / 7; return acc }, {})
+
+  if (range === '5D') {
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(_D_TODAY); d.setDate(d.getDate() - (4 - i))
+      return { ...baseData[i % baseData.length], date: `${_D_MONTHS[d.getMonth()]} ${d.getDate()}` }
+    })
+  }
+  if (range === '1M') {
+    return Array.from({ length: 5 }, (_, wi) => {
+      const d = new Date(_D_TODAY); d.setDate(d.getDate() - (4 - wi) * 7)
+      const v = 0.82 + wi * 0.055
+      return _TIME_KEYS.reduce((row, k) => { row[k] = Math.round(weeklyTotals[k] * v); return row },
+        { date: `${_D_MONTHS[d.getMonth()]} ${d.getDate()}` })
+    })
+  }
+  if (range === '6M') {
+    return Array.from({ length: 6 }, (_, mi) => {
+      const d = new Date(_D_TODAY.getFullYear(), _D_TODAY.getMonth() - (5 - mi), 1)
+      const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+      const v = 0.78 + mi * 0.04
+      return _TIME_KEYS.reduce((row, k) => { row[k] = Math.round(dailyAvg[k] * daysInMonth * v); return row },
+        { date: _D_MONTHS[d.getMonth()] })
+    })
+  }
+  if (range === 'YTD') {
+    const curMonth = _D_TODAY.getMonth()
+    return Array.from({ length: curMonth + 1 }, (_, mi) => {
+      const days = mi === curMonth ? _D_TODAY.getDate() : new Date(_D_TODAY.getFullYear(), mi + 1, 0).getDate()
+      const v = 0.88 + mi * 0.06
+      return _TIME_KEYS.reduce((row, k) => { row[k] = Math.round(dailyAvg[k] * days * v); return row },
+        { date: _D_MONTHS[mi] })
+    })
+  }
+  return baseData
+}
+
+// Multiplier vs. 7-day base — scales carrier totals and failure counts to match range
+const _ytdDays = Math.floor((_D_TODAY - new Date(_D_TODAY.getFullYear(), 0, 1)) / 86400000) + 1
+const RANGE_MULTIPLIER = { '5D': 0.85, '1M': 4.1, '6M': 23.5, 'YTD': _ytdDays / 7 }
+
+// KPI card jitter per range — 1M is baseline (1.00), others vary ±3–14%
+// 12 values = one per KPI card slot (kpi1[0..5] then kpi2[0..5])
+const RANGE_KPI_JITTER = {
+  '5D':  [0.94, 1.02, 0.97, 0.91, 0.96, 1.04, 0.98, 1.06, 0.93, 0.99, 1.02, 0.95],
+  '1M':  [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00],
+  '6M':  [1.07, 0.95, 1.11, 1.09, 1.03, 0.91, 1.08, 0.96, 1.13, 1.04, 0.93, 1.06],
+  'YTD': [1.04, 1.10, 0.95, 1.13, 1.08, 0.90, 1.05, 1.12, 0.97, 1.09, 0.94, 1.11],
+}
+
+// Generates status (failure-rate %) rows for the selected range with real dates
+function buildStatusData(baseStatus, range) {
+  const avg = {
+    delivered: baseStatus.reduce((s, r) => s + r.delivered, 0) / baseStatus.length,
+    failed:    baseStatus.reduce((s, r) => s + r.failed,    0) / baseStatus.length,
+    canceled:  baseStatus.reduce((s, r) => s + r.canceled,  0) / baseStatus.length,
+  }
+  function row(date, v) {
+    const delivered = Math.min(98, Math.round(avg.delivered * v))
+    const failed    = Math.max(1,  Math.round(avg.failed    * (2 - v)))
+    const canceled  = Math.max(0,  100 - delivered - failed)
+    return { date, delivered, failed, canceled }
+  }
+  if (range === '5D') {
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(_D_TODAY); d.setDate(d.getDate() - (4 - i))
+      return { ...baseStatus[i % baseStatus.length], date: `${_D_MONTHS[d.getMonth()]} ${d.getDate()}` }
+    })
+  }
+  if (range === '1M') {
+    return Array.from({ length: 5 }, (_, wi) => {
+      const d = new Date(_D_TODAY); d.setDate(d.getDate() - (4 - wi) * 7)
+      return row(`${_D_MONTHS[d.getMonth()]} ${d.getDate()}`, 0.97 + wi * 0.005)
+    })
+  }
+  if (range === '6M') {
+    return Array.from({ length: 6 }, (_, mi) => {
+      const d = new Date(_D_TODAY.getFullYear(), _D_TODAY.getMonth() - (5 - mi), 1)
+      return row(_D_MONTHS[d.getMonth()], 0.91 + mi * 0.015)
+    })
+  }
+  if (range === 'YTD') {
+    return Array.from({ length: _D_TODAY.getMonth() + 1 }, (_, mi) => {
+      return row(_D_MONTHS[mi], 0.90 + mi * 0.007)
+    })
+  }
+  return baseStatus
+}
+
+// ── KPI trend helpers ──────────────────────────────────────────────────────────
+const KPI_GOOD_DIR = {
+  'Shipment Time (hrs) - P95':  'down',
+  'Unit Sales (Daily Avg)':      'up',
+  'Max Shipment Delay (hrs)':    'down',
+  'Order Count (All Carriers)':  'up',
+  'Total Dock Time (s)':         'down',
+  'Damage Rate - Avg':           'down',
+  'Peak Queue (#) - P95':        'down',
+  'Peak Pickers (#) - P95':      'up',
+  'Dock Wait Time (s) - Avg':    'down',
+  '% Idle Time - Avg':           'down',
+  'Pallets Loaded - Avg':        'up',
+  'Returns Processed - Avg':     'down',
+}
+// Magnitude scales by range — longer periods naturally show larger % swings
+const TREND_RANGE_SCALE = { '5D': 0.3, '1M': 0.7, '6M': 1.6, 'YTD': 2.4 }
+
+function getKpiTrend(label, country, dateRange = '1M') {
+  const seed      = (label.length * 11 + country.length * 7) % 19
+  const rangeSeed = (seed + (dateRange.length * 5)) % 19
+  const base      = 0.5 + rangeSeed * 0.38
+  const scale     = TREND_RANGE_SCALE[dateRange] ?? 1
+  const magnitude = parseFloat((base * scale).toFixed(1))
+  const sign      = (label.length + country.length + dateRange.length) % 4 !== 0 ? 1 : -1
+  return sign * magnitude
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -475,12 +640,19 @@ function SwatchLegend({ items, col }) {
   )
 }
 
-function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, dragHandlers, T }) {
+function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country, dateRange, isDragging, isOver, dragHandlers, T }) {
+  const trend      = getKpiTrend(label, country, dateRange)
+  const goodDir    = KPI_GOOD_DIR[label] || 'up'
+  const isGood     = (trend > 0 && goodDir === 'up') || (trend < 0 && goodDir === 'down')
+  const trendColor = isGood ? '#4caf50' : '#f44336'
+  const arrow      = trend > 0 ? '↑' : '↓'
+  const animPrimary   = useAnimatedValue(primary)
+  const animSecondary = useAnimatedValue(secondary || '')
   return (
     <div
       {...dragHandlers}
       style={{
-        backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, padding:'14px 16px',
+        backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, padding:'18px 20px',
         display:'flex', flexDirection:'column',
         cursor:'grab',
         opacity: isDragging ? 0.35 : 1,
@@ -489,11 +661,20 @@ function KpiCard({ label, sublabel, primary, secondary, isDragging, isOver, drag
         userSelect:'none',
       }}
     >
-      <div style={{ color: T.text, fontSize:26, fontWeight:700, lineHeight:1.1 }}>{primary}</div>
-      {secondary && <div style={{ color:'#ffb74d', fontSize:11, marginTop:2 }}>{secondary}</div>}
-      <div style={{ flex:1 }} />
-      <div style={{ color:'#80cbc4', fontSize:12, fontWeight:500, lineHeight:1.3, marginTop:6 }}>{label}</div>
-      {sublabel && <div style={{ color:'#ffb74d', fontSize:10 }}>{sublabel}</div>}
+      <div style={{ minHeight:48 }}>
+        <div style={{ color:'#80cbc4', fontSize:12, fontWeight:500, lineHeight:1.3 }}>{label}</div>
+      </div>
+      <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:8, marginTop:8 }}>
+        <div key={primary} className="kpi-flip" style={{ color: T.text, fontSize:26, fontWeight:700, lineHeight:1.1 }}>{animPrimary}</div>
+        <span key={trend} className="kpi-flip" style={{ fontSize:16, fontWeight:700, color: trendColor, whiteSpace:'nowrap' }}>
+          {arrow} {Math.abs(trend)}%
+        </span>
+      </div>
+      {secondary && sublabel?.startsWith('P') && (
+        <div style={{ color:'#ffb74d', fontSize:11, marginTop:2 }}>
+          {sublabel} = {animSecondary}
+        </div>
+      )}
     </div>
   )
 }
@@ -506,8 +687,66 @@ export default function App() {
   const [view, setView] = useState('dashboard')
   const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
   const [theme, setTheme] = useState('dark')
+  const [dateRange, setDateRange] = useState('1M')
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
   const T = THEME[theme]
+  const dashboardRef = useRef(null)
+
+  // ── Export helpers ──
+  function exportCSV() {
+    const d = COUNTRY_DATA[country]
+    const rangeJitter = RANGE_KPI_JITTER[dateRange] ?? RANGE_KPI_JITTER['1M']
+    const cards = [...d.kpi1, ...d.kpi2].map((k, i) => {
+      const factor = getMultiCityScale(country, selectedCities) * (rangeJitter[i] ?? 1)
+      return { ...k, primary: factor === 1 ? k.primary : scaleStr(k.primary, factor) }
+    })
+
+    const rows = [
+      ['Dashboard Export', `${country} | ${dateRange} | ${new Date().toLocaleString()}`],
+      [],
+      ['KPI Cards'],
+      ['Label', 'Value'],
+      ...cards.map(k => [k.label, k.primary]),
+      [],
+      ['Shipment Count Over Time'],
+      ['Date', 'Express', 'Ground', 'Priority', 'Same Day', 'Standard'],
+      ...buildTimeData(scaleRowData(d.time, getMultiCityScale(country, selectedCities)), dateRange)
+        .map(r => [r.date, r.express ?? '', r.ground ?? '', r.priority ?? '', r.sameDay ?? '', r.standard ?? '']),
+      [],
+      ['Delivery Status Over Time'],
+      ['Date', 'Delivered %', 'Failed %', 'Canceled %'],
+      ...buildStatusData(d.status, dateRange).map(r => [r.date, r.delivered, r.failed, r.canceled]),
+    ]
+
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    saveAs(blob, `warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.csv`)
+  }
+
+  async function exportPDF() {
+    if (!dashboardRef.current) return
+    const canvas = await html2canvas(dashboardRef.current, {
+      scale: 2,
+      backgroundColor: T.bg,
+      useCORS: true,
+    })
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] })
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2)
+    pdf.save(`warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.pdf`)
+  }
+
+  async function exportChartPNG() {
+    if (!dashboardRef.current) return
+    const chartGrid = dashboardRef.current.querySelector('.chart-grid')
+    if (!chartGrid) return
+    const canvas = await html2canvas(chartGrid, {
+      scale: 2,
+      backgroundColor: T.panelBg,
+      useCORS: true,
+    })
+    canvas.toBlob(blob => saveAs(blob, `warehouseiq-charts-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.png`))
+  }
   const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px' }
   const ttip  = { backgroundColor: T.tooltipBg, border: `1px solid ${T.tooltipBorder}`, color: T.text, fontSize:11 }
   const d = COUNTRY_DATA[country]
@@ -592,13 +831,18 @@ export default function App() {
     : selectedCities.length === 1
       ? selectedCities[0]
       : 'Multiple'
-  const displayKpiCards = cityScale === 1
-    ? kpiCards
-    : kpiCards.map(k => ({ ...k, primary: scaleStr(k.primary, cityScale), secondary: scaleStr(k.secondary, cityScale) }))
+  const rangeJitter = RANGE_KPI_JITTER[dateRange] ?? RANGE_KPI_JITTER['1M']
+  const displayKpiCards = kpiCards.map((k, i) => {
+    const factor = cityScale * (rangeJitter[i] ?? 1)
+    if (factor === 1) return k
+    return { ...k, primary: scaleStr(k.primary, factor), secondary: scaleStr(k.secondary, factor) }
+  })
 
-  const scaledCarriers = scaleRowData(d.carriers, cityScale)
-  const scaledTime     = scaleRowData(d.time, cityScale)
-  const scaledFailure  = scaleRowData(d.failure, cityScale)
+  const rangeMultiplier = RANGE_MULTIPLIER[dateRange] ?? 1
+  const scaledCarriers = scaleRowData(d.carriers, cityScale * rangeMultiplier)
+  const scaledFailure  = scaleRowData(d.failure,  cityScale * rangeMultiplier)
+  const timeData       = buildTimeData(scaleRowData(d.time, cityScale), dateRange)
+  const statusData     = buildStatusData(d.status, dateRange)
 
   const carrierData = scaledCarriers.map(r => ({
     ...r,
@@ -635,6 +879,18 @@ export default function App() {
         </span>
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
         <span style={{ fontSize:12, color: T.textMuted }}>Shipping Dashboard</span>
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <div style={{ display:'flex', gap:4 }}>
+          {['5D','1M','6M','YTD'].map(r => (
+            <button key={r} onClick={() => setDateRange(r)} style={{
+              background: r === dateRange ? '#00bcd4' : 'transparent',
+              color:      r === dateRange ? '#111' : T.textDim,
+              border: `1px solid #00bcd4`, fontSize:11, padding:'6px 14px',
+              borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
+              transition:'all 0.15s',
+            }}>{r}</button>
+          ))}
+        </div>
 
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
@@ -721,6 +977,32 @@ export default function App() {
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                title="Export data"
+                style={{
+                  width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}
+              >
+                <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
+              <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportChartPNG} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Save Charts as PNG
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <img
             src="/avatar.jpg"
             alt="User account"
@@ -730,7 +1012,7 @@ export default function App() {
       </div>
 
       {/* ── Dashboard body ── */}
-      <div style={{ padding:'12px 14px' }}>
+      <div ref={dashboardRef} style={{ padding:'12px 14px' }}>
 
         {/* KPI cards — draggable */}
         <div className="kpi-grid">
@@ -738,6 +1020,8 @@ export default function App() {
             <KpiCard
               key={kpi.label + kpi.primary}
               {...kpi}
+              country={country}
+              dateRange={dateRange}
               isDragging={dragIdx === i}
               isOver={(overIdx === i && dragIdx !== i) || pressedIdx === i}
               T={T}
@@ -817,14 +1101,21 @@ export default function App() {
 
             if (id === 'time') return (
               <div key={id} style={chartPanelStyle} {...dragProps}>
-                <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Shipment Count Over Time</div>
+                <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:10 }}>
+                  <span style={{ fontSize:12, fontWeight:600, color: T.text }}>Shipment Count Over Time</span>
+                  <span style={{ fontSize:10, color: T.textDim }}>
+                    — {dateRange === '5D' ? 'Last 5 Days' : dateRange === '1M' ? 'Last Month' : dateRange === '6M' ? 'Last 6 Months' : 'Year to Date'}
+                    {dateRange !== 'YTD' && ` (${timeData[0]?.date} – ${timeData[timeData.length-1]?.date})`}
+                  </span>
+                </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={360}>
-                      <BarChart data={scaledTime} margin={{ top:10, right:10, bottom:28, left:14 }}>
+                      <BarChart data={timeData} margin={{ top:10, right:10, bottom:28, left:14 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
-                        <XAxis dataKey="date" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                        <XAxis dataKey="date" stroke={T.border}
+                          tick={{ fill: T.axTick, fontSize:10 }}
+                          label={{ value: dateRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
@@ -884,10 +1175,11 @@ export default function App() {
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={d.status} margin={{ top:4, right:10, bottom:28, left:14 }}>
+                      <BarChart data={statusData} margin={{ top:4, right:10, bottom:28, left:14 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
-                        <XAxis dataKey="date" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value:'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                        <XAxis dataKey="date" stroke={T.border}
+                          tick={{ fill: T.axTick, fontSize:10 }}
+                          label={{ value: dateRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
                         <Tooltip contentStyle={ttip} formatter={v => `${v}%`} />
                         <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
