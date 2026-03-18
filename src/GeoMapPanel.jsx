@@ -43,12 +43,15 @@ function getTier(country) {
 
 const DEFAULT_VIEW = { zoom: 1, center: [15, 20] }
 
-// Countries that need zoom-in to show highlight effect
+// Zoom config for every country — max 3x
 const COUNTRY_VIEW = {
-  'Germany':     { zoom: 6,  center: [10.4,  51.2] },
-  'South Korea': { zoom: 10, center: [127.8, 35.9] },
-  'Japan':       { zoom: 5,  center: [138.2, 36.2] },
-  'Mexico':      { zoom: 3,  center: [-102.5, 23.6] },
+  'United States': { zoom: 3, center: [-98.35,  39.5]  },
+  'Canada':        { zoom: 3, center: [-106.3,  56.1]  },
+  'Mexico':        { zoom: 3, center: [-102.5,  23.6]  },
+  'Germany':       { zoom: 3, center: [10.4,    51.2]  },
+  'Japan':         { zoom: 3, center: [138.2,   36.2]  },
+  'South Korea':   { zoom: 3, center: [127.8,   35.9]  },
+  'China':         { zoom: 3, center: [104.2,   35.9]  },
 }
 
 // ISO 3166-1 numeric codes used by world-atlas topojson
@@ -178,7 +181,11 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                 <Marker
                   key={country}
                   coordinates={[lng, lat]}
-                  onClick={() => onCountrySelect && onCountrySelect(country)}
+                  onClick={() => {
+                    if (!onCountrySelect) return
+                    // clicking the already-selected country reverts to world view
+                    onCountrySelect(country === selectedCountry ? null : country)
+                  }}
                   onMouseEnter={() => setHoveredCountry(country)}
                   onMouseLeave={() => setHoveredCountry(null)}
                   style={{ cursor: 'pointer' }}
