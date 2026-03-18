@@ -105,6 +105,19 @@ const COUNTRY_ISO = {
   'China':         '156',
 }
 
+// Leader line config: angle in degrees (0=right, 90=down, 180=left, 270=up)
+// and total distance from bubble center to label
+const LABEL_CONFIG = {
+  'United States': { angle: 250, dist: 42 },
+  'Canada':        { angle: 310, dist: 42 },
+  'Mexico':        { angle: 160, dist: 38 },
+  'Germany':       { angle: 270, dist: 38 },
+  'Japan':         { angle:  60, dist: 38 },
+  'South Korea':   { angle: 200, dist: 38 },
+  'China':         { angle:  90, dist: 42 },
+}
+const DEFAULT_LABEL = { angle: 90, dist: 38 }
+
 // Per-range radius bounds — min/max both increase progressively across ranges
 // 5D floor of 14 keeps numbers readable; each longer range is visibly larger overall
 // Follows UI button order left→right: 5D → 1M → 6M → YTD (largest)
@@ -284,20 +297,42 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                       ? (volumes[country] / 1000000).toFixed(1) + 'M'
                       : (volumes[country] / 1000).toFixed(0) + 'K'}
                   </text>
-                  <text
-                    textAnchor="middle"
-                    dy={scaledR + 12}
-                    style={{
-                      fontSize: 9,
-                      fontWeight: isSelected || isHovered ? 700 : 400,
-                      fill: isSelected ? tier.color : T.textMuted,
-                      fontFamily: 'inherit',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    }}
-                  >
-                    {country}
-                  </text>
+                  {(() => {
+                    const cfg = LABEL_CONFIG[country] ?? DEFAULT_LABEL
+                    const rad = (cfg.angle * Math.PI) / 180
+                    const lx = Math.cos(rad) * cfg.dist
+                    const ly = Math.sin(rad) * cfg.dist
+                    const lineX = Math.cos(rad) * (scaledR + 2)
+                    const lineY = Math.sin(rad) * (scaledR + 2)
+                    const anchor = lx > 4 ? 'start' : lx < -4 ? 'end' : 'middle'
+                    return (
+                      <g>
+                        <line
+                          x1={lineX} y1={lineY}
+                          x2={lx} y2={ly}
+                          stroke={isSelected ? tier.color : T.textMuted}
+                          strokeWidth={0.8}
+                          strokeOpacity={isSelected || isHovered ? 0.8 : 0.45}
+                        />
+                        <text
+                          x={lx}
+                          y={ly}
+                          textAnchor={anchor}
+                          dominantBaseline="middle"
+                          style={{
+                            fontSize: 9,
+                            fontWeight: isSelected || isHovered ? 700 : 400,
+                            fill: isSelected ? tier.color : T.textMuted,
+                            fontFamily: 'inherit',
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                          }}
+                        >
+                          {country}
+                        </text>
+                      </g>
+                    )
+                  })()}
                 </Marker>
               )
             })}
