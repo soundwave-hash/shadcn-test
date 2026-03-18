@@ -189,10 +189,9 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       .filter(n => n.kind === 'status')
       .reduce((max, n) => Math.max(max, n.name.length), 0);
 
-    // Stats label "1,234,567 (100%)" ≈ 16 chars — may be wider than the name itself
-    const STATS_CHARS = 16;
-    const leftMargin  = Math.ceil(Math.max(longestCarrier, STATS_CHARS) * CHAR_W) + PAD;
-    const rightMargin = Math.ceil(Math.max(longestStatus,  STATS_CHARS) * CHAR_W) + PAD;
+    // Labels are inside the node bars so no margin needed for text overflow — just visual edge padding
+    const leftMargin  = 10;
+    const rightMargin = 10;
 
     const gen = sankey()
       .nodeWidth(16)
@@ -290,25 +289,23 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                 const pct = grandTotal > 0 ? Math.round((node.value / grandTotal) * 100) : 0;
                 const volLabel = (node.value || 0).toLocaleString();
                 const statsLabel = `${volLabel} (${pct}%)`;
-                // Only show second line if node is tall enough
-                const showStats = nodeH >= 16;
-                const LINE_GAP = 11;
+                const showStats = nodeH >= 22;
+                const LINE_GAP = 12;
+                const CHAR_W = 6.2;
+                const INNER_PAD = 5;
 
-                // Label positioning — carriers left, status right, types beside node
-                let labelX, textAnchor;
-                if (node.kind === 'carrier') {
-                  labelX = node.x0 - 8;
-                  textAnchor = 'end';
-                } else if (node.kind === 'status') {
-                  labelX = node.x1 + 8;
-                  textAnchor = 'start';
-                } else {
-                  labelX = node.x1 + 6;
-                  textAnchor = 'start';
-                }
+                // Carrier + Type: left-aligned inside node; Status: right-aligned inside node
+                const isStatus = node.kind === 'status';
+                const labelX   = isStatus ? node.x1 - INNER_PAD : node.x0 + INNER_PAD;
+                const anchor   = isStatus ? 'end' : 'start';
 
                 const nameY  = showStats ? nodeCenter - LINE_GAP / 2 : nodeCenter;
                 const statsY = nodeCenter + LINE_GAP / 2;
+
+                const nameBgW  = node.name.length * CHAR_W + 8;
+                const statsBgW = statsLabel.length * CHAR_W + 8;
+                const nameBgX  = isStatus ? labelX - nameBgW  + 4 : labelX - 4;
+                const statsBgX = isStatus ? labelX - statsBgW + 4 : labelX - 4;
 
                 const isOther = node.name === 'Other' && node.kind === 'carrier';
 
@@ -327,10 +324,11 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                       onMouseMove={isOther ? (e) => setNodeTooltipPos({ x: e.clientX, y: e.clientY }) : undefined}
                       onMouseLeave={isOther ? () => setHoveredNode(null) : undefined}
                     />
+                    <rect x={nameBgX} y={nameY - 7} width={nameBgW} height={13} fill={T.panelBg} fillOpacity={0.72} rx={3} />
                     <text
                       x={labelX}
                       y={nameY}
-                      textAnchor={textAnchor}
+                      textAnchor={anchor}
                       dominantBaseline="middle"
                       fill={T.text}
                       fontSize={10}
@@ -339,18 +337,21 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                       {node.name}
                     </text>
                     {showStats && (
-                      <text
-                        x={labelX}
-                        y={statsY}
-                        textAnchor={textAnchor}
-                        dominantBaseline="middle"
-                        fill={T.textMuted}
-                        fontSize={10}
-                        fontWeight="bold"
-                        style={{ userSelect: 'none' }}
-                      >
-                        {statsLabel}
-                      </text>
+                      <>
+                        <rect x={statsBgX} y={statsY - 7} width={statsBgW} height={13} fill={T.panelBg} fillOpacity={0.72} rx={3} />
+                        <text
+                          x={labelX}
+                          y={statsY}
+                          textAnchor={anchor}
+                          dominantBaseline="middle"
+                          fill={T.textMuted}
+                          fontSize={10}
+                          fontWeight="bold"
+                          style={{ userSelect: 'none' }}
+                        >
+                          {statsLabel}
+                        </text>
+                      </>
                     )}
                   </g>
                 );

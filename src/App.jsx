@@ -920,7 +920,18 @@ export default function App() {
             </button>
           </div>
         </div>
-        <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
+        <style>{`
+          .geo-scroll::-webkit-scrollbar { width: 8px; }
+          .geo-scroll::-webkit-scrollbar-track { background: ${T.panelBg}; }
+          .geo-scroll::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 4px; }
+          .geo-scroll::-webkit-scrollbar-thumb:hover { background: #00bcd4; }
+        `}</style>
+        <div
+          className="geo-scroll"
+          style={{ height: 'calc(100vh - 40px)', overflowY: 'scroll', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}
+        >
+          <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
+        </div>
       </div>
     )
   }
