@@ -107,11 +107,12 @@ const COUNTRY_ISO = {
 
 // Per-range radius bounds — min/max both increase progressively across ranges
 // 5D floor of 14 keeps numbers readable; each longer range is visibly larger overall
+// Follows UI button order left→right: 5D → 1M → 6M → YTD (largest)
 const RADIUS_BY_RANGE = {
   '5D':  { min: 14, max: 20 },
   '1M':  { min: 16, max: 26 },
-  'YTD': { min: 18, max: 30 },
-  '6M':  { min: 20, max: 36 },
+  '6M':  { min: 18, max: 30 },
+  'YTD': { min: 20, max: 36 },
 }
 
 function getBubbleRadius(country, volumes, dateRange) {
