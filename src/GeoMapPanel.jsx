@@ -29,6 +29,18 @@ const COUNTRY_VOLUMES = {
   'China':         198400,
 }
 
+// 3-tier thresholds
+const TIERS = [
+  { label: 'High',   min: 100000, color: '#e91e63' },
+  { label: 'Mid',    min: 50000,  color: '#00bcd4' },
+  { label: 'Low',    min: 0,      color: '#4fc3f7' },
+]
+
+function getTier(country) {
+  const vol = COUNTRY_VOLUMES[country] ?? 0
+  return TIERS.find(t => vol >= t.min) ?? TIERS[TIERS.length - 1]
+}
+
 const MIN_RADIUS = 8
 const MAX_RADIUS = 28
 
@@ -44,6 +56,13 @@ function getBubbleRadius(country) {
 export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
   const [hoveredCountry, setHoveredCountry] = useState(null)
 
+  const isDark = T.bg === '#111'
+
+  // Country land fill — subtle blue-grey tint for visibility
+  const landFill        = isDark ? '#1e2b3a' : '#dce8f0'
+  const landFillHover   = isDark ? '#263748' : '#c8dcea'
+  const borderColor     = isDark ? '#334455' : '#aabdcc'
+
   return (
     <div
       style={{
@@ -53,28 +72,31 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
         padding: '14px 16px',
       }}
     >
-      {/* Panel header */}
-      <div style={{ marginBottom: 8 }}>
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: T.text,
-            letterSpacing: '0.02em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Global Shipment Volume
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.text, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+            Global Shipment Volume
+          </div>
+          <div style={{ fontSize: 11, color: selectedCountry ? '#00bcd4' : T.textMuted, marginTop: 2, minHeight: 16 }}>
+            {selectedCountry
+              ? `${selectedCountry} — ${COUNTRY_VOLUMES[selectedCountry]?.toLocaleString()} shipments`
+              : 'Select a country'}
+          </div>
         </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: selectedCountry ? '#00bcd4' : T.textMuted,
-            marginTop: 2,
-            minHeight: 16,
-          }}
-        >
-          {selectedCountry ? selectedCountry : 'Select a country'}
+
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          {TIERS.map(tier => (
+            <div key={tier.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg width={12} height={12}>
+                <circle cx={6} cy={6} r={5} fill={tier.color} fillOpacity={0.8} />
+              </svg>
+              <span style={{ fontSize: 10, color: T.textMuted, whiteSpace: 'nowrap' }}>
+                {tier.label === 'High' ? '> 100K' : tier.label === 'Mid' ? '50K – 100K' : '< 50K'}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -84,10 +106,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
           width={800}
           height={420}
           projection="geoMercator"
-          projectionConfig={{
-            scale: 130,
-            center: [15, 20],
-          }}
+          projectionConfig={{ scale: 130, center: [15, 20] }}
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
           <ZoomableGroup>
@@ -98,24 +117,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                     key={geo.rsmKey}
                     geography={geo}
                     style={{
-                      default: {
-                        fill: '#222',
-                        stroke: T.border,
-                        strokeWidth: 0.4,
-                        outline: 'none',
-                      },
-                      hover: {
-                        fill: '#2a2a2a',
-                        stroke: T.border,
-                        strokeWidth: 0.4,
-                        outline: 'none',
-                      },
-                      pressed: {
-                        fill: '#222',
-                        stroke: T.border,
-                        strokeWidth: 0.4,
-                        outline: 'none',
-                      },
+                      default: { fill: landFill,      stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
+                      hover:   { fill: landFillHover,  stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
+                      pressed: { fill: landFill,      stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
                     }}
                   />
                 ))
@@ -123,11 +127,15 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
             </Geographies>
 
             {Object.entries(COUNTRY_COORDS).map(([country, { lat, lng }]) => {
-              const isSelected = country === selectedCountry
-              const isHovered = country === hoveredCountry
-              const radius = getBubbleRadius(country)
-              const scaledRadius = isSelected ? radius * 1.15 : radius
-              const opacity = isSelected ? 0.9 : isHovered ? 0.75 : 0.5
+              const isSelected  = country === selectedCountry
+              const isHovered   = country === hoveredCountry
+              const radius      = getBubbleRadius(country)
+              const scaledR     = isSelected ? radius * 1.18 : radius
+              const tier        = getTier(country)
+              const fillColor   = isSelected ? '#fff' : tier.color
+              const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
+              const strokeColor = isSelected ? '#fff' : tier.color
+              const strokeW     = isSelected ? 2 : isHovered ? 1.5 : 1
 
               return (
                 <Marker
@@ -138,24 +146,49 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                   onMouseLeave={() => setHoveredCountry(null)}
                   style={{ cursor: 'pointer' }}
                 >
+                  {/* Outer glow ring on hover/select */}
+                  {(isSelected || isHovered) && (
+                    <circle
+                      r={scaledR + 5}
+                      fill="none"
+                      stroke={tier.color}
+                      strokeWidth={1}
+                      strokeOpacity={isSelected ? 0.5 : 0.3}
+                    />
+                  )}
                   <circle
-                    r={scaledRadius}
-                    fill="#00bcd4"
-                    fillOpacity={opacity}
-                    stroke={isSelected ? '#fff' : '#00bcd4'}
-                    strokeWidth={isSelected ? 1.5 : 0.5}
-                    strokeOpacity={isSelected ? 0.8 : 0.4}
-                    style={{
-                      cursor: 'pointer',
-                      transition: 'r 0.15s ease, fill-opacity 0.15s ease',
-                    }}
+                    r={scaledR}
+                    fill={fillColor}
+                    fillOpacity={fillOpacity}
+                    stroke={strokeColor}
+                    strokeWidth={strokeW}
+                    strokeOpacity={0.9}
+                    style={{ cursor: 'pointer', transition: 'r 0.15s ease, fill-opacity 0.15s ease' }}
                   />
+                  {/* Volume label inside large-enough bubbles */}
+                  {scaledR >= 16 && (
+                    <text
+                      textAnchor="middle"
+                      dy="0.35em"
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 700,
+                        fill: isSelected ? tier.color : (isDark ? '#111' : '#fff'),
+                        fontFamily: 'inherit',
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      }}
+                    >
+                      {(COUNTRY_VOLUMES[country] / 1000).toFixed(0)}K
+                    </text>
+                  )}
                   <text
                     textAnchor="middle"
-                    dy={scaledRadius + 11}
+                    dy={scaledR + 12}
                     style={{
                       fontSize: 9,
-                      fill: isSelected ? '#fff' : T.textMuted,
+                      fontWeight: isSelected ? 700 : 400,
+                      fill: isSelected ? tier.color : T.textMuted,
                       fontFamily: 'inherit',
                       pointerEvents: 'none',
                       userSelect: 'none',
