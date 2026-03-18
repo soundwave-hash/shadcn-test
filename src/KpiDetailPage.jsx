@@ -961,7 +961,7 @@ export default function KpiDetailPage({
                 const maxVal     = Math.max(ty ?? 0, ly ?? 0)
                 const yFrac      = (maxVal - yDomain[0]) / (yDomain[1] - yDomain[0])
                 const yPx        = 8 + plotH * (1 - yFrac)  // pixel Y of the highest line
-                const topPx      = Math.max(2, yPx - 58)    // 58px above it; clamp to top
+                const topPx      = Math.max(2, yPx - 68)    // 68px above it; clamp to top
                 return (
                   <div style={{
                     position:'absolute', top: topPx, left:x,
