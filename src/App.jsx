@@ -1116,10 +1116,17 @@ export default function App() {
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
-                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} width={140} interval={0} />
+                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={false} width={150} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
+                            {ki === 0 && (
+                              <LabelList dataKey="carrier"
+                                content={({ x, y, height, value }) => (
+                                  <text x={x - 6} y={y + height / 2} textAnchor="end" fill={T.axTick} fontSize={10} dominantBaseline="middle">{value}</text>
+                                )}
+                              />
+                            )}
                             {ki === CARRIER_KEYS.length - 1 && (
                               <LabelList dataKey="_total" position="right"
                                 content={({ x, y, width, height, value }) =>
