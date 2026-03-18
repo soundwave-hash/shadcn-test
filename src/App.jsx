@@ -1106,8 +1106,8 @@ export default function App() {
                 <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Orders by Carrier &amp; Type</div>
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
-                    <ResponsiveContainer width="100%" height={360}>
-                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:8 }} barSize={12}
+                    <ResponsiveContainer width="100%" height={Math.max(360, carrierData.length * 34)}>
+                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:0 }} barSize={12}
                         onMouseMove={e => {
                           if (!carrierTipPos && e?.activeTooltipIndex === 0 && e?.activeCoordinate) {
                             setCarrierTipPos({ x: e.activeCoordinate.x, y: e.activeCoordinate.y })
@@ -1117,13 +1117,7 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
                         <YAxis type="category" dataKey="carrier" stroke={T.border} width={160}
-                          ticks={carrierData.map(d => d.carrier)}
-                          tick={({ x, y, payload }) => (
-                            <text x={x - 4} y={y} textAnchor="end" dominantBaseline="middle" fill={T.axTick} fontSize={10}>
-                              {payload.value}
-                            </text>
-                          )}
-                        />
+                          tick={{ fill: T.axTick, fontSize:10 }} interval={0} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
