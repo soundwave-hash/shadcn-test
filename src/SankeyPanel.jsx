@@ -161,7 +161,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     const gen = sankey()
       .nodeWidth(16)
       .nodePadding(20)
-      .extent([[1, 1], [width - 1, HEIGHT - 1]]);
+      .extent([[160, 10], [width - 110, HEIGHT - 10]]);
 
     // d3-sankey mutates the data, so deep clone
     const graph = gen({
@@ -228,21 +228,24 @@ export default function SankeyPanel({ country, carrierRows, T }) {
               const color = getNodeColor(node);
               const nodeH = Math.max(1, node.y1 - node.y0);
 
-              // Label positioning
-              let labelX, textAnchor, labelY;
+              // Label positioning — carriers left, status right, types beside node
+              let labelX, textAnchor, labelY, dominantBaseline;
               if (node.kind === 'carrier') {
-                labelX = node.x0 - 6;
+                labelX = node.x0 - 8;
                 textAnchor = 'end';
                 labelY = (node.y0 + node.y1) / 2;
+                dominantBaseline = 'middle';
               } else if (node.kind === 'status') {
+                labelX = node.x1 + 8;
+                textAnchor = 'start';
+                labelY = (node.y0 + node.y1) / 2;
+                dominantBaseline = 'middle';
+              } else {
+                // type — label to the right of node, vertically centered
                 labelX = node.x1 + 6;
                 textAnchor = 'start';
                 labelY = (node.y0 + node.y1) / 2;
-              } else {
-                // middle — centered above node
-                labelX = (node.x0 + node.x1) / 2;
-                textAnchor = 'middle';
-                labelY = node.y0 - 4;
+                dominantBaseline = 'middle';
               }
 
               return (
@@ -260,9 +263,9 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                     x={labelX}
                     y={labelY}
                     textAnchor={textAnchor}
-                    dominantBaseline={node.kind === 'type' ? 'auto' : 'middle'}
-                    fill={T.axTick || T.textMuted}
-                    fontSize={9}
+                    dominantBaseline={dominantBaseline}
+                    fill={T.text}
+                    fontSize={10}
                     style={{ userSelect: 'none' }}
                   >
                     {node.name}
