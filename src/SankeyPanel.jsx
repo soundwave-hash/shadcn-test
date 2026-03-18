@@ -39,7 +39,7 @@ const NODE_COLORS = {
   CANCELED:  '#757575',
 };
 
-const HEIGHT = 420;
+const HEIGHT = 600;
 
 function getNodeColor(node) {
   if (node.kind === 'carrier') return NODE_COLORS.carrier;
@@ -159,8 +159,8 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     if (!sankeyData || width < 50) return null;
 
     const gen = sankey()
-      .nodeWidth(14)
-      .nodePadding(8)
+      .nodeWidth(16)
+      .nodePadding(20)
       .extent([[1, 1], [width - 1, HEIGHT - 1]]);
 
     // d3-sankey mutates the data, so deep clone
