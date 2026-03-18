@@ -292,7 +292,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                     style={{
                       fontSize: 8,
                       fontWeight: 700,
-                      fill: isSelected ? tier.color : (isDark ? '#111' : '#fff'),
+                      fill: '#111',
                       fontFamily: 'inherit',
                       pointerEvents: 'none',
                       userSelect: 'none',
