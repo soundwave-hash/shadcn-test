@@ -234,9 +234,10 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
               const radius      = getBubbleRadius(country, volumes, dateRange)
               const scaledR     = isSelected ? radius * 1.18 : isHovered ? radius * 1.15 : radius
               const tier        = getTier(country, tiers, volumes)
-              const fillColor   = isSelected ? '#b2ebf2' : tier.color
+              const selectedFill = isDark ? '#b2ebf2' : '#0097a7'
+              const fillColor   = isSelected ? selectedFill : tier.color
               const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
-              const strokeColor = isSelected ? '#b2ebf2' : tier.color
+              const strokeColor = isSelected ? selectedFill : tier.color
               const strokeW     = isSelected ? 2 : isHovered ? 1.5 : 1
 
               return (
