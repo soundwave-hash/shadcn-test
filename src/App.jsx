@@ -627,11 +627,12 @@ const LEGEND_ITEMS  = [
 ]
 
 // ── Shipment chart tooltip — shifts left/right so it never covers the active bar ──
-function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T }) {
+function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T, formatter }) {
   if (!active || !payload?.length) return null
   // Compare bar x to the midpoint of the actual plot area (viewBox.x is the left margin offset)
   const midpoint = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
   const toRight  = (coordinate?.x ?? 0) <= midpoint
+  const fmt = formatter ?? (v => Number(v).toLocaleString())
   return (
     <div style={{
       backgroundColor: T.tooltipBg,
@@ -649,7 +650,7 @@ function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T }) {
       {payload.map(p => (
         <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ width:8, height:8, borderRadius:'50%', backgroundColor:p.fill, flexShrink:0 }}/>
-          <span>{p.name}: {Number(p.value).toLocaleString()}</span>
+          <span>{p.name}: {fmt(p.value)}</span>
         </div>
       ))}
     </div>
@@ -1210,7 +1211,7 @@ export default function App() {
                           tick={{ fill: T.axTick, fontSize:10 }}
                           label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
-                        <Tooltip contentStyle={ttip} formatter={v => `${v}%`} />
+                        <Tooltip content={<ShipmentTooltip T={T} formatter={v => `${v}%`} />} allowEscapeViewBox={{ x: true, y: false }} />
                         <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
                         <Bar dataKey="failed"    stackId="a" fill={C.failed}    name="FAILED" />
                         <Bar dataKey="delivered" stackId="a" fill={C.delivered} name="DELIVERED" />
