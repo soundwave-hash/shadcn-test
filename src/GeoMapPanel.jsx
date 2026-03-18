@@ -41,6 +41,17 @@ function getTier(country) {
   return TIERS.find(t => vol >= t.min) ?? TIERS[TIERS.length - 1]
 }
 
+// ISO 3166-1 numeric codes used by world-atlas topojson
+const COUNTRY_ISO = {
+  'United States': '840',
+  'Canada':        '124',
+  'Mexico':        '484',
+  'Germany':       '276',
+  'Japan':         '392',
+  'South Korea':   '410',
+  'China':         '156',
+}
+
 const MIN_RADIUS = 8
 const MAX_RADIUS = 28
 
@@ -111,19 +122,27 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
         >
           <ZoomableGroup>
             <Geographies geography={GEO_URL}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    style={{
-                      default: { fill: landFill,      stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
-                      hover:   { fill: landFillHover,  stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
-                      pressed: { fill: landFill,      stroke: borderColor, strokeWidth: 0.6, outline: 'none' },
-                    }}
-                  />
-                ))
-              }
+              {({ geographies }) => {
+                const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
+                const selectedTierColor = selectedCountry ? getTier(selectedCountry).color : null
+                return geographies.map((geo) => {
+                  const isActiveCountry = geo.id === selectedIso
+                  const activeFill = isDark
+                    ? `${selectedTierColor}33`   // ~20% opacity tint of the tier color
+                    : `${selectedTierColor}44`
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      style={{
+                        default: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        hover:   { fill: isActiveCountry ? activeFill : landFillHover, stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        pressed: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                      }}
+                    />
+                  )
+                })
+              }}
             </Geographies>
 
             {Object.entries(COUNTRY_COORDS).map(([country, { lat, lng }]) => {
