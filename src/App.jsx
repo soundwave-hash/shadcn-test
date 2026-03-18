@@ -683,6 +683,8 @@ export default function App() {
   const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [dateRange, setDateRange] = useState('1M')
+  // Dashboard doesn't support 1D — clamp to 5D if arriving from unit sales
+  const dashboardRange = dateRange === '1D' ? '5D' : dateRange
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
   const T = THEME[theme]
   const dashboardRef = useRef(null)
@@ -690,14 +692,14 @@ export default function App() {
   // ── Export helpers ──
   function exportCSV() {
     const d = COUNTRY_DATA[country]
-    const rangeJitter = RANGE_KPI_JITTER[dateRange] ?? RANGE_KPI_JITTER['1M']
+    const rangeJitter = RANGE_KPI_JITTER[dashboardRange] ?? RANGE_KPI_JITTER['1M']
     const cards = [...d.kpi1, ...d.kpi2].map((k, i) => {
       const factor = getMultiCityScale(country, selectedCities) * (rangeJitter[i] ?? 1)
       return { ...k, primary: factor === 1 ? k.primary : scaleStr(k.primary, factor) }
     })
 
     const rows = [
-      ['Dashboard Export', `${country} | ${dateRange} | ${new Date().toLocaleString()}`],
+      ['Dashboard Export', `${country} | ${dashboardRange} | ${new Date().toLocaleString()}`],
       [],
       ['KPI Cards'],
       ['Label', 'Value'],
@@ -705,17 +707,17 @@ export default function App() {
       [],
       ['Shipment Count Over Time'],
       ['Date', 'Express', 'Ground', 'Priority', 'Same Day', 'Standard'],
-      ...buildTimeData(scaleRowData(d.time, getMultiCityScale(country, selectedCities)), dateRange)
+      ...buildTimeData(scaleRowData(d.time, getMultiCityScale(country, selectedCities)), dashboardRange)
         .map(r => [r.date, r.express ?? '', r.ground ?? '', r.priority ?? '', r.sameDay ?? '', r.standard ?? '']),
       [],
       ['Delivery Status Over Time'],
       ['Date', 'Delivered %', 'Failed %', 'Canceled %'],
-      ...buildStatusData(d.status, dateRange).map(r => [r.date, r.delivered, r.failed, r.canceled]),
+      ...buildStatusData(d.status, dashboardRange).map(r => [r.date, r.delivered, r.failed, r.canceled]),
     ]
 
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    saveAs(blob, `warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.csv`)
+    saveAs(blob, `warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dashboardRange}.csv`)
   }
 
   async function exportPDF() {
@@ -728,7 +730,7 @@ export default function App() {
     const imgData = canvas.toDataURL('image/png')
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] })
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2)
-    pdf.save(`warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.pdf`)
+    pdf.save(`warehouseiq-${country.replace(/\s+/g, '-').toLowerCase()}-${dashboardRange}.pdf`)
   }
 
   async function exportChartPNG() {
@@ -740,7 +742,7 @@ export default function App() {
       backgroundColor: T.panelBg,
       useCORS: true,
     })
-    canvas.toBlob(blob => saveAs(blob, `warehouseiq-charts-${country.replace(/\s+/g, '-').toLowerCase()}-${dateRange}.png`))
+    canvas.toBlob(blob => saveAs(blob, `warehouseiq-charts-${country.replace(/\s+/g, '-').toLowerCase()}-${dashboardRange}.png`))
   }
   const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px' }
   const ttip  = { backgroundColor: T.tooltipBg, border: `1px solid ${T.tooltipBorder}`, color: T.text, fontSize:11 }
@@ -826,18 +828,18 @@ export default function App() {
     : selectedCities.length === 1
       ? selectedCities[0]
       : 'Multiple'
-  const rangeJitter = RANGE_KPI_JITTER[dateRange] ?? RANGE_KPI_JITTER['1M']
+  const rangeJitter = RANGE_KPI_JITTER[dashboardRange] ?? RANGE_KPI_JITTER['1M']
   const displayKpiCards = kpiCards.map((k, i) => {
     const factor = cityScale * (rangeJitter[i] ?? 1)
     if (factor === 1) return k
     return { ...k, primary: scaleStr(k.primary, factor), secondary: scaleStr(k.secondary, factor) }
   })
 
-  const rangeMultiplier = RANGE_MULTIPLIER[dateRange] ?? 1
+  const rangeMultiplier = RANGE_MULTIPLIER[dashboardRange] ?? 1
   const scaledCarriers = scaleRowData(d.carriers, cityScale * rangeMultiplier)
   const scaledFailure  = scaleRowData(d.failure,  cityScale * rangeMultiplier)
-  const timeData       = buildTimeData(scaleRowData(d.time, cityScale), dateRange)
-  const statusData     = buildStatusData(d.status, dateRange)
+  const timeData       = buildTimeData(scaleRowData(d.time, cityScale), dashboardRange)
+  const statusData     = buildStatusData(d.status, dashboardRange)
 
   const carrierData = scaledCarriers.map(r => ({
     ...r,
@@ -880,10 +882,10 @@ export default function App() {
         <div style={{ display:'flex', gap:4 }}>
           {['5D','1M','6M','YTD'].map(r => (
             <button key={r} onClick={() => setDateRange(r)} style={{
-              background: r === dateRange ? '#00bcd4' : 'transparent',
-              color:      r === dateRange ? '#111' : T.textDim,
+              background: r === dashboardRange ? '#00bcd4' : 'transparent',
+              color:      r === dashboardRange ? '#111' : T.textDim,
               border: `1px solid #00bcd4`, fontSize:11, padding:'1.5px 0', width:42, textAlign:'center',
-              borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
+              borderRadius:4, cursor:'pointer', fontWeight: r === dashboardRange ? 700 : 400,
               transition:'all 0.15s',
             }}>{r}</button>
           ))}
@@ -1018,7 +1020,7 @@ export default function App() {
               key={kpi.label + kpi.primary}
               {...kpi}
               country={country}
-              dateRange={dateRange}
+              dateRange={dashboardRange}
               isDragging={dragIdx === i}
               isOver={(overIdx === i && dragIdx !== i) || pressedIdx === i}
               T={T}
@@ -1101,8 +1103,8 @@ export default function App() {
                 <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:10 }}>
                   <span style={{ fontSize:12, fontWeight:600, color: T.text }}>Shipment Count Over Time</span>
                   <span style={{ fontSize:10, color: T.textDim }}>
-                    — {dateRange === '5D' ? 'Last 5 Days' : dateRange === '1M' ? 'Last Month' : dateRange === '6M' ? 'Last 6 Months' : 'Year to Date'}
-                    {dateRange !== 'YTD' && ` (${timeData[0]?.date} – ${timeData[timeData.length-1]?.date})`}
+                    — {dashboardRange === '5D' ? 'Last 5 Days' : dashboardRange === '1M' ? 'Last Month' : dashboardRange === '6M' ? 'Last 6 Months' : 'Year to Date'}
+                    {dashboardRange !== 'YTD' && ` (${timeData[0]?.date} – ${timeData[timeData.length-1]?.date})`}
                   </span>
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
@@ -1112,7 +1114,7 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
                         <XAxis dataKey="date" stroke={T.border}
                           tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value: dateRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
@@ -1176,7 +1178,7 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
                         <XAxis dataKey="date" stroke={T.border}
                           tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value: dateRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
+                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
                         <Tooltip contentStyle={ttip} formatter={v => `${v}%`} />
                         <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
