@@ -720,6 +720,10 @@ export default function App() {
   const T = THEME[theme]
   const dashboardRef = useRef(null)
 
+  // ── Carrier chart: fix tooltip position to top bar (highest orders) ──
+  const [carrierTipPos, setCarrierTipPos] = useState(null)
+  useEffect(() => { setCarrierTipPos(null) }, [country])
+
   // ── Export helpers ──
   function exportCSV() {
     const d = COUNTRY_DATA[country]
@@ -1103,11 +1107,17 @@ export default function App() {
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={360}>
-                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:0 }} barSize={12}>
+                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:0 }} barSize={12}
+                        onMouseMove={e => {
+                          if (!carrierTipPos && e?.activeTooltipIndex === 0 && e?.activeCoordinate) {
+                            setCarrierTipPos({ x: e.activeCoordinate.x, y: e.activeCoordinate.y })
+                          }
+                        }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
                         <YAxis type="category" dataKey="carrier" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} width={120} />
-                        <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
+                        <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             {ki === CARRIER_KEYS.length - 1 && (
