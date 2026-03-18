@@ -1107,7 +1107,7 @@ export default function App() {
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <ResponsiveContainer width="100%" height={360}>
-                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:0 }} barSize={12}
+                      <BarChart layout="vertical" data={carrierData} margin={{ top:0, right:60, bottom:0, left:8 }} barSize={12}
                         onMouseMove={e => {
                           if (!carrierTipPos && e?.activeTooltipIndex === 0 && e?.activeCoordinate) {
                             setCarrierTipPos({ x: e.activeCoordinate.x, y: e.activeCoordinate.y })
@@ -1116,17 +1116,16 @@ export default function App() {
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
-                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={false} width={150} />
+                        <YAxis type="category" dataKey="carrier" stroke={T.border} width={160} interval={0}
+                          tick={({ x, y, payload }) => (
+                            <text x={x - 4} y={y} textAnchor="end" dominantBaseline="middle" fill={T.axTick} fontSize={10}>
+                              {payload.value}
+                            </text>
+                          )}
+                        />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
-                            {ki === 0 && (
-                              <LabelList dataKey="carrier"
-                                content={({ x, y, height, value }) => (
-                                  <text x={x - 6} y={y + height / 2} textAnchor="end" fill={T.axTick} fontSize={10} dominantBaseline="middle">{value}</text>
-                                )}
-                              />
-                            )}
                             {ki === CARRIER_KEYS.length - 1 && (
                               <LabelList dataKey="_total" position="right"
                                 content={({ x, y, width, height, value }) =>
