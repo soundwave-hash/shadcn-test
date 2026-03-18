@@ -196,7 +196,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
             <Geographies geography={GEO_URL}>
               {({ geographies }) => {
                 const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
-                const selectedTierColor = selectedCountry ? getTier(selectedCountry).color : null
+                const selectedTierColor = selectedCountry ? getTier(selectedCountry, tiers, volumes).color : null
                 return geographies.map((geo) => {
                   const isActiveCountry = geo.id === selectedIso
                   const activeFill = isDark
