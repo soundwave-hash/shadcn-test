@@ -333,6 +333,15 @@ function MetricGauge({ period, invScale, checked, T }) {
   )
 }
 
+// ── Custom cursor — extends 20px above the plot area ───────────────────────────
+function ExtendedCursor({ x, y, height }) {
+  if (x == null) return null
+  return (
+    <line x1={x} y1={y - 20} x2={x} y2={y + height}
+      stroke="#444" strokeWidth={1} strokeDasharray="4 3" />
+  )
+}
+
 // ── Custom tooltip ─────────────────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label, template, ttipStyle }) {
   if (!active || !payload?.length) return null
@@ -927,7 +936,7 @@ export default function KpiDetailPage({
                     )
                   }}/>
                   <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
-                  <Tooltip content={() => null} cursor={{ stroke:'#444', strokeWidth:1, strokeDasharray:'4 3' }}/>
+                  <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
                   {/* Shading band — drawn before grid so grid renders on top */}
                   <Area type="monotone" dataKey="upper" fill="rgba(0,188,212,0.15)" stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
