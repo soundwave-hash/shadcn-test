@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Sun, Download } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
+import GeoScreen from './GeoScreen'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -881,6 +882,37 @@ export default function App() {
     _total: CARRIER_KEYS.reduce((s, k) => s + (r[k] || 0), 0),
   }))
 
+  if (view === 'geo') {
+    return (
+      <div style={{ backgroundColor: T.bg, minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color: T.text }}>
+        {/* ── Menu bar ── */}
+        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
+          <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
+          <span style={{ color: T.sep, fontSize:12 }}>|</span>
+          {[{id:'dashboard', label:'Dashboard'}, {id:'geo', label:'Geo Flow'}].map(tab => (
+            <button key={tab.id} onClick={() => setView(tab.id)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize:12, fontWeight: view === tab.id ? 700 : 400,
+              color: view === tab.id ? '#00bcd4' : T.textMuted,
+              borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
+              padding: '0 4px', height:40,
+            }}>{tab.label}</button>
+          ))}
+          <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+            <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
+              width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+              backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+              <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+            </button>
+          </div>
+        </div>
+        <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} />
+      </div>
+    )
+  }
+
   if (view === 'detail' && selectedKpiLabel) {
     const currentKpi = [...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2]
       .find(k => k.label === selectedKpiLabel) || kpiCards[0]
@@ -912,7 +944,15 @@ export default function App() {
           WarehouseIQ
         </span>
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
-        <span style={{ fontSize:12, color: T.textMuted }}>Shipping Dashboard</span>
+        {[{id:'dashboard', label:'Dashboard'}, {id:'geo', label:'Geo Flow'}].map(tab => (
+          <button key={tab.id} onClick={() => setView(tab.id)} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize:12, fontWeight: view === tab.id ? 700 : 400,
+            color: view === tab.id ? '#00bcd4' : T.textMuted,
+            borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
+            padding: '0 4px', height:40,
+          }}>{tab.label}</button>
+        ))}
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
         <div style={{ display:'flex', gap:4 }}>
           {['5D','1M','6M','YTD'].map(r => (
