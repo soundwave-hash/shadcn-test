@@ -10,22 +10,18 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
     : []
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'row', gap: 16, alignItems: 'stretch' }}>
-      <div style={{ flex: '0 0 40%', minWidth: 0 }}>
-        <GeoMapPanel
-          selectedCountry={selectedCountry}
-          onCountrySelect={setSelectedCountry}
-          dateRange={dateRange}
-          T={T}
-        />
-      </div>
-      <div style={{ flex: '0 0 calc(60% - 16px)', minWidth: 0 }}>
-        <SankeyPanel
-          country={selectedCountry || 'Global'}
-          carrierRows={carrierRows}
-          T={T}
-        />
-      </div>
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <GeoMapPanel
+        selectedCountry={selectedCountry}
+        onCountrySelect={setSelectedCountry}
+        dateRange={dateRange}
+        T={T}
+      />
+      <SankeyPanel
+        country={selectedCountry || 'Global'}
+        carrierRows={carrierRows}
+        T={T}
+      />
     </div>
   )
 }
