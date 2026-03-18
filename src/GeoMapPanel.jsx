@@ -289,7 +289,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                     dy={scaledR + 12}
                     style={{
                       fontSize: 9,
-                      fontWeight: isSelected ? 700 : 400,
+                      fontWeight: isSelected || isHovered ? 700 : 400,
                       fill: isSelected ? tier.color : T.textMuted,
                       fontFamily: 'inherit',
                       pointerEvents: 'none',
