@@ -72,16 +72,38 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     const nodes = [];
     const links = [];
 
+    // Collapse carriers below 5% of total volume into "Other"
+    const CARRIER_KEYS = ['express','ground','priority','sameDay','standard','freight','returns','unknown'];
+    const rowTotals = carrierRows.map(row => ({
+      ...row,
+      _total: CARRIER_KEYS.reduce((s, k) => s + (row[k] || 0), 0),
+    }));
+    const grandTotal = rowTotals.reduce((s, r) => s + r._total, 0);
+    const threshold = grandTotal * 0.05;
+
+    const mainRows = rowTotals.filter(r => r._total >= threshold);
+    const otherRows = rowTotals.filter(r => r._total < threshold);
+
+    let collapsedRows = mainRows;
+    if (otherRows.length > 0) {
+      const otherMerged = { carrier: 'Other', _total: 0 };
+      CARRIER_KEYS.forEach(k => {
+        otherMerged[k] = otherRows.reduce((s, r) => s + (r[k] || 0), 0);
+        otherMerged._total += otherMerged[k];
+      });
+      collapsedRows = [...mainRows, otherMerged];
+    }
+
     // Carrier nodes
     const carrierIndexMap = {};
-    carrierRows.forEach((row, i) => {
+    collapsedRows.forEach(row => {
       carrierIndexMap[row.carrier] = nodes.length;
       nodes.push({ name: row.carrier, kind: 'carrier' });
     });
 
     // Which type keys have any volume > 0
     const activeTypeKeys = TYPE_KEYS.filter(key =>
-      carrierRows.some(row => (row[key] || 0) > 0)
+      collapsedRows.some(row => (row[key] || 0) > 0)
     );
 
     // Type nodes
@@ -103,7 +125,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     const typeVolumes = {};
     activeTypeKeys.forEach(k => { typeVolumes[k] = 0; });
 
-    carrierRows.forEach(row => {
+    collapsedRows.forEach(row => {
       const carrierIdx = carrierIndexMap[row.carrier];
       activeTypeKeys.forEach(key => {
         const val = row[key] || 0;
