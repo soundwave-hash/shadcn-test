@@ -33,7 +33,7 @@ const COUNTRY_VOLUMES = {
 const TIERS = [
   { label: 'High',   min: 100000, color: '#e91e63' },
   { label: 'Mid',    min: 50000,  color: '#00bcd4' },
-  { label: 'Low',    min: 0,      color: '#4fc3f7' },
+  { label: 'Low',    min: 0,      color: '#ff9800' },
 ]
 
 function getTier(country) {
