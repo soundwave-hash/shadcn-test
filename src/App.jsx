@@ -627,20 +627,27 @@ const LEGEND_ITEMS  = [
 ]
 
 // ── Shipment chart tooltip — shifts left/right so it never covers the active bar ──
-function ShipmentTooltip({ active, payload, label, coordinate, viewBox, contentStyle }) {
+function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T }) {
   if (!active || !payload?.length) return null
-  const toRight = (coordinate?.x ?? 0) <= (viewBox?.width ?? 0) / 2
+  // Compare bar x to the midpoint of the actual plot area (viewBox.x is the left margin offset)
+  const midpoint = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
+  const toRight  = (coordinate?.x ?? 0) <= midpoint
   return (
     <div style={{
-      ...contentStyle,
+      backgroundColor: T.tooltipBg,
+      border: `1px solid ${T.tooltipBorder}`,
+      color: T.text,
+      fontSize: 11,
       borderRadius: 6,
       padding: '8px 10px',
       pointerEvents: 'none',
-      marginLeft: toRight ? 56 : -56,
+      // toRight: shift right so left edge clears the bar
+      // toLeft:  translateX(-100%) moves right edge to wrapper origin, then subtract gap
+      ...(toRight ? { marginLeft: 40 } : { transform: 'translateX(calc(-100% - 20px))' }),
     }}>
-      <div style={{ marginBottom:4, fontWeight:600, fontSize:11 }}>{label}</div>
+      <div style={{ marginBottom:4, fontWeight:600 }}>{label}</div>
       {payload.map(p => (
-        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, fontSize:11 }}>
+        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ width:8, height:8, borderRadius:'50%', backgroundColor:p.fill, flexShrink:0 }}/>
           <span>{p.name}: {Number(p.value).toLocaleString()}</span>
         </div>
@@ -1140,7 +1147,7 @@ export default function App() {
                           label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
-                        <Tooltip content={<ShipmentTooltip contentStyle={ttip} />} />
+                        <Tooltip content={<ShipmentTooltip T={T} />} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             <LabelList dataKey={k} position="center"
