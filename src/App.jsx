@@ -898,6 +898,18 @@ export default function App() {
               padding: '0 4px', height:40,
             }}>{tab.label}</button>
           ))}
+          <span style={{ color: T.sep, fontSize:12 }}>|</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['5D','1M','6M','YTD'].map(r => (
+              <button key={r} onClick={() => setDateRange(r)} style={{
+                background: r === dateRange ? '#00bcd4' : 'transparent',
+                color:      r === dateRange ? '#111' : T.textDim,
+                border: `1px solid #00bcd4`, fontSize:11, padding:'1.5px 0', width:42, textAlign:'center',
+                borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
+                transition:'all 0.15s',
+              }}>{r}</button>
+            ))}
+          </div>
           <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
             <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
               width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
@@ -908,7 +920,7 @@ export default function App() {
             </button>
           </div>
         </div>
-        <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} />
+        <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
       </div>
     )
   }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import GeoMapPanel from './GeoMapPanel'
 import SankeyPanel from './SankeyPanel'
 
-export default function GeoScreen({ countryData, theme, T }) {
+export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onDateRangeChange }) {
   const [selectedCountry, setSelectedCountry] = useState(null)
 
   const carrierRows = selectedCountry && countryData[selectedCountry]
@@ -11,14 +11,12 @@ export default function GeoScreen({ countryData, theme, T }) {
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Top row: map */}
       <GeoMapPanel
         selectedCountry={selectedCountry}
         onCountrySelect={setSelectedCountry}
+        dateRange={dateRange}
         T={T}
       />
-
-      {/* Bottom row: sankey */}
       <SankeyPanel
         country={selectedCountry || 'Global'}
         carrierRows={carrierRows}

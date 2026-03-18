@@ -19,26 +19,66 @@ const COUNTRY_COORDS = {
   'China':         { lat: 35.9,  lng: 104.2   },
 }
 
-const COUNTRY_VOLUMES = {
-  'United States': 95760,
-  'Canada':        42300,
-  'Mexico':        25800,
-  'Germany':       58200,
-  'Japan':         72400,
-  'South Korea':   65200,
-  'China':         198400,
+const COUNTRY_VOLUMES_BY_RANGE = {
+  '5D': {
+    'United States': 16200,
+    'Canada':         7100,
+    'Mexico':         4300,
+    'Germany':        9700,
+    'Japan':         12100,
+    'South Korea':   10900,
+    'China':         33200,
+  },
+  '1M': {
+    'United States': 95760,
+    'Canada':        42300,
+    'Mexico':        25800,
+    'Germany':       58200,
+    'Japan':         72400,
+    'South Korea':   65200,
+    'China':        198400,
+  },
+  '6M': {
+    'United States': 574600,
+    'Canada':        253800,
+    'Mexico':        154800,
+    'Germany':       349200,
+    'Japan':         434400,
+    'South Korea':   391200,
+    'China':        1190400,
+  },
+  'YTD': {
+    'United States': 239400,
+    'Canada':        105750,
+    'Mexico':         64500,
+    'Germany':        145500,
+    'Japan':          181000,
+    'South Korea':    163000,
+    'China':          496000,
+  },
 }
 
-// 3-tier thresholds
-const TIERS = [
-  { label: 'High',   min: 100000, color: '#e91e63' },
-  { label: 'Mid',    min: 50000,  color: '#00bcd4' },
-  { label: 'Low',    min: 0,      color: '#ff9800' },
+const TIER_COLORS = [
+  { label: 'High', color: '#e91e63' },
+  { label: 'Mid',  color: '#00bcd4' },
+  { label: 'Low',  color: '#ff9800' },
 ]
 
-function getTier(country) {
-  const vol = COUNTRY_VOLUMES[country] ?? 0
-  return TIERS.find(t => vol >= t.min) ?? TIERS[TIERS.length - 1]
+// Compute tiers dynamically so Low/Mid/High always distribute across the current range's volumes
+function computeTiers(volumes) {
+  const vals = Object.values(volumes).sort((a, b) => a - b)
+  const low  = vals[Math.floor(vals.length * 0.33)]
+  const high = vals[Math.floor(vals.length * 0.66)]
+  return [
+    { ...TIER_COLORS[0], min: high },
+    { ...TIER_COLORS[1], min: low  },
+    { ...TIER_COLORS[2], min: 0    },
+  ]
+}
+
+function getTier(country, tiers, volumes) {
+  const vol = volumes[country] ?? 0
+  return tiers.find(t => vol >= t.min) ?? tiers[tiers.length - 1]
 }
 
 const DEFAULT_VIEW = { zoom: 1, center: [15, 20] }
@@ -68,18 +108,21 @@ const COUNTRY_ISO = {
 const MIN_RADIUS = 8
 const MAX_RADIUS = 28
 
-function getBubbleRadius(country) {
-  const volumes = Object.values(COUNTRY_VOLUMES)
-  const min = Math.min(...volumes)
-  const max = Math.max(...volumes)
-  const vol = COUNTRY_VOLUMES[country]
-  const t = (vol - min) / (max - min)
+function getBubbleRadius(country, volumes) {
+  const vals = Object.values(volumes)
+  const min = Math.min(...vals)
+  const max = Math.max(...vals)
+  const vol = volumes[country] ?? min
+  const t = max === min ? 0.5 : (vol - min) / (max - min)
   return MIN_RADIUS + t * (MAX_RADIUS - MIN_RADIUS)
 }
 
-export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
+export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRange = '1M', T }) {
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [mapView, setMapView] = useState(DEFAULT_VIEW)
+
+  const volumes = COUNTRY_VOLUMES_BY_RANGE[dateRange] ?? COUNTRY_VOLUMES_BY_RANGE['1M']
+  const tiers   = computeTiers(volumes)
 
   useEffect(() => {
     setMapView(selectedCountry && COUNTRY_VIEW[selectedCountry]
@@ -112,20 +155,20 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
           </div>
           <div style={{ fontSize: 11, color: selectedCountry ? '#00bcd4' : T.textMuted, marginTop: 2, minHeight: 16 }}>
             {selectedCountry
-              ? `${selectedCountry} — ${COUNTRY_VOLUMES[selectedCountry]?.toLocaleString()} shipments`
+              ? `${selectedCountry} — ${volumes[selectedCountry]?.toLocaleString()} shipments`
               : 'Select a country'}
           </div>
         </div>
 
         {/* Legend */}
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          {TIERS.map(tier => (
+          {tiers.map(tier => (
             <div key={tier.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <svg width={12} height={12}>
                 <circle cx={6} cy={6} r={5} fill={tier.color} fillOpacity={0.8} />
               </svg>
               <span style={{ fontSize: 10, color: T.textMuted, whiteSpace: 'nowrap' }}>
-                {tier.label === 'High' ? '> 100K' : tier.label === 'Mid' ? '50K – 100K' : '< 50K'}
+                {tier.label}
               </span>
             </div>
           ))}
@@ -169,9 +212,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
             {Object.entries(COUNTRY_COORDS).map(([country, { lat, lng }]) => {
               const isSelected  = country === selectedCountry
               const isHovered   = country === hoveredCountry
-              const radius      = getBubbleRadius(country)
+              const radius      = getBubbleRadius(country, volumes)
               const scaledR     = isSelected ? radius * 1.18 : radius
-              const tier        = getTier(country)
+              const tier        = getTier(country, tiers, volumes)
               const fillColor   = isSelected ? '#fff' : tier.color
               const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
               const strokeColor = isSelected ? '#fff' : tier.color
@@ -222,7 +265,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                       userSelect: 'none',
                     }}
                   >
-                    {(COUNTRY_VOLUMES[country] / 1000).toFixed(0)}K
+                    {volumes[country] >= 1000000
+                      ? (volumes[country] / 1000000).toFixed(1) + 'M'
+                      : (volumes[country] / 1000).toFixed(0) + 'K'}
                   </text>
                   <text
                     textAnchor="middle"
