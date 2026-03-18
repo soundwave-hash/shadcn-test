@@ -217,11 +217,18 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
               }}
             </Geographies>
 
-            {Object.entries(COUNTRY_COORDS).map(([country, { lat, lng }]) => {
+            {Object.entries(COUNTRY_COORDS)
+              // Render hovered/selected last so they sit on top of nearby bubbles
+              .sort(([a], [b]) => {
+                const aScore = a === selectedCountry ? 2 : a === hoveredCountry ? 1 : 0
+                const bScore = b === selectedCountry ? 2 : b === hoveredCountry ? 1 : 0
+                return aScore - bScore
+              })
+              .map(([country, { lat, lng }]) => {
               const isSelected  = country === selectedCountry
               const isHovered   = country === hoveredCountry
               const radius      = getBubbleRadius(country, volumes, dateRange)
-              const scaledR     = isSelected ? radius * 1.18 : isHovered ? radius * 1.12 : radius
+              const scaledR     = isSelected ? radius * 1.18 : isHovered ? radius * 1.15 : radius
               const tier        = getTier(country, tiers, volumes)
               const fillColor   = isSelected ? '#fff' : tier.color
               const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
