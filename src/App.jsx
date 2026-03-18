@@ -643,7 +643,7 @@ function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T }) {
       pointerEvents: 'none',
       // toRight: shift right so left edge clears the bar
       // toLeft:  translateX(-100%) moves right edge to wrapper origin, then subtract gap
-      ...(toRight ? { marginLeft: 40 } : { transform: 'translateX(calc(-100% - 20px))' }),
+      ...(toRight ? { marginLeft: 40 } : { transform: 'translateX(calc(-100% - 60px))' }),
     }}>
       <div style={{ marginBottom:4, fontWeight:600 }}>{label}</div>
       {payload.map(p => (
@@ -1147,7 +1147,7 @@ export default function App() {
                           label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
-                        <Tooltip content={<ShipmentTooltip T={T} />} />
+                        <Tooltip content={<ShipmentTooltip T={T} />} allowEscapeViewBox={{ x: true, y: false }} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             <LabelList dataKey={k} position="center"
