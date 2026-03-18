@@ -105,16 +105,22 @@ const COUNTRY_ISO = {
   'China':         '156',
 }
 
-const MIN_RADIUS = 8
-const MAX_RADIUS = 28
+// Per-range radius bounds — 5D has a larger minimum so numbers stay readable
+const RADIUS_BY_RANGE = {
+  '5D':  { min: 16, max: 26 },
+  '1M':  { min: 10, max: 30 },
+  'YTD': { min: 12, max: 34 },
+  '6M':  { min: 14, max: 38 },
+}
 
-function getBubbleRadius(country, volumes) {
+function getBubbleRadius(country, volumes, dateRange) {
+  const { min: minR, max: maxR } = RADIUS_BY_RANGE[dateRange] ?? RADIUS_BY_RANGE['1M']
   const vals = Object.values(volumes)
-  const min = Math.min(...vals)
-  const max = Math.max(...vals)
-  const vol = volumes[country] ?? min
-  const t = max === min ? 0.5 : (vol - min) / (max - min)
-  return MIN_RADIUS + t * (MAX_RADIUS - MIN_RADIUS)
+  const minV = Math.min(...vals)
+  const maxV = Math.max(...vals)
+  const vol = volumes[country] ?? minV
+  const t = maxV === minV ? 0.5 : (vol - minV) / (maxV - minV)
+  return minR + t * (maxR - minR)
 }
 
 export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRange = '1M', T }) {
@@ -212,7 +218,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
             {Object.entries(COUNTRY_COORDS).map(([country, { lat, lng }]) => {
               const isSelected  = country === selectedCountry
               const isHovered   = country === hoveredCountry
-              const radius      = getBubbleRadius(country, volumes)
+              const radius      = getBubbleRadius(country, volumes, dateRange)
               const scaledR     = isSelected ? radius * 1.18 : radius
               const tier        = getTier(country, tiers, volumes)
               const fillColor   = isSelected ? '#fff' : tier.color
@@ -257,7 +263,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                     textAnchor="middle"
                     dy="0.35em"
                     style={{
-                      fontSize: scaledR >= 16 ? 8 : 6,
+                      fontSize: 8,
                       fontWeight: 700,
                       fill: isSelected ? tier.color : (isDark ? '#111' : '#fff'),
                       fontFamily: 'inherit',
