@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
 import {
   ComposedChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -41,86 +42,53 @@ const PERIODS = ['1D','5D','1M','6M','YTD']
 
 const STATUS_C = { good:'#4caf50', watch:'#ff9800', low:'#f44336' }
 
-// ── Grocery leaderboard data (20 items) ───────────────────────────────────────
-// Inventory is sized to give a realistic spread of WoS across the 20 items:
-//   Good (≥8 wks): Eggs, Whole Milk, Chicken, Pasta, Ground Beef, Tortillas
-//   Watch (4–8 wks): Sourdough, Cheddar, White Rice, Strawberries, Frozen Pizza, Sour Cream, Cream Cheese, Cereal
-//   Low  (<4 wks): Bananas, Russet Potatoes, Greek Yogurt, OJ, Butter, Baby Spinach
-const BASE_ITEMS = [
-  { name:'Bananas (lb)',        dailyAvg:1820, inventory: 38200 }, // ~3.0 wks → Low
-  { name:'Eggs (12pk)',         dailyAvg:1560, inventory: 98300 }, // ~9.0 wks → Good
-  { name:'Whole Milk (gal)',    dailyAvg:1240, inventory: 69400 }, // ~8.0 wks → Good
-  { name:'Russet Potatoes',     dailyAvg: 920, inventory: 22100 }, // ~3.4 wks → Low
-  { name:'Chicken Breast',      dailyAvg: 842, inventory: 47200 }, // ~8.0 wks → Good
-  { name:'Sourdough Bread',     dailyAvg: 680, inventory: 21400 }, // ~4.5 wks → Watch
-  { name:'Greek Yogurt',        dailyAvg: 620, inventory: 15500 }, // ~3.6 wks → Low
-  { name:'Pasta (16oz)',        dailyAvg: 440, inventory: 34300 }, // ~11.2 wks → Good
-  { name:'Cheddar Cheese',      dailyAvg: 380, inventory: 14900 }, // ~5.6 wks → Watch
-  { name:'White Rice (5lb)',    dailyAvg: 290, inventory: 10200 }, // ~5.0 wks → Watch
-  { name:'Orange Juice (64oz)', dailyAvg: 760, inventory: 14400 }, // ~2.7 wks → Low
-  { name:'Ground Beef (1lb)',   dailyAvg: 510, inventory: 31600 }, // ~8.9 wks → Good
-  { name:'Butter (1lb)',        dailyAvg: 340, inventory:  7800 }, // ~3.3 wks → Low
-  { name:'Baby Spinach (5oz)',  dailyAvg: 270, inventory:  4600 }, // ~2.4 wks → Low
-  { name:'Strawberries (1lb)',  dailyAvg: 890, inventory: 42700 }, // ~6.9 wks → Watch
-  { name:'Frozen Pizza',        dailyAvg: 460, inventory: 18200 }, // ~5.6 wks → Watch
-  { name:'Sour Cream (16oz)',   dailyAvg: 210, inventory: 11200 }, // ~7.6 wks → Watch
-  { name:'Cream Cheese (8oz)',  dailyAvg: 195, inventory:  9400 }, // ~6.9 wks → Watch
-  { name:'Tortillas (20ct)',    dailyAvg: 330, inventory: 25400 }, // ~11.0 wks → Good
-  { name:'Cereal (18oz)',       dailyAvg: 175, inventory:  6100 }, // ~5.0 wks → Watch
-]
+// BASE_ITEMS imported from ./data/groceryProducts — full catalog with per-product
+// country distribution profiles. Total dailyAvg/inventory are global figures;
+// country and city level values are derived from COUNTRY_SALES_PROFILES / COUNTRY_INV_PROFILES.
 
 const PERIOD_SCALE = { '1D':1.0, '5D':1.02, '1M':0.98, '6M':0.92, 'YTD':0.88 }
 
-// Cumulative days per period — makes leaderboard unit sales match the chart's total
+// Cumulative days per period
 const PERIOD_DAYS = { '1D': 1, '5D': 5, '1M': 30, '6M': 182, 'YTD': 300 }
 
-// Inventory scale factors by country — controls WoS and thus health score
-const COUNTRY_INV_SCALE = {
-  'United States': 1.5,   // ~55% At Risk
-  'Canada':        2.5,   // ~85% Healthy
-  'Mexico':        0.8,   // ~10% Critical
-  'Germany':       2.0,   // ~70% Healthy
-  'Japan':         3.0,   // ~95% Healthy
-  'Korea':         1.2,   // ~30% At Risk
-  'China':         0.65,  // ~0%  Critical
+// Simplified country scale used ONLY for non-Unit-Sales KPI card baseValue scaling.
+// Unit sales leaderboard and chart use per-product COUNTRY_SALES_PROFILES instead.
+const KPI_COUNTRY_SCALE = {
+  'United States': 1.00, 'Canada': 0.20, 'Mexico': 0.10,
+  'Germany': 0.10, 'Japan': 0.05, 'Korea': 0.02, 'China': 3.50,
 }
 
-// Country-level unit sales scale relative to US baseline
-const COUNTRY_SALES_SCALE = {
-  'United States': 1.00,  // baseline
-  'Canada':        0.20,  // -80%
-  'Mexico':        0.10,  // -110%
-  'Germany':       0.10,  // -110%
-  'Japan':         0.05,  // -200%
-  'Korea':         0.02,  // -300%
-  'China':         3.50,  // +250%
+// ── Per-product regional helpers ───────────────────────────────────────────────
+
+function getProductSalesFrac(item, country, cities = []) {
+  if (!country || country === 'All') return 1
+  const prof = COUNTRY_SALES_PROFILES[item.profile] ?? COUNTRY_SALES_PROFILES.Balanced
+  const countryFrac = prof[country] ?? 0
+  if (cities.length === 0) return countryFrac
+  const cityFrac = cities.reduce((s, c) => s + (CITY_FRACTIONS[country]?.[c] ?? 0), 0)
+  return countryFrac * cityFrac
 }
 
-// City-level fraction of country inventory (values sum to ~1.0 per country)
-const CITY_INV_SCALE = {
-  'United States': { All:1.0, 'New York':0.20, 'Los Angeles':0.17, 'Chicago':0.16, 'Houston':0.19, 'Phoenix':0.14, 'Philadelphia':0.14 },
-  'Canada':        { All:1.0, 'Toronto':0.30,  'Vancouver':0.20,   'Montreal':0.22,'Calgary':0.12,  'Ottawa':0.09,   'Edmonton':0.07  },
-  'Mexico':        { All:1.0, 'Mexico City':0.32,'Guadalajara':0.22,'Monterrey':0.16,'Puebla':0.14, 'Tijuana':0.09,  'León':0.07      },
-  'Germany':       { All:1.0, 'Berlin':0.20,   'Munich':0.22,      'Hamburg':0.17, 'Frankfurt':0.19,'Cologne':0.12,  'Stuttgart':0.10 },
-  'Japan':         { All:1.0, 'Tokyo':0.35,    'Osaka':0.26,       'Nagoya':0.13,  'Sapporo':0.11,  'Fukuoka':0.09,  'Kyoto':0.06    },
-  'Korea':         { All:1.0, 'Seoul':0.42,    'Busan':0.22,       'Incheon':0.14, 'Daegu':0.11,    'Gwangju':0.06,  'Daejeon':0.05  },
-  'China':         { All:1.0, 'Beijing':0.19,  'Shanghai':0.22,    'Guangzhou':0.18,'Shenzhen':0.15,'Chengdu':0.15,  'Wuhan':0.11    },
+function getProductInvFrac(item, country, cities = []) {
+  if (!country || country === 'All') return 1
+  const prof = COUNTRY_INV_PROFILES[item.profile] ?? COUNTRY_INV_PROFILES.Balanced
+  const countryFrac = prof[country] ?? 0
+  if (cities.length === 0) return countryFrac
+  const cityFrac = cities.reduce((s, c) => s + (CITY_FRACTIONS[country]?.[c] ?? 0), 0)
+  return countryFrac * cityFrac
 }
 
-function getInvScale(country, location) {
-  const c = COUNTRY_INV_SCALE[country] ?? 1
-  const l = CITY_INV_SCALE[country]?.[location] ?? 1
-  return c * l
-}
-
-function buildLeaderboard(period, sortField, sortAsc, invScale = 1, salesScale = 1) {
+function buildLeaderboard(period, sortField, sortAsc, country = 'All', cities = []) {
   const days = PERIOD_DAYS[period] || 1
   const rows = BASE_ITEMS.map(item => {
-    const avgSales  = Math.round(item.dailyAvg * days * salesScale)
-    const scaledInv = item.inventory * invScale
-    const wos       = parseFloat((scaledInv / (item.dailyAvg * 7)).toFixed(1))
+    const salesFrac = getProductSalesFrac(item, country, cities)
+    const invFrac   = getProductInvFrac(item, country, cities)
+    const avgSales  = Math.round(item.dailyAvg * days * salesFrac)
+    const scaledInv = Math.round(item.inventory * invFrac)
+    const localAvg  = item.dailyAvg * salesFrac
+    const wos       = localAvg > 0 ? parseFloat((scaledInv / (localAvg * 7)).toFixed(1)) : 0
     const status    = wos >= 8 ? 'good' : wos >= 4 ? 'watch' : 'low'
-    return { name:item.name, avgSales, inventory:Math.round(scaledInv), wos, status }
+    return { name:item.name, category:item.category, subcategory:item.subcategory, avgSales, inventory:scaledInv, wos, status }
   })
   const key = sortField === 'wos' ? 'wos' : sortField === 'inventory' ? 'inventory' : 'avgSales'
   return [...rows].sort((a, b) => sortAsc ? a[key] - b[key] : b[key] - a[key])
@@ -259,13 +227,13 @@ const MAX_WOS   = Math.max(...BASE_ITEMS.map(i => i.inventory / (i.dailyAvg * 7)
 // Slight metric variation per period (longer periods smooth out spikes)
 const METRIC_PERIOD_SCALE = { '1D':1.0, '5D':0.97, '1M':1.04, '6M':0.93, 'YTD':0.90 }
 
-function MetricGauge({ period, invScale, checked, T }) {
+function MetricGauge({ period, country, selectedCities, checked, T }) {
   const cx=130, cy=130, r=90, sw=22
 
   const rows = useMemo(() => {
-    const all = buildLeaderboard(period, 'wos', true, invScale)
+    const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
     return checked.size === 0 ? [] : checked.size === BASE_ITEMS.length ? all : all.filter(r => checked.has(r.name))
-  }, [period, invScale, checked])
+  }, [period, country, selectedCities, checked])
   const totalSales = rows.reduce((s, r) => s + r.avgSales, 0)
   const goodSales  = rows.filter(r => r.status === 'good').reduce((s, r) => s + r.avgSales, 0)
   const weightedPct = totalSales === 0 ? 0 : goodSales / totalSales
@@ -366,15 +334,32 @@ function ChartTooltip({ active, payload, label, template, ttipStyle }) {
 }
 
 // ── Leaderboard ────────────────────────────────────────────────────────────────
-function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T }) {
+function Leaderboard({ period, country, selectedCities, checked, onCheckedChange, T }) {
   const setChecked = onCheckedChange
   const [sortField, setSortField] = useState('wos')
   const [sortAsc, setSortAsc]     = useState(true)   // WOS asc = worst first by default
   const [hovered, setHovered]     = useState(null)   // row hover
   const [hovCol, setHovCol]       = useState(null)   // column header hover
+  const [selCat, setSelCat]       = useState('All')  // department filter
+  const [selSub, setSelSub]       = useState('All')  // subcategory filter
 
-  const rows     = useMemo(() => buildLeaderboard(period, sortField, sortAsc, invScale, salesScale), [period, sortField, sortAsc, invScale, salesScale])
-  const maxSales = Math.max(...rows.map(r => r.avgSales))
+  const allRows  = useMemo(() => buildLeaderboard(period, sortField, sortAsc, country, selectedCities), [period, sortField, sortAsc, country, selectedCities])
+
+  const rows = useMemo(() => {
+    let r = allRows
+    if (selCat !== 'All') r = r.filter(row => row.category === selCat)
+    if (selSub !== 'All') r = r.filter(row => row.subcategory === selSub)
+    return r
+  }, [allRows, selCat, selSub])
+
+  const subcats = selCat === 'All' ? [] : (SUBCATEGORIES_BY_CATEGORY[selCat] ?? [])
+
+  function handleCatChange(cat) {
+    setSelCat(cat)
+    setSelSub('All')
+  }
+
+  const maxSales = Math.max(...rows.map(r => r.avgSales), 1)
 
   const allChecked  = rows.length > 0 && rows.every(r => checked.has(r.name))
   const someChecked = !allChecked && rows.some(r => checked.has(r.name))
@@ -397,8 +382,84 @@ function Leaderboard({ period, invScale, salesScale, checked, onCheckedChange, T
   return (
     <div style={{ backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'12px 10px', display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
       {/* Header */}
-      <div style={{ marginBottom:10, flexShrink:0 }}>
+      <div style={{ marginBottom:8, flexShrink:0 }}>
         <span style={{ fontSize:12, fontWeight:700, color: T.text }}>Product Leaderboard</span>
+      </div>
+
+      {/* Department / Category / Subcategory filters */}
+      <div style={{ display:'flex', gap:6, marginBottom:8, flexShrink:0, flexWrap:'wrap' }}>
+        {/* Department (category) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button style={{
+              backgroundColor: T.inputBg, border:`1px solid ${selCat !== 'All' ? '#00bcd4' : T.inputBorder}`,
+              color: selCat !== 'All' ? '#00bcd4' : T.inputText,
+              fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
+              display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
+            }}>
+              <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Dept</span>
+              {selCat === 'All' ? 'All' : selCat} ▾
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:160, zIndex:100 }}>
+            {['All', ...CATEGORIES].map(cat => (
+              <DropdownMenuItem
+                key={cat}
+                onClick={() => handleCatChange(cat)}
+                style={{
+                  fontSize:11, padding:'5px 12px', cursor:'pointer', color: T.text,
+                  backgroundColor: selCat === cat ? T.activeItemBg : 'transparent',
+                }}
+              >
+                {cat}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Subcategory — only shown when a department is selected */}
+        {selCat !== 'All' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={{
+                backgroundColor: T.inputBg, border:`1px solid ${selSub !== 'All' ? '#00bcd4' : T.inputBorder}`,
+                color: selSub !== 'All' ? '#00bcd4' : T.inputText,
+                fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
+                display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
+              }}>
+                <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sub</span>
+                {selSub === 'All' ? 'All' : selSub} ▾
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:180, zIndex:100 }}>
+              {['All', ...subcats].map(sub => (
+                <DropdownMenuItem
+                  key={sub}
+                  onClick={() => setSelSub(sub)}
+                  style={{
+                    fontSize:11, padding:'5px 12px', cursor:'pointer', color: T.text,
+                    backgroundColor: selSub === sub ? T.activeItemBg : 'transparent',
+                  }}
+                >
+                  {sub}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Reset pill — shown when any filter is active */}
+        {selCat !== 'All' && (
+          <button
+            onClick={() => { setSelCat('All'); setSelSub('All') }}
+            style={{
+              backgroundColor:'transparent', border:`1px solid ${T.border}`,
+              color: T.textMuted, fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
+            }}
+          >
+            ✕ Reset
+          </button>
+        )}
       </div>
 
       {/* Column headers */}
@@ -527,7 +588,7 @@ export default function KpiDetailPage({
 
   // ── Export helpers ──
   function exportCSV() {
-    const s = buildUnitSalesSeries(period, cityScale, selectedDailyTotal, country)
+    const s = buildUnitSalesSeries(period, 1, selectedDailyTotal, country)
     const rows = [
       ['Unit Sales Export', `${kpi.label} | ${country} | ${period} | ${new Date().toLocaleString()}`],
       [],
@@ -560,23 +621,21 @@ export default function KpiDetailPage({
     ? 'All'
     : selectedCities.length === 1 ? selectedCities[0] : 'Multiple'
 
-  const countrySalesScale = COUNTRY_SALES_SCALE[country] ?? 1
-  const citySalesScale = selectedCities.length === 0
+  // kpiCityScale: used only for non-Unit-Sales KPI card baseValue
+  const kpiCountrySc = KPI_COUNTRY_SCALE[country] ?? 1
+  const kpiCitySc = selectedCities.length === 0
     ? 1
     : selectedCities.reduce((sum, city) => sum + (cityScales[country]?.[city] ?? 0), 0)
-  const cityScale = countrySalesScale * citySalesScale
-  const invScale = selectedCities.length === 0
-    ? getInvScale(country, 'All')
-    : selectedCities.reduce((sum, city) => sum + getInvScale(country, city), 0)
-  const baseValue = parseNum(kpi.primary) * cityScale
+  const kpiCityScale = kpiCountrySc * kpiCitySc
+  const baseValue = parseNum(kpi.primary) * kpiCityScale
 
-  // When items are checked, sum only those items' daily averages
+  // selectedDailyTotal: sum of country/city-adjusted dailyAvg for checked items
   const allItemsChecked = checked.size === BASE_ITEMS.length
-  const selectedDailyTotal = checked.size === 0
-    ? 0
-    : allItemsChecked
-      ? LEADERBOARD_DAILY_TOTAL
-      : BASE_ITEMS.filter(item => checked.has(item.name)).reduce((s, item) => s + item.dailyAvg, 0)
+  const selectedDailyTotal = useMemo(() => {
+    if (checked.size === 0) return 0
+    const items = allItemsChecked ? BASE_ITEMS : BASE_ITEMS.filter(i => checked.has(i.name))
+    return items.reduce((s, item) => s + item.dailyAvg * getProductSalesFrac(item, country, selectedCities), 0)
+  }, [checked, allItemsChecked, country, selectedCities])
 
   const checkedLabel = !allItemsChecked && checked.size === 1
     ? [...checked][0]
@@ -584,11 +643,11 @@ export default function KpiDetailPage({
 
   const series = useMemo(() => {
     const s = kpi.label === 'Unit Sales'
-      ? buildUnitSalesSeries(period, cityScale, selectedDailyTotal, country)
+      ? buildUnitSalesSeries(period, 1, selectedDailyTotal, country)
       : buildSeries(baseValue, period)
     if (period === '1D') console.log('1D series[0..3]:', s.slice(0,4).map(p => ({label:p.label, ty:p.thisYear, ly:p.lastYear})), '...noon:', {label:s[12]?.label, ty:s[12]?.thisYear})
     return s
-  }, [kpi.label, period, cityScale, selectedDailyTotal, baseValue, country])
+  }, [kpi.label, period, selectedDailyTotal, baseValue, country])
 
   // Tight Y-axis domain so line separation is always visible
   const yDomain = useMemo(() => {
@@ -625,9 +684,9 @@ export default function KpiDetailPage({
 
   // Inventory health stats for context panel
   const healthRows = useMemo(() => {
-    const all = buildLeaderboard(period, 'wos', true, invScale)
+    const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
     return checked.size === 0 ? [] : allItemsChecked ? all : all.filter(r => checked.has(r.name))
-  }, [period, invScale, checked, allItemsChecked])
+  }, [period, country, selectedCities, checked, allItemsChecked])
   const goodItems   = healthRows.filter(r => r.status === 'good')
   const lowItems    = healthRows.filter(r => r.status === 'low').sort((a,b) => a.wos - b.wos)
   const totalSales  = healthRows.reduce((s, r) => s + r.avgSales, 0)
@@ -799,7 +858,7 @@ export default function KpiDetailPage({
 
         {/* LEFT: Leaderboard */}
         <div style={{ width:340, flexShrink:0, display:'flex', flexDirection:'column' }}>
-          <Leaderboard period={period} invScale={invScale} salesScale={cityScale} checked={checked} onCheckedChange={setChecked} T={T}/>
+          <Leaderboard period={period} country={country} selectedCities={selectedCities} checked={checked} onCheckedChange={setChecked} T={T}/>
         </div>
 
         {/* RIGHT: Meter + Chart */}
@@ -808,7 +867,7 @@ export default function KpiDetailPage({
           {/* Metric Meter */}
           <div style={{ ...panel, display:'flex', alignItems:'flex-start', gap:24, flexShrink:0, padding:'12px 20px' }}>
             <div style={{ flex:'0 0 auto' }}>
-              <MetricGauge period={period} invScale={invScale} checked={checked} T={T}/>
+              <MetricGauge period={period} country={country} selectedCities={selectedCities} checked={checked} T={T}/>
             </div>
             <div style={{ flex:1, borderLeft:`1px solid ${T.border}`, paddingLeft:24 }}>
               <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Inventory Health Context</div>
