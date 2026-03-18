@@ -158,10 +158,24 @@ export default function SankeyPanel({ country, carrierRows, T }) {
   const layout = useMemo(() => {
     if (!sankeyData || width < 50) return null;
 
+    // Dynamically compute margins so labels never overflow the panel
+    const CHAR_W = 6.2;  // approx px per character at 10px sans-serif
+    const PAD    = 12;   // gap between node edge and label
+
+    const longestCarrier = sankeyData.nodes
+      .filter(n => n.kind === 'carrier')
+      .reduce((max, n) => Math.max(max, n.name.length), 0);
+    const longestStatus = sankeyData.nodes
+      .filter(n => n.kind === 'status')
+      .reduce((max, n) => Math.max(max, n.name.length), 0);
+
+    const leftMargin  = Math.ceil(longestCarrier * CHAR_W) + PAD;
+    const rightMargin = Math.ceil(longestStatus  * CHAR_W) + PAD;
+
     const gen = sankey()
       .nodeWidth(16)
       .nodePadding(20)
-      .extent([[160, 10], [width - 110, HEIGHT - 10]]);
+      .extent([[leftMargin, 10], [width - rightMargin, HEIGHT - 10]]);
 
     // d3-sankey mutates the data, so deep clone
     const graph = gen({
@@ -202,7 +216,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
             Select a country on the map
           </div>
         ) : layout ? (
-          <svg width={width} height={HEIGHT} style={{ display: 'block', overflow: 'visible' }}>
+          <svg width={width} height={HEIGHT} style={{ display: 'block', overflow: 'hidden' }}>
             {/* Links */}
             {layout.links.map((link, i) => {
               const pathD = sankeyLinkHorizontal()(link);
