@@ -159,7 +159,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: T.text, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-            Global Shipment Volume — {dateRange}
+            Global Shipment Volume - {dateRange}
           </div>
           <div style={{ fontSize: 11, color: selectedCountry ? '#00bcd4' : T.textMuted, marginTop: 2, minHeight: 16 }}>
             {selectedCountry
