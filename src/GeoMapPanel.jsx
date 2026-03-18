@@ -135,9 +135,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                       key={geo.rsmKey}
                       geography={geo}
                       style={{
-                        default: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
-                        hover:   { fill: isActiveCountry ? activeFill : landFillHover, stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
-                        pressed: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? selectedTierColor : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        default: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        hover:   { fill: isActiveCountry ? activeFill : landFillHover, stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        pressed: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
                       }}
                     />
                   )
