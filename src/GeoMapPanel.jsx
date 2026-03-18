@@ -115,42 +115,6 @@ const RADIUS_BY_RANGE = {
   'YTD': { min: 20, max: 36 },
 }
 
-// Dynamically compute label offset directions based on geographic proximity.
-// For each country, sum repulsion vectors away from nearby neighbors and normalize.
-// Returns { [country]: { dx, dy } } where (dx,dy) is a unit vector pointing away from neighbors.
-// Falls back to straight-down (0, 1) when no neighbors are close.
-function computeLabelOffsets(coords, threshold = 50) {
-  // Approximate Mercator screen coords (relative units, not pixels)
-  const toProj = (lng, lat) => [
-    (lng - 15) * 2.269,
-    -Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 130,
-  ]
-  const projected = Object.fromEntries(
-    Object.entries(coords).map(([c, { lat, lng }]) => [c, toProj(lng, lat)])
-  )
-  return Object.fromEntries(
-    Object.entries(projected).map(([country, [x, y]]) => {
-      let repX = 0, repY = 0
-      Object.entries(projected).forEach(([other, [ox, oy]]) => {
-        if (other === country) return
-        const dx = x - ox
-        const dy = y - oy
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < threshold) {
-          // Weighted repulsion — closer neighbors push harder
-          repX += dx / (dist + 1)
-          repY += dy / (dist + 1)
-        }
-      })
-      const len = Math.sqrt(repX * repX + repY * repY)
-      if (len < 0.1) return [country, { dx: 0, dy: 1 }] // default: straight down
-      return [country, { dx: repX / len, dy: repY / len }]
-    })
-  )
-}
-
-const LABEL_OFFSETS = computeLabelOffsets(COUNTRY_COORDS)
-
 function getBubbleRadius(country, volumes, dateRange) {
   const { min: minR, max: maxR } = RADIUS_BY_RANGE[dateRange] ?? RADIUS_BY_RANGE['1M']
   const vals = Object.values(volumes)
@@ -321,13 +285,8 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                       : (volumes[country] / 1000).toFixed(0) + 'K'}
                   </text>
                   <text
-                    x={(LABEL_OFFSETS[country]?.dx ?? 0) * (scaledR + 12)}
-                    y={(LABEL_OFFSETS[country]?.dy ?? 1) * (scaledR + 12)}
-                    textAnchor={
-                      (LABEL_OFFSETS[country]?.dx ?? 0) > 0.4 ? 'start' :
-                      (LABEL_OFFSETS[country]?.dx ?? 0) < -0.4 ? 'end' : 'middle'
-                    }
-                    dominantBaseline="middle"
+                    textAnchor="middle"
+                    dy={scaledR + 12}
                     style={{
                       fontSize: 9,
                       fontWeight: isSelected || isHovered ? 700 : 400,
