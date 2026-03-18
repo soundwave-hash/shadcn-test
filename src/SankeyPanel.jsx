@@ -25,7 +25,6 @@ const TYPE_LABELS = {
 };
 
 const NODE_COLORS = {
-  carrier:  '#00bcd4',
   express:  '#00bcd4',
   ground:   '#f44336',
   priority: '#4caf50',
@@ -39,10 +38,25 @@ const NODE_COLORS = {
   CANCELED:  '#757575',
 };
 
+// Distinct per-carrier colors — purples, browns, yellows, and dark neutrals only
+// deliberately avoids cyan, red, green, orange, indigo, pink, grey (all used by type/status nodes)
+const CARRIER_PALETTE = [
+  '#2F5D8C', // navy medium blue
+  '#4e342e', // dark brown
+  '#fdd835', // yellow
+  '#123A63', // navy deep blue
+  '#795548', // medium brown
+  '#f0b429', // golden yellow
+  '#827717', // olive
+  '#37474f', // dark slate
+  '#C9D6E5', // navy light steel blue
+  '#263238', // very dark slate
+];
+
 const HEIGHT = 800;
 
 function getNodeColor(node) {
-  if (node.kind === 'carrier') return NODE_COLORS.carrier;
+  if (node.kind === 'carrier') return node.color || '#9e9e9e';
   if (node.kind === 'type') return NODE_COLORS[node.typeKey] || '#9e9e9e';
   if (node.kind === 'status') return NODE_COLORS[node.name] || '#9e9e9e';
   return '#9e9e9e';
@@ -97,11 +111,11 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       collapsedRows = [...mainRows, otherMerged];
     }
 
-    // Carrier nodes
+    // Carrier nodes — each gets a unique color from the palette
     const carrierIndexMap = {};
-    collapsedRows.forEach(row => {
+    collapsedRows.forEach((row, idx) => {
       carrierIndexMap[row.carrier] = nodes.length;
-      nodes.push({ name: row.carrier, kind: 'carrier' });
+      nodes.push({ name: row.carrier, kind: 'carrier', color: CARRIER_PALETTE[idx % CARRIER_PALETTE.length] });
     });
 
     // Which type keys have any volume > 0
@@ -183,6 +197,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     const gen = sankey()
       .nodeWidth(16)
       .nodePadding(20)
+      .nodeSort((a, b) => b.value - a.value)
       .extent([[leftMargin, 10], [width - rightMargin, HEIGHT - 10]]);
 
     // d3-sankey mutates the data, so deep clone
@@ -220,7 +235,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       }}
     >
       <div style={{ fontSize: 12, fontWeight: 'bold', color: T.text, marginBottom: 10 }}>
-        {country} — Carrier Flow
+        {country} - Carrier Flow
       </div>
 
       <div ref={containerRef} style={{ width: '100%', minHeight: HEIGHT }}>
