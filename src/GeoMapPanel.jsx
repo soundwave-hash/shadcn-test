@@ -133,10 +133,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
   const tiers   = computeTiers(volumes)
 
   useEffect(() => {
-    setMapView(selectedCountry && COUNTRY_VIEW[selectedCountry]
-      ? COUNTRY_VIEW[selectedCountry]
-      : DEFAULT_VIEW
-    )
+    setMapView(DEFAULT_VIEW)
   }, [selectedCountry])
 
   const isDark = T.bg === '#111'
