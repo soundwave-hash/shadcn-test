@@ -66,6 +66,8 @@ export default function SankeyPanel({ country, carrierRows, T }) {
 
   const [hoveredLink, setHoveredLink] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [nodeTooltipPos, setNodeTooltipPos] = useState({ x: 0, y: 0 });
 
   const sankeyData = useMemo(() => {
     if (!carrierRows || carrierRows.length === 0) return null;
@@ -153,7 +155,10 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       if (canceledVal > 0)  links.push({ source: typeIdx, target: statusIndexMap['CANCELED'],  value: canceledVal });
     });
 
-    return { nodes, links };
+    // Keep the collapsed carriers list for the "Other" tooltip
+    const otherCarriers = otherRows.map(r => ({ name: r.carrier, total: r._total }));
+
+    return { nodes, links, otherCarriers, grandTotal };
   }, [carrierRows]);
 
   const layout = useMemo(() => {
@@ -184,6 +189,20 @@ export default function SankeyPanel({ country, carrierRows, T }) {
     const graph = gen({
       nodes: sankeyData.nodes.map(d => ({ ...d })),
       links: sankeyData.links.map(d => ({ ...d })),
+    });
+
+    // Scale node heights and link widths by 0.8 from vertical center so
+    // lines look less chunky while nodes and links remain perfectly aligned
+    const VISUAL_SCALE = 0.8;
+    const yMid = HEIGHT / 2;
+    graph.nodes.forEach(node => {
+      node.y0 = yMid + (node.y0 - yMid) * VISUAL_SCALE;
+      node.y1 = yMid + (node.y1 - yMid) * VISUAL_SCALE;
+    });
+    graph.links.forEach(link => {
+      link.width *= VISUAL_SCALE;
+      link.y0 = yMid + (link.y0 - yMid) * VISUAL_SCALE;
+      link.y1 = yMid + (link.y1 - yMid) * VISUAL_SCALE;
     });
 
     return graph;
@@ -232,7 +251,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                   fill="none"
                   stroke={color}
                   strokeOpacity={isHovered ? 0.5 : 0.25}
-                  strokeWidth={Math.max(1, link.width)}
+                  strokeWidth={Math.max(3, link.width)}
                   onMouseEnter={(e) => { setHoveredLink(i); setTooltipPos({ x: e.clientX, y: e.clientY }); }}
                   onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
                   onMouseLeave={() => setHoveredLink(null)}
@@ -276,6 +295,8 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                 const nameY  = showStats ? nodeCenter - LINE_GAP / 2 : nodeCenter;
                 const statsY = nodeCenter + LINE_GAP / 2;
 
+                const isOther = node.name === 'Other' && node.kind === 'carrier';
+
                 return (
                   <g key={i}>
                     <rect
@@ -286,6 +307,10 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                       fill={color}
                       fillOpacity={0.7}
                       rx={3}
+                      style={isOther ? { cursor: 'default' } : undefined}
+                      onMouseEnter={isOther ? (e) => { setHoveredNode(node); setNodeTooltipPos({ x: e.clientX, y: e.clientY }); } : undefined}
+                      onMouseMove={isOther ? (e) => setNodeTooltipPos({ x: e.clientX, y: e.clientY }) : undefined}
+                      onMouseLeave={isOther ? () => setHoveredNode(null) : undefined}
                     />
                     <text
                       x={labelX}
@@ -354,6 +379,43 @@ export default function SankeyPanel({ country, carrierRows, T }) {
             <div style={{ color: T.textMuted, marginTop: 1 }}>
               {pct}% of total
             </div>
+          </div>
+        );
+      })()}
+
+      {/* "Other" carrier node tooltip */}
+      {hoveredNode && sankeyData?.otherCarriers?.length > 0 && (() => {
+        const grandTotal = sankeyData.grandTotal;
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: nodeTooltipPos.x + 14,
+              top: nodeTooltipPos.y - 14,
+              backgroundColor: T.panelBg,
+              border: '1px solid ' + T.border,
+              borderRadius: 6,
+              padding: '7px 11px',
+              pointerEvents: 'none',
+              zIndex: 9999,
+              fontSize: 11,
+              color: T.text,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              minWidth: 160,
+            }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 'bold', color: T.text, marginBottom: 6 }}>
+              Other Carriers
+            </div>
+            {sankeyData.otherCarriers.map(c => {
+              const pct = grandTotal > 0 ? Math.round((c.total / grandTotal) * 100) : 0;
+              return (
+                <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 3 }}>
+                  <span style={{ color: T.textMuted }}>{c.name}</span>
+                  <span style={{ fontWeight: 'bold' }}>{c.total.toLocaleString()} <span style={{ fontWeight: 'normal', color: T.textMuted }}>({pct}%)</span></span>
+                </div>
+              );
+            })}
           </div>
         );
       })()}
