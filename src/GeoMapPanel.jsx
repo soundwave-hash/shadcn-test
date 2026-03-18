@@ -19,7 +19,7 @@ const COUNTRY_COORDS = {
   'China':         { lat: 35.9,  lng: 104.2   },
 }
 
-const COUNTRY_VOLUMES_BY_RANGE = {
+export const COUNTRY_VOLUMES_BY_RANGE = {
   '5D': {
     'United States': 16200,
     'Canada':         7100,

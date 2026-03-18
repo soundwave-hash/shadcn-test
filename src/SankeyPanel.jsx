@@ -235,7 +235,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       }}
     >
       <div style={{ fontSize: 12, fontWeight: 'bold', color: T.text, marginBottom: 10 }}>
-        {country} - Carrier Flow
+        {country} - Carrier Success Flow
       </div>
 
       <div ref={containerRef} style={{ width: '100%', minHeight: HEIGHT }}>
@@ -265,7 +265,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                   d={pathD}
                   fill="none"
                   stroke={color}
-                  strokeOpacity={isHovered ? 0.5 : 0.25}
+                  strokeOpacity={isHovered ? 0.7 : 0.25}
                   strokeWidth={Math.max(3, link.width)}
                   onMouseEnter={(e) => { setHoveredLink(i); setTooltipPos({ x: e.clientX, y: e.clientY }); }}
                   onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
