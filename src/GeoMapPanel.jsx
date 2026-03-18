@@ -221,7 +221,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
               const isSelected  = country === selectedCountry
               const isHovered   = country === hoveredCountry
               const radius      = getBubbleRadius(country, volumes, dateRange)
-              const scaledR     = isSelected ? radius * 1.18 : radius
+              const scaledR     = isSelected ? radius * 1.18 : isHovered ? radius * 1.12 : radius
               const tier        = getTier(country, tiers, volumes)
               const fillColor   = isSelected ? '#fff' : tier.color
               const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
