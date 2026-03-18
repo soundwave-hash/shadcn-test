@@ -512,13 +512,15 @@ export default function KpiDetailPage({
   kpi, country, selectedCities = [], cities, cityScales, countries,
   onBack, onCountryChange, onLocationChange,
   theme = 'dark', onThemeToggle,
+  dateRange = '1M', onDateRangeChange,
 }) {
   const T = THEME[theme]
   const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px' }
   const ttip   = { backgroundColor:T.tooltipBg, border:`1px solid ${T.tooltipBorder}`, color:T.text, fontSize:11, borderRadius:6 }
   const axTick = { fill:T.axTick, fontSize:10 }
 
-  const [period, setPeriod]           = useState('1M')
+  const period    = dateRange
+  const setPeriod = onDateRangeChange ?? (() => {})
   const [activeTooltip, setActiveTooltip] = useState(null)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)

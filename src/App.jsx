@@ -860,6 +860,8 @@ export default function App() {
         onLocationChange={setSelectedCities}
         theme={theme}
         onThemeToggle={toggleTheme}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
       />
     )
   }
