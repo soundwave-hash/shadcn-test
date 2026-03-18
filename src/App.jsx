@@ -1116,7 +1116,7 @@ export default function App() {
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
-                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} width={120} />
+                        <YAxis type="category" dataKey="carrier" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} width={140} interval={0} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
