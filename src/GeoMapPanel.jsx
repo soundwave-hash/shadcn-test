@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ComposableMap,
   Geographies,
@@ -41,6 +41,16 @@ function getTier(country) {
   return TIERS.find(t => vol >= t.min) ?? TIERS[TIERS.length - 1]
 }
 
+const DEFAULT_VIEW = { zoom: 1, center: [15, 20] }
+
+// Countries that need zoom-in to show highlight effect
+const COUNTRY_VIEW = {
+  'Germany':     { zoom: 6,  center: [10.4,  51.2] },
+  'South Korea': { zoom: 10, center: [127.8, 35.9] },
+  'Japan':       { zoom: 5,  center: [138.2, 36.2] },
+  'Mexico':      { zoom: 3,  center: [-102.5, 23.6] },
+}
+
 // ISO 3166-1 numeric codes used by world-atlas topojson
 const COUNTRY_ISO = {
   'United States': '840',
@@ -66,6 +76,14 @@ function getBubbleRadius(country) {
 
 export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
   const [hoveredCountry, setHoveredCountry] = useState(null)
+  const [mapView, setMapView] = useState(DEFAULT_VIEW)
+
+  useEffect(() => {
+    setMapView(selectedCountry && COUNTRY_VIEW[selectedCountry]
+      ? COUNTRY_VIEW[selectedCountry]
+      : DEFAULT_VIEW
+    )
+  }, [selectedCountry])
 
   const isDark = T.bg === '#111'
 
@@ -120,7 +138,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
           projectionConfig={{ scale: 130, center: [15, 20] }}
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
-          <ZoomableGroup>
+          <ZoomableGroup center={mapView.center} zoom={mapView.zoom}>
             <Geographies geography={GEO_URL}>
               {({ geographies }) => {
                 const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
