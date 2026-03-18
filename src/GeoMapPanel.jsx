@@ -128,6 +128,7 @@ function getBubbleRadius(country, volumes, dateRange) {
 export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRange = '1M', T }) {
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [mapView, setMapView] = useState(DEFAULT_VIEW)
+  const [zoomKey, setZoomKey] = useState(0)
 
   const volumes = COUNTRY_VOLUMES_BY_RANGE[dateRange] ?? COUNTRY_VOLUMES_BY_RANGE['1M']
   const tiers   = computeTiers(volumes)
@@ -181,7 +182,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
       </div>
 
       {/* Map */}
-      <div style={{ width: '100%' }}>
+      <div style={{ width: '100%' }} onClick={() => setZoomKey(k => k + 1)}>
         <style>{`
           @keyframes geo-pulse {
             0%   { transform: scale(1);   opacity: 0.7; }
@@ -196,7 +197,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
           projectionConfig={{ scale: 130, center: [15, 20] }}
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
-          <ZoomableGroup center={mapView.center} zoom={mapView.zoom}>
+          <ZoomableGroup key={zoomKey} center={mapView.center} zoom={mapView.zoom}>
             <Geographies geography={GEO_URL}>
               {({ geographies }) => {
                 const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
@@ -244,9 +245,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                 <Marker
                   key={country}
                   coordinates={[lng, lat]}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     if (!onCountrySelect) return
-                    // clicking the already-selected country reverts to world view
                     onCountrySelect(country === selectedCountry ? null : country)
                   }}
                   onMouseEnter={() => setHoveredCountry(country)}
