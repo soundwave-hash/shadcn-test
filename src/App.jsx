@@ -626,6 +626,29 @@ const LEGEND_ITEMS  = [
   ['RETURNS', C.returns], ['UNKNOWN',  C.unknown],
 ]
 
+// ── Shipment chart tooltip — shifts left/right so it never covers the active bar ──
+function ShipmentTooltip({ active, payload, label, coordinate, viewBox, contentStyle }) {
+  if (!active || !payload?.length) return null
+  const toRight = (coordinate?.x ?? 0) <= (viewBox?.width ?? 0) / 2
+  return (
+    <div style={{
+      ...contentStyle,
+      borderRadius: 6,
+      padding: '8px 10px',
+      pointerEvents: 'none',
+      marginLeft: toRight ? 56 : -56,
+    }}>
+      <div style={{ marginBottom:4, fontWeight:600, fontSize:11 }}>{label}</div>
+      {payload.map(p => (
+        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, fontSize:11 }}>
+          <span style={{ width:8, height:8, borderRadius:'50%', backgroundColor:p.fill, flexShrink:0 }}/>
+          <span>{p.name}: {Number(p.value).toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Small components ──────────────────────────────────────────────────────────
 function SwatchLegend({ items, col }) {
   return (
@@ -1117,7 +1140,7 @@ export default function App() {
                           label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
-                        <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
+                        <Tooltip content={<ShipmentTooltip contentStyle={ttip} />} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             <LabelList dataKey={k} position="center"
