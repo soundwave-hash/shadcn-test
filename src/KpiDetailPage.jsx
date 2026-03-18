@@ -608,7 +608,8 @@ export default function KpiDetailPage({
         forecast: i >= cutIdx ? pt.thisYear : null,
       }))
     }
-    return series
+    // For other periods, include null actual/forecast so recharts data shape stays consistent
+    return series.map(pt => ({ ...pt, actual: null, forecast: null }))
   }, [period, series])
 
   // Inventory health stats for context panel
@@ -932,20 +933,20 @@ export default function KpiDetailPage({
                   <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>
-                  {/* Lines */}
-                  {['YTD','1D'].includes(period) ? <>
-                    <Line type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
-                      dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                      connectNulls={false} animationDuration={700} animationEasing="ease-in-out"/>
-                    <Line type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
-                      strokeDasharray="4 4" strokeOpacity={0.55}
-                      dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
-                      connectNulls={false} animationDuration={700} animationEasing="ease-in-out"/>
-                  </> :
-                    <Line type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
-                      dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                      animationDuration={700} animationEasing="ease-in-out"/>
-                  }
+                  {/* Lines — always render all three; use hide to toggle so recharts doesn't lose track */}
+                  <Line type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
+                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
+                    animationDuration={700} animationEasing="ease-in-out"
+                    hide={['YTD','1D'].includes(period)}/>
+                  <Line type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
+                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
+                    connectNulls={false} animationDuration={700} animationEasing="ease-in-out"
+                    hide={!['YTD','1D'].includes(period)}/>
+                  <Line type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
+                    strokeDasharray="4 4" strokeOpacity={0.55}
+                    dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
+                    connectNulls={false} animationDuration={700} animationEasing="ease-in-out"
+                    hide={!['YTD','1D'].includes(period)}/>
                   <Line type="monotone" dataKey="lastYear" stroke="#ff9800" strokeWidth={1.5}
                     dot={{ r:2.5, fill:'#ff9800', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
                     animationDuration={700} animationEasing="ease-in-out"/>
