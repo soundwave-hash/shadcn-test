@@ -39,7 +39,7 @@ const NODE_COLORS = {
   CANCELED:  '#757575',
 };
 
-const HEIGHT = 600;
+const HEIGHT = 800;
 
 function getNodeColor(node) {
   if (node.kind === 'carrier') return NODE_COLORS.carrier;
