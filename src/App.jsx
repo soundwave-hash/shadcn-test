@@ -889,8 +889,8 @@ export default function App() {
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
-          {[{id:'dashboard', label:'Dashboard'}, {id:'geo', label:'Geo Flow'}].map(tab => (
-            <button key={tab.id} onClick={() => setView(tab.id)} style={{
+          {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}].map(tab => (
+            <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
               color: view === tab.id ? '#00bcd4' : T.textMuted,
@@ -936,7 +936,7 @@ export default function App() {
         cities={CITY_LISTS[country]}
         cityScales={CITY_SCALES}
         countries={COUNTRIES}
-        onBack={() => setView('dashboard')}
+        onBack={(target) => setView(target ?? 'dashboard')}
         onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
         onLocationChange={setSelectedCities}
         theme={theme}

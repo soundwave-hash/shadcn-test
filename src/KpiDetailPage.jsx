@@ -677,13 +677,15 @@ export default function KpiDetailPage({
       <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
         <span style={{ color: T.sep }}>|</span>
-        <button onClick={onBack} style={{ background:'none', border:'none', color:'#00bcd4', fontSize:12, cursor:'pointer', padding:0 }}>
-          ← Dashboard
-        </button>
-        <span style={{ color: T.sep }}>|</span>
-        <span style={{ fontSize:12, color: T.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:300 }}>
-          {kpi.label}
-        </span>
+        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}].map(tab => (
+          <button key={tab.id} onClick={() => tab.id === 'dashboard' ? onBack() : onBack(tab.id)} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize:12, fontWeight: tab.id === 'detail' ? 700 : 400,
+            color: tab.id === 'detail' ? '#00bcd4' : T.textMuted,
+            borderBottom: tab.id === 'detail' ? '2px solid #00bcd4' : '2px solid transparent',
+            padding: '0 4px', height:40,
+          }}>{tab.label}</button>
+        ))}
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
