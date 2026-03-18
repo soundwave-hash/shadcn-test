@@ -105,12 +105,13 @@ const COUNTRY_ISO = {
   'China':         '156',
 }
 
-// Per-range radius bounds — 5D has a larger minimum so numbers stay readable
+// Per-range radius bounds — min/max both increase progressively across ranges
+// 5D floor of 14 keeps numbers readable; each longer range is visibly larger overall
 const RADIUS_BY_RANGE = {
-  '5D':  { min: 16, max: 26 },
-  '1M':  { min: 10, max: 30 },
-  'YTD': { min: 12, max: 34 },
-  '6M':  { min: 14, max: 38 },
+  '5D':  { min: 14, max: 20 },
+  '1M':  { min: 16, max: 26 },
+  'YTD': { min: 18, max: 30 },
+  '6M':  { min: 20, max: 36 },
 }
 
 function getBubbleRadius(country, volumes, dateRange) {
