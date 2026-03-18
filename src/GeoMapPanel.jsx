@@ -201,20 +201,20 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
             <Geographies geography={GEO_URL}>
               {({ geographies }) => {
                 const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
-                const selectedTierColor = selectedCountry ? getTier(selectedCountry, tiers, volumes).color : null
+                const SELECTED_COLOR = '#e91e63'
                 return geographies.map((geo) => {
                   const isActiveCountry = geo.id === selectedIso
                   const activeFill = isDark
-                    ? `${selectedTierColor}18`   // ~9% opacity tint of the tier color
-                    : `${selectedTierColor}22`
+                    ? `${SELECTED_COLOR}18`
+                    : `${SELECTED_COLOR}22`
                   return (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
                       style={{
-                        default: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
-                        hover:   { fill: isActiveCountry ? activeFill : landFillHover, stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
-                        pressed: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${selectedTierColor}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        default: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${SELECTED_COLOR}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        hover:   { fill: isActiveCountry ? activeFill : landFillHover, stroke: isActiveCountry ? `${SELECTED_COLOR}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
+                        pressed: { fill: isActiveCountry ? activeFill : landFill,     stroke: isActiveCountry ? `${SELECTED_COLOR}55` : borderColor, strokeWidth: isActiveCountry ? 1 : 0.6, outline: 'none' },
                       }}
                     />
                   )

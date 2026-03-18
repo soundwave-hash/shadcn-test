@@ -65,6 +65,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
   }, []);
 
   const [hoveredLink, setHoveredLink] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   const sankeyData = useMemo(() => {
     if (!carrierRows || carrierRows.length === 0) return null;
@@ -169,8 +170,10 @@ export default function SankeyPanel({ country, carrierRows, T }) {
       .filter(n => n.kind === 'status')
       .reduce((max, n) => Math.max(max, n.name.length), 0);
 
-    const leftMargin  = Math.ceil(longestCarrier * CHAR_W) + PAD;
-    const rightMargin = Math.ceil(longestStatus  * CHAR_W) + PAD;
+    // Stats label "1,234,567 (100%)" ≈ 16 chars — may be wider than the name itself
+    const STATS_CHARS = 16;
+    const leftMargin  = Math.ceil(Math.max(longestCarrier, STATS_CHARS) * CHAR_W) + PAD;
+    const rightMargin = Math.ceil(Math.max(longestStatus,  STATS_CHARS) * CHAR_W) + PAD;
 
     const gen = sankey()
       .nodeWidth(16)
@@ -230,7 +233,8 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                   stroke={color}
                   strokeOpacity={isHovered ? 0.5 : 0.25}
                   strokeWidth={Math.max(1, link.width)}
-                  onMouseEnter={() => setHoveredLink(i)}
+                  onMouseEnter={(e) => { setHoveredLink(i); setTooltipPos({ x: e.clientX, y: e.clientY }); }}
+                  onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
                   onMouseLeave={() => setHoveredLink(null)}
                   style={{ cursor: 'default' }}
                 />
@@ -238,58 +242,121 @@ export default function SankeyPanel({ country, carrierRows, T }) {
             })}
 
             {/* Nodes */}
-            {layout.nodes.map((node, i) => {
-              const color = getNodeColor(node);
-              const nodeH = Math.max(1, node.y1 - node.y0);
+            {(() => {
+              const grandTotal = layout.nodes
+                .filter(n => n.kind === 'status')
+                .reduce((s, n) => s + (n.value || 0), 0);
 
-              // Label positioning — carriers left, status right, types beside node
-              let labelX, textAnchor, labelY, dominantBaseline;
-              if (node.kind === 'carrier') {
-                labelX = node.x0 - 8;
-                textAnchor = 'end';
-                labelY = (node.y0 + node.y1) / 2;
-                dominantBaseline = 'middle';
-              } else if (node.kind === 'status') {
-                labelX = node.x1 + 8;
-                textAnchor = 'start';
-                labelY = (node.y0 + node.y1) / 2;
-                dominantBaseline = 'middle';
-              } else {
-                // type — label to the right of node, vertically centered
-                labelX = node.x1 + 6;
-                textAnchor = 'start';
-                labelY = (node.y0 + node.y1) / 2;
-                dominantBaseline = 'middle';
-              }
+              return layout.nodes.map((node, i) => {
+                const color = getNodeColor(node);
+                const nodeH = Math.max(1, node.y1 - node.y0);
+                const nodeCenter = (node.y0 + node.y1) / 2;
 
-              return (
-                <g key={i}>
-                  <rect
-                    x={node.x0}
-                    y={node.y0}
-                    width={node.x1 - node.x0}
-                    height={nodeH}
-                    fill={color}
-                    fillOpacity={0.7}
-                    rx={3}
-                  />
-                  <text
-                    x={labelX}
-                    y={labelY}
-                    textAnchor={textAnchor}
-                    dominantBaseline={dominantBaseline}
-                    fill={T.text}
-                    fontSize={10}
-                    style={{ userSelect: 'none' }}
-                  >
-                    {node.name}
-                  </text>
-                </g>
-              );
-            })}
+                // Stats label
+                const pct = grandTotal > 0 ? Math.round((node.value / grandTotal) * 100) : 0;
+                const volLabel = (node.value || 0).toLocaleString();
+                const statsLabel = `${volLabel} (${pct}%)`;
+                // Only show second line if node is tall enough
+                const showStats = nodeH >= 16;
+                const LINE_GAP = 11;
+
+                // Label positioning — carriers left, status right, types beside node
+                let labelX, textAnchor;
+                if (node.kind === 'carrier') {
+                  labelX = node.x0 - 8;
+                  textAnchor = 'end';
+                } else if (node.kind === 'status') {
+                  labelX = node.x1 + 8;
+                  textAnchor = 'start';
+                } else {
+                  labelX = node.x1 + 6;
+                  textAnchor = 'start';
+                }
+
+                const nameY  = showStats ? nodeCenter - LINE_GAP / 2 : nodeCenter;
+                const statsY = nodeCenter + LINE_GAP / 2;
+
+                return (
+                  <g key={i}>
+                    <rect
+                      x={node.x0}
+                      y={node.y0}
+                      width={node.x1 - node.x0}
+                      height={nodeH}
+                      fill={color}
+                      fillOpacity={0.7}
+                      rx={3}
+                    />
+                    <text
+                      x={labelX}
+                      y={nameY}
+                      textAnchor={textAnchor}
+                      dominantBaseline="middle"
+                      fill={T.text}
+                      fontSize={10}
+                      style={{ userSelect: 'none' }}
+                    >
+                      {node.name}
+                    </text>
+                    {showStats && (
+                      <text
+                        x={labelX}
+                        y={statsY}
+                        textAnchor={textAnchor}
+                        dominantBaseline="middle"
+                        fill={T.textMuted}
+                        fontSize={10}
+                        fontWeight="bold"
+                        style={{ userSelect: 'none' }}
+                      >
+                        {statsLabel}
+                      </text>
+                    )}
+                  </g>
+                );
+              });
+            })()}
           </svg>
         ) : null}
       </div>
+
+      {/* Link hover tooltip */}
+      {hoveredLink !== null && layout && (() => {
+        const link = layout.links[hoveredLink];
+        const grandTotal = layout.nodes
+          .filter(n => n.kind === 'status')
+          .reduce((s, n) => s + (n.value || 0), 0);
+        const pct = grandTotal > 0 ? Math.round((link.value / grandTotal) * 100) : 0;
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltipPos.x + 14,
+              top: tooltipPos.y - 14,
+              backgroundColor: T.panelBg,
+              border: '1px solid ' + T.border,
+              borderRadius: 6,
+              padding: '7px 11px',
+              pointerEvents: 'none',
+              zIndex: 9999,
+              fontSize: 11,
+              color: T.text,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              minWidth: 140,
+            }}
+          >
+            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>
+              {link.source.name} → {link.target.name}
+            </div>
+            <div style={{ fontWeight: 'bold', fontSize: 13 }}>
+              {link.value.toLocaleString()}
+            </div>
+            <div style={{ color: T.textMuted, marginTop: 1 }}>
+              {pct}% of total
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
