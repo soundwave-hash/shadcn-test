@@ -267,7 +267,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                     <circle
                       r={scaledR + 5}
                       fill="none"
-                      stroke={tier.color}
+                      stroke="#00bcd4"
                       strokeWidth={1.5}
                       style={{
                         transformBox: 'fill-box',
