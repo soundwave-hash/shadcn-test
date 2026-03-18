@@ -182,6 +182,13 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
 
       {/* Map */}
       <div style={{ width: '100%' }}>
+        <style>{`
+          @keyframes geo-pulse {
+            0%   { transform: scale(1);   opacity: 0.7; }
+            70%  { transform: scale(2.0); opacity: 0;   }
+            100% { transform: scale(2.0); opacity: 0;   }
+          }
+        `}</style>
         <ComposableMap
           width={800}
           height={420}
@@ -227,9 +234,9 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
               const radius      = getBubbleRadius(country, volumes, dateRange)
               const scaledR     = isSelected ? radius * 1.18 : isHovered ? radius * 1.15 : radius
               const tier        = getTier(country, tiers, volumes)
-              const fillColor   = isSelected ? '#fff' : tier.color
+              const fillColor   = isSelected ? '#b2ebf2' : tier.color
               const fillOpacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65
-              const strokeColor = isSelected ? '#fff' : tier.color
+              const strokeColor = isSelected ? '#b2ebf2' : tier.color
               const strokeW     = isSelected ? 2 : isHovered ? 1.5 : 1
 
               return (
@@ -245,14 +252,28 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                   onMouseLeave={() => setHoveredCountry(null)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Outer glow ring on hover/select */}
-                  {(isSelected || isHovered) && (
+                  {/* Hover ring */}
+                  {isHovered && !isSelected && (
                     <circle
                       r={scaledR + 5}
                       fill="none"
                       stroke={tier.color}
                       strokeWidth={1}
-                      strokeOpacity={isSelected ? 0.5 : 0.3}
+                      strokeOpacity={0.3}
+                    />
+                  )}
+                  {/* Pulsing ring for selected state */}
+                  {isSelected && (
+                    <circle
+                      r={scaledR + 5}
+                      fill="none"
+                      stroke={tier.color}
+                      strokeWidth={1.5}
+                      style={{
+                        transformBox: 'fill-box',
+                        transformOrigin: 'center',
+                        animation: 'geo-pulse 1.8s ease-out infinite',
+                      }}
                     />
                   )}
                   <circle
