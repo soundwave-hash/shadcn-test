@@ -128,8 +128,8 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                 return geographies.map((geo) => {
                   const isActiveCountry = geo.id === selectedIso
                   const activeFill = isDark
-                    ? `${selectedTierColor}33`   // ~20% opacity tint of the tier color
-                    : `${selectedTierColor}44`
+                    ? `${selectedTierColor}18`   // ~9% opacity tint of the tier color
+                    : `${selectedTierColor}22`
                   return (
                     <Geography
                       key={geo.rsmKey}
