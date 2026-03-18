@@ -165,23 +165,21 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, T }) {
                     strokeOpacity={0.9}
                     style={{ cursor: 'pointer', transition: 'r 0.15s ease, fill-opacity 0.15s ease' }}
                   />
-                  {/* Volume label inside large-enough bubbles */}
-                  {scaledR >= 16 && (
-                    <text
-                      textAnchor="middle"
-                      dy="0.35em"
-                      style={{
-                        fontSize: 8,
-                        fontWeight: 700,
-                        fill: isSelected ? tier.color : (isDark ? '#111' : '#fff'),
-                        fontFamily: 'inherit',
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                      }}
-                    >
-                      {(COUNTRY_VOLUMES[country] / 1000).toFixed(0)}K
-                    </text>
-                  )}
+                  {/* Volume label inside every bubble */}
+                  <text
+                    textAnchor="middle"
+                    dy="0.35em"
+                    style={{
+                      fontSize: scaledR >= 16 ? 8 : 6,
+                      fontWeight: 700,
+                      fill: isSelected ? tier.color : (isDark ? '#111' : '#fff'),
+                      fontFamily: 'inherit',
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}
+                  >
+                    {(COUNTRY_VOLUMES[country] / 1000).toFixed(0)}K
+                  </text>
                   <text
                     textAnchor="middle"
                     dy={scaledR + 12}
