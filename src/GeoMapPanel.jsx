@@ -10,12 +10,12 @@ import {
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
 const COUNTRY_COORDS = {
-  'United States': { lat: 39.5,  lng: -98.35  },
+  'United States': { lat: 41.0,  lng: -98.35  },
   'Canada':        { lat: 56.1,  lng: -106.3  },
-  'Mexico':        { lat: 23.6,  lng: -102.5  },
+  'Mexico':        { lat: 19.5,  lng: -102.5  },
   'Germany':       { lat: 51.2,  lng: 10.4    },
-  'Japan':         { lat: 36.2,  lng: 138.2   },
-  'South Korea':   { lat: 35.9,  lng: 127.8   },
+  'Japan':         { lat: 38.5,  lng: 143.0   },
+  'South Korea':   { lat: 33.0,  lng: 126.5   },
   'China':         { lat: 35.9,  lng: 104.2   },
 }
 
