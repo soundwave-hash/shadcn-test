@@ -1116,7 +1116,8 @@ export default function App() {
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
                         <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
-                        <YAxis type="category" dataKey="carrier" stroke={T.border} width={160} interval={0}
+                        <YAxis type="category" dataKey="carrier" stroke={T.border} width={160}
+                          ticks={carrierData.map(d => d.carrier)}
                           tick={({ x, y, payload }) => (
                             <text x={x - 4} y={y} textAnchor="end" dominantBaseline="middle" fill={T.axTick} fontSize={10}>
                               {payload.value}
