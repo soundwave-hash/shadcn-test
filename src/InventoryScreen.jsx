@@ -18,7 +18,7 @@ const COLS = [
   { key: 'sku',        label: 'SKU',          width:  72, align: 'left',  sticky: true  },
   { key: 'name',       label: 'Name',          width: 168, align: 'left',  sticky: true  },
   { key: 'category',   label: 'Department',    width: 110, align: 'left',  sticky: true  },
-  { key: 'subcategory',label: 'Subcategory',   width: 140, align: 'left',  sticky: true  },
+  { key: 'subcategory',label: 'Category',      width: 140, align: 'left',  sticky: true  },
   { key: 'onHand',     label: 'Units on Hand', width: 108, align: 'right', sticky: false },
   { key: 'dailySales', label: 'Daily Sales',   width:  88, align: 'right', sticky: false },
   { key: 'weeklySales',label: 'Weekly Sales',  width:  96, align: 'right', sticky: false },
@@ -386,7 +386,7 @@ export default function InventoryScreen({
         </DropdownMenu>
 
         {/* Subcategory */}
-        <span style={{ fontSize: 11, color: T.textDim }}>Subcat:</span>
+        <span style={{ fontSize: 11, color: T.textDim }}>Category:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button style={{ ...filterDropBtn, opacity: selDept === 'All' ? 0.5 : 1 }} disabled={selDept === 'All'}>
