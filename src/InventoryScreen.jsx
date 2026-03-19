@@ -264,6 +264,12 @@ export default function InventoryScreen({
     setSelSubs(new Set())
     setSortCol('weeklySales')
     setSortAsc(false)
+    const defaultOrder = NON_STICKY_COLS.map(c => c.key)
+    setColOrder(defaultOrder)
+    try {
+      const prefs = JSON.parse(localStorage.getItem(`warehouseiq_prefs_${activeUser?.id}`)) ?? {}
+      localStorage.setItem(`warehouseiq_prefs_${activeUser?.id}`, JSON.stringify({ ...prefs, colOrder: defaultOrder }))
+    } catch {}
   }
 
   function exportCSV() {
