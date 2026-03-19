@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import GeoMapPanel, { COUNTRY_VOLUMES_BY_RANGE } from './GeoMapPanel'
 import SankeyPanel from './SankeyPanel'
 
@@ -16,10 +16,11 @@ const CARRIER_TYPE_RANGE_BIAS = {
 export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onDateRangeChange }) {
   const [selectedCountry, setSelectedCountry] = useState(null)
   const sankeyRef = useRef(null)
-  const mapRef    = useRef(null)
 
-  function smoothScroll(target) {
+  useEffect(() => {
+    if (!selectedCountry) return
     const container = document.querySelector('.geo-scroll')
+    const target    = sankeyRef.current
     if (!container || !target) return
     const from     = container.scrollTop
     const to       = target.getBoundingClientRect().top
@@ -35,10 +36,7 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
       if (progress < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
-  }
-
-  function scrollToSankey() { smoothScroll(sankeyRef.current) }
-  function scrollToMap()    { smoothScroll(mapRef.current)    }
+  }, [selectedCountry])
 
   const carrierRows = (() => {
     if (!selectedCountry || !countryData[selectedCountry]) return []
@@ -55,21 +53,17 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div ref={mapRef}>
-        <GeoMapPanel
-          selectedCountry={selectedCountry}
-          onCountrySelect={setSelectedCountry}
-          onScrollToSankey={scrollToSankey}
-          dateRange={dateRange}
-          T={T}
-        />
-      </div>
+      <GeoMapPanel
+        selectedCountry={selectedCountry}
+        onCountrySelect={setSelectedCountry}
+        dateRange={dateRange}
+        T={T}
+      />
       <div ref={sankeyRef}>
         <SankeyPanel
           country={selectedCountry || 'Global'}
           carrierRows={carrierRows}
           T={T}
-          onScrollToMap={scrollToMap}
         />
       </div>
     </div>

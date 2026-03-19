@@ -62,7 +62,7 @@ function getNodeColor(node) {
   return '#9e9e9e';
 }
 
-export default function SankeyPanel({ country, carrierRows, T, onScrollToMap }) {
+export default function SankeyPanel({ country, carrierRows, T }) {
   const containerRef = useRef(null);
   const [width, setWidth] = useState(600);
 
@@ -231,51 +231,8 @@ export default function SankeyPanel({ country, carrierRows, T, onScrollToMap }) 
         border: '1px solid ' + T.border,
         borderRadius: 8,
         padding: '14px 16px',
-        position: 'relative',
       }}
     >
-      <style>{`
-        @keyframes sankey-hint-fade {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes sankey-hint-bounce {
-          0%, 100% { transform: translateX(-50%) translateY(-100%);        }
-          50%       { transform: translateX(-50%) translateY(calc(-100% - 7px)); }
-        }
-        .sankey-hint-wrap {
-          animation: sankey-hint-fade 0.8s ease-out forwards, sankey-hint-bounce 1.6s ease-in-out 0.8s infinite;
-        }
-      `}</style>
-
-      {onScrollToMap && (
-        <div
-          className="sankey-hint-wrap"
-          onClick={onScrollToMap}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%) translateY(-100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 5,
-            cursor: 'pointer',
-            zIndex: 10,
-          }}
-        >
-          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
-               style={{ filter: 'drop-shadow(0 -2px 8px rgba(0,188,212,0.5))' }}>
-            <circle cx="13" cy="13" r="12" stroke="#00bcd4" strokeWidth="1.5" strokeOpacity="0.55" />
-            <polyline points="8,16 13,9 18,16" stroke="#00bcd4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span style={{ fontSize: 10, color: '#00bcd4', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-            Global Map
-          </span>
-        </div>
-      )}
-
       <div style={{ fontSize: 12, fontWeight: 'bold', color: T.text, marginBottom: 10 }}>
         {country} - Carrier Success Flow
       </div>
