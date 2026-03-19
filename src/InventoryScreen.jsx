@@ -631,7 +631,7 @@ export default function InventoryScreen({
         onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
         style={{
           position: 'fixed', bottom: 28, right: 50, zIndex: 9998,
-          width: 44, height: 44, borderRadius: 10,
+          width: 31, height: 31, borderRadius: 7,
           background: '#1e2d5a', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
@@ -641,7 +641,7 @@ export default function InventoryScreen({
         onMouseLeave={e => e.currentTarget.style.background = '#1e2d5a'}
         title="Back to top"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
           <polyline points="4,13 10,7 16,13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
