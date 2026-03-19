@@ -869,6 +869,7 @@ export default function App() {
     })
     setDragIdx(null)
     setOverIdx(null)
+    setKpiExpanded(false)
   }
   function handleDragEnd() {
     setDragIdx(null)
