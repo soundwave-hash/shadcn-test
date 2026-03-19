@@ -805,6 +805,12 @@ export default function App() {
   const [dragIdx, setDragIdx]     = useState(null)
   const [overIdx, setOverIdx]     = useState(null)
   const [pressedIdx, setPressedIdx] = useState(null)
+  const [kpiExpanded, setKpiExpanded] = useState(() => {
+    try { return localStorage.getItem('kpiExpanded') === 'true' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('kpiExpanded', kpiExpanded) } catch {}
+  }, [kpiExpanded])
   const dragNode = useRef(null)
 
   useEffect(() => {
@@ -815,6 +821,7 @@ export default function App() {
     dragNode.current = i
     setDragIdx(i)
     e.dataTransfer.effectAllowed = 'move'
+    if (!kpiExpanded) setKpiExpanded(true)
   }
   function handleDragOver(e, i) {
     e.preventDefault()
@@ -1171,13 +1178,13 @@ export default function App() {
       {/* ── Dashboard body ── */}
       <div ref={dashboardRef} style={{ flex:1, overflowY:'auto', padding:'14px 20px', scrollbarWidth:'thin', scrollbarColor:`${T.border} ${T.bg}` }}>
 
-        {/* KPI cards — draggable */}
+        {/* KPI cards — row 1 (always visible) */}
         <div className="kpi-grid">
           {kpiLoading
-            ? Array.from({ length: displayKpiCards.length }).map((_, i) => (
+            ? Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} style={{ height: 110, borderRadius: 4, backgroundColor: T.cardBg, opacity: 0.6 }} />
               ))
-            : displayKpiCards.map((kpi, i) => (
+            : displayKpiCards.slice(0, 6).map((kpi, i) => (
                 <KpiCard
                   key={kpi.label + kpi.primary}
                   {...kpi}
@@ -1199,6 +1206,65 @@ export default function App() {
                 />
               ))
           }
+        </div>
+
+        {/* Show more / less toggle */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, margin:'6px 0 2px' }}>
+          <button
+            onClick={() => setKpiExpanded(e => !e)}
+            style={{
+              background:'none', border:`1px solid ${T.border}`, color: T.textMuted,
+              fontSize:11, padding:'3px 10px', borderRadius:4, cursor:'pointer',
+              display:'flex', alignItems:'center', gap:5,
+            }}
+          >
+            <span style={{ fontSize:9 }}>{kpiExpanded ? '▲' : '▼'}</span>
+            {kpiExpanded ? 'Show less' : 'Show more metrics'}
+          </button>
+          {!kpiExpanded && (
+            <span style={{ fontSize:11, color: T.textFaint }}>6 additional metrics hidden</span>
+          )}
+        </div>
+
+        {/* KPI cards — row 2 (animated collapsible) */}
+        <div style={{
+          overflow: 'hidden',
+          maxHeight: kpiExpanded ? 500 : 0,
+          opacity: kpiExpanded ? 1 : 0,
+          transition: 'max-height 0.3s ease, opacity 0.2s ease',
+          marginBottom: kpiExpanded ? 4 : 0,
+        }}>
+          <div className="kpi-grid">
+            {kpiLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} style={{ height: 110, borderRadius: 4, backgroundColor: T.cardBg, opacity: 0.6 }} />
+                ))
+              : displayKpiCards.slice(6).map((kpi, i) => {
+                  const idx = i + 6
+                  return (
+                    <KpiCard
+                      key={kpi.label + kpi.primary}
+                      {...kpi}
+                      country={country}
+                      dateRange={dashboardRange}
+                      isDragging={dragIdx === idx}
+                      isOver={(overIdx === idx && dragIdx !== idx) || pressedIdx === idx}
+                      T={T}
+                      dragHandlers={{
+                        draggable: true,
+                        onMouseDown: () => setPressedIdx(idx),
+                        onMouseUp:   () => setPressedIdx(null),
+                        onDragStart: e => handleDragStart(e, idx),
+                        onDragOver:  e => handleDragOver(e, idx),
+                        onDrop:      e => handleDrop(e, idx),
+                        onDragEnd:   handleDragEnd,
+                        onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
+                      }}
+                    />
+                  )
+                })
+            }
+          </div>
         </div>
 
         {/* Section header */}
