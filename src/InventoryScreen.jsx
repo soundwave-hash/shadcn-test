@@ -245,6 +245,10 @@ export default function InventoryScreen({
     fontSize: 12, padding: '3px 9px', borderRadius: 4, cursor: 'pointer',
     display: 'flex', alignItems: 'center', gap: 6,
   }
+  const filterDropBtn = {
+    ...dropBtn,
+    padding: '7px 9px',
+  }
   const iconBtn = {
     width: 28, height: 28, borderRadius: 7, cursor: 'pointer', border: `1px solid ${T.inputBorder}`,
     backgroundColor: isDark ? '#1c1c1c' : '#f5f5f5',
@@ -364,12 +368,12 @@ export default function InventoryScreen({
       </div>
 
       {/* ── Filters bar ── */}
-      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 40, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0 }}>
+      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 48, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0 }}>
         {/* Department */}
         <span style={{ fontSize: 11, color: T.textDim }}>Dept:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button style={dropBtn}>{selDept}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span></button>
+            <button style={filterDropBtn}>{selDept}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span></button>
           </DropdownMenuTrigger>
           <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth: 160 }}>
             {['All', ...CATEGORIES].map(c => (
@@ -385,7 +389,7 @@ export default function InventoryScreen({
         <span style={{ fontSize: 11, color: T.textDim }}>Subcat:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button style={{ ...dropBtn, opacity: selDept === 'All' ? 0.5 : 1 }} disabled={selDept === 'All'}>
+            <button style={{ ...filterDropBtn, opacity: selDept === 'All' ? 0.5 : 1 }} disabled={selDept === 'All'}>
               {selSub}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span>
             </button>
           </DropdownMenuTrigger>
@@ -404,7 +408,7 @@ export default function InventoryScreen({
         {/* Reset */}
         <button onClick={handleReset} style={{
           background: 'none', border: `1px solid ${T.inputBorder}`, color: T.textMuted,
-          fontSize: 11, padding: '3px 10px', borderRadius: 4, cursor: 'pointer',
+          fontSize: 11, padding: '7px 10px', borderRadius: 4, cursor: 'pointer',
         }}>Reset</button>
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: T.textDim }}>
