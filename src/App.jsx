@@ -833,9 +833,11 @@ export default function App() {
   const [kpiExpanded, setKpiExpanded] = useState(() => {
     return loadPrefs(USERS[0].id).kpiExpanded ?? false
   })
+  const activeUserRef = useRef(activeUser)
+  useEffect(() => { activeUserRef.current = activeUser }, [activeUser])
   useEffect(() => {
-    savePrefs(activeUser.id, { kpiExpanded })
-  }, [kpiExpanded, activeUser])
+    savePrefs(activeUserRef.current.id, { kpiExpanded })
+  }, [kpiExpanded])
   const dragNode = useRef(null)
 
   // Restore layout prefs when country or active account changes
