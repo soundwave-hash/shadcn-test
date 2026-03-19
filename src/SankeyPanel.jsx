@@ -309,8 +309,36 @@ export default function SankeyPanel({ country, carrierRows, T }) {
 
                 const isOther = node.name === 'Other' && node.kind === 'carrier';
 
+                const totalLabel = (node.value || 0).toLocaleString();
+                const topLabelX = isStatus ? node.x1 : node.x0 + (node.x1 - node.x0) / 2;
+                const topAnchor = isStatus ? 'end' : 'middle';
+
                 return (
                   <g key={i}>
+                    {/* "Total Units" header above each node */}
+                    <text
+                      x={topLabelX}
+                      y={node.y0 - 16}
+                      textAnchor={topAnchor}
+                      dominantBaseline="middle"
+                      fill={T.textDim}
+                      fontSize={10}
+                      style={{ userSelect: 'none' }}
+                    >
+                      Total Units
+                    </text>
+                    <text
+                      x={topLabelX}
+                      y={node.y0 - 4}
+                      textAnchor={topAnchor}
+                      dominantBaseline="middle"
+                      fill={T.text}
+                      fontSize={10}
+                      fontWeight="bold"
+                      style={{ userSelect: 'none' }}
+                    >
+                      {totalLabel}
+                    </text>
                     <rect
                       x={node.x0}
                       y={node.y0}
