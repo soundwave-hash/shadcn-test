@@ -916,7 +916,7 @@ export default function KpiDetailPage({
                   ].map(([color, label, range, desc]) => (
                     <React.Fragment key={label}>
                       <div style={{ width:60, backgroundColor: label === healthZone ? color+'66' : color+'22', border:`1px solid ${color}`, borderRadius:6, padding:'4px 10px', textAlign:'left' }}>
-                        <div style={{ fontSize:9, fontWeight:700, color, lineHeight:1.2 }}>{range}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color, lineHeight:1.2 }}>{range}</div>
                       </div>
                       <span style={{ fontSize:10, color, fontWeight:600 }}>{label}</span>
                       <span style={{ fontSize:10, color: T.textFaint }}>{desc}</span>
