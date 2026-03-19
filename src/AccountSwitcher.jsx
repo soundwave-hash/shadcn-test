@@ -2,17 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 
 const HOVER_STYLE = `
 @keyframes avatarHoverReveal {
-  from { transform: scale(1.22); opacity: 0; }
+  from { transform: scale(1.18); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
 }
 .avatar-hover-card {
-  animation: avatarHoverReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: avatarHoverReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.avatar-user-row:hover {
+  background: rgba(0,188,212,0.08) !important;
 }
 `
 
 export const USERS = [
-  { id: 1, name: 'Takumi Fujiwara',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
-  { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif',
+  { id: 1, name: 'Takumi Fujiwara', role: 'Supply Chain Manager', src: '/avatar.jpg'   },
+  { id: 2, name: 'Sarah Smiles',    role: 'Operations Analyst',   src: '/avatar2.avif',
     imgStyle: { transform: 'scale(1.3) translateY(-8%)', transformOrigin: 'center 25%' } },
 ]
 
@@ -41,74 +44,38 @@ function Avatar({ user, size, border, onClick, title, cursor }) {
 }
 
 export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft }) {
-  const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
   const ref = useRef(null)
 
-  useEffect(() => {
-    function handle(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [])
-
   return (
-    <div ref={ref} style={{ position: 'relative', flexShrink: 0, marginLeft: marginLeft ?? 0 }}>
+    <div
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ position: 'relative', flexShrink: 0, marginLeft: marginLeft ?? 0 }}
+    >
       <style>{HOVER_STYLE}</style>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{ display: 'inline-block' }}
-      >
-        <Avatar
-          user={activeUser}
-          size={28}
-          border={open ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`}
-          onClick={() => setOpen(o => !o)}
-          title="User accounts"
-          cursor="pointer"
-        />
-      </div>
 
-      {hovered && !open && (
+      <Avatar
+        user={activeUser}
+        size={28}
+        border={hovered ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`}
+        cursor="pointer"
+        title="Switch account"
+      />
+
+      {hovered && (
         <div
           className="avatar-hover-card"
           style={{
             position: 'absolute', top: 36, right: 0,
             background: T.panelBg,
             border: `1px solid ${T.border}`,
-            borderRadius: 12,
-            padding: '14px 16px 12px',
-            zIndex: 9998,
+            borderRadius: 10, padding: '10px 8px 8px',
+            minWidth: 215, zIndex: 9999,
             boxShadow: '0 10px 32px rgba(0,0,0,0.5)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-            minWidth: 110,
-            pointerEvents: 'none',
           }}
         >
-          <Avatar user={activeUser} size={52} border={`2px solid #00bcd4`} />
-          <div style={{
-            fontSize: 12, fontWeight: 700, color: T.text,
-            textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap',
-          }}>
-            {activeUser.name}
-          </div>
-          <div style={{ fontSize: 10, color: T.textDim, textAlign: 'center', whiteSpace: 'nowrap' }}>
-            {activeUser.role}
-          </div>
-        </div>
-      )}
-
-      {open && (
-        <div style={{
-          position: 'absolute', top: 36, right: 0,
-          background: T.panelBg,
-          border: `1px solid ${T.border}`,
-          borderRadius: 10, padding: '10px 8px 8px',
-          minWidth: 215, zIndex: 9999,
-          boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
-        }}>
           <div style={{
             fontSize: 10, fontWeight: 700, color: T.textDim,
             letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -124,10 +91,12 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
             return (
               <div
                 key={user.id}
-                onClick={() => { onSwitch(user); setOpen(false) }}
+                className="avatar-user-row"
+                onClick={() => onSwitch(user)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '7px 8px', borderRadius: 7, cursor: 'pointer',
+                  padding: '7px 8px', borderRadius: 7,
+                  cursor: active ? 'default' : 'pointer',
                   background: active ? 'rgba(0,188,212,0.1)' : 'transparent',
                   transition: 'background 0.15s',
                 }}
