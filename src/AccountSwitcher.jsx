@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 
 export const USERS = [
   { id: 1, name: 'Alex Chen',  role: 'Supply Chain Manager', src: '/avatar.jpg'   },
-  { id: 2, name: 'Sarah Kim',  role: 'Operations Analyst',   src: '/avatar2.avif' },
+  { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif' },
 ]
 
 export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft }) {
