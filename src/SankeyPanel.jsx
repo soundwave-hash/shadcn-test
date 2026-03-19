@@ -363,15 +363,17 @@ export default function SankeyPanel({ country, carrierRows, T }) {
               const groupNodes = layout.nodes.filter(n => n.kind === kind)
               if (!groupNodes.length) return null
               const topY    = Math.min(...groupNodes.map(n => n.y0))
-              const centerX = (groupNodes[0].x0 + groupNodes[0].x1) / 2
+              const isStatus = kind === 'status'
+              const labelX   = isStatus ? groupNodes[0].x1 : groupNodes[0].x0
+              const anchor   = isStatus ? 'end' : 'start'
               const total   = groupNodes.reduce((s, n) => s + (n.value || 0), 0)
               return (
                 <g key={kind}>
-                  <text x={centerX} y={topY - 27} textAnchor="middle" dominantBaseline="middle"
+                  <text x={labelX} y={topY - 27} textAnchor={anchor} dominantBaseline="middle"
                     fill={T.text} fontSize={10} fontWeight="bold" style={{ userSelect: 'none' }}>
                     Total Units
                   </text>
-                  <text x={centerX} y={topY - 15} textAnchor="middle" dominantBaseline="middle"
+                  <text x={labelX} y={topY - 15} textAnchor={anchor} dominantBaseline="middle"
                     fill={T.textMuted} fontSize={10} fontWeight="normal" style={{ userSelect: 'none' }}>
                     {total.toLocaleString()}
                   </text>
