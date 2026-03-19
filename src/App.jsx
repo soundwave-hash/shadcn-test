@@ -887,7 +887,7 @@ export default function App() {
     return (
       <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
         {/* ── Menu bar ── */}
-        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
+        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
           {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
@@ -896,7 +896,7 @@ export default function App() {
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
               color: view === tab.id ? '#00bcd4' : T.textMuted,
               borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
-              padding: '0 4px', height:40,
+              padding: '0 4px', height:48,
             }}>{tab.label}</button>
           ))}
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
@@ -1010,7 +1010,7 @@ export default function App() {
     <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Menu bar ── */}
-      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
+      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:48, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>
           WarehouseIQ
         </span>
@@ -1021,7 +1021,7 @@ export default function App() {
             fontSize:12, fontWeight: view === tab.id ? 700 : 400,
             color: view === tab.id ? '#00bcd4' : T.textMuted,
             borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
-            padding: '0 4px', height:40,
+            padding: '0 4px', height:48,
           }}>{tab.label}</button>
         ))}
         <span style={{ color: T.sep, fontSize:12 }}>|</span>

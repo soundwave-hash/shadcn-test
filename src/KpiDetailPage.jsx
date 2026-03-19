@@ -733,7 +733,7 @@ export default function KpiDetailPage({
     <div ref={pageRef} style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Nav bar ── */}
-      <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
+      <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
         <span style={{ color: T.sep }}>|</span>
         {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
@@ -742,7 +742,7 @@ export default function KpiDetailPage({
             fontSize:12, fontWeight: tab.id === 'detail' ? 700 : 400,
             color: tab.id === 'detail' ? '#00bcd4' : T.textMuted,
             borderBottom: tab.id === 'detail' ? '2px solid #00bcd4' : '2px solid transparent',
-            padding: '0 4px', height:40,
+            padding: '0 4px', height:48,
           }}>{tab.label}</button>
         ))}
         <span style={{ color: T.sep }}>|</span>
