@@ -629,7 +629,7 @@ export default function InventoryScreen({
       <button
         onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
         style={{
-          position: 'fixed', bottom: 28, right: 38, zIndex: 9998,
+          position: 'fixed', bottom: 28, right: 48, zIndex: 9998,
           width: 44, height: 44, borderRadius: 10,
           background: '#1e2d5a', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
