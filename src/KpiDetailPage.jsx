@@ -596,7 +596,7 @@ export default function KpiDetailPage({
   const T = THEME[theme]
   const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px' }
   const ttip   = { backgroundColor:T.tooltipBg, border:`1px solid ${T.tooltipBorder}`, color:T.text, fontSize:11, borderRadius:6 }
-  const axTick = { fill:T.axTick, fontSize:10 }
+  const axTick = { fill:T.axTick, fontSize:11 }
 
   const period    = dateRange
   const setPeriod = onDateRangeChange ?? (() => {})
@@ -1075,7 +1075,7 @@ export default function KpiDetailPage({
                       <text
                         x={x} y={y + 4}
                         textAnchor={angled ? 'end' : 'middle'}
-                        fontSize={9}
+                        fontSize={11}
                         fill={isNow ? '#00bcd4' : T.axTick}
                         fontWeight={isNow ? 700 : 400}
                         transform={angled ? `rotate(-35, ${x}, ${y + 4})` : undefined}
