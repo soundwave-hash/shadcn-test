@@ -1017,7 +1017,7 @@ export default function App() {
         cities={CITY_LISTS[country]}
         cityScales={CITY_SCALES}
         countries={COUNTRIES}
-        onBack={(target) => setView(target ?? 'dashboard')}
+        onBack={(target) => { if (dateRange === '1D') setDateRange('1M'); setView(target ?? 'dashboard') }}
         onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
         onLocationChange={setSelectedCities}
         theme={theme}
