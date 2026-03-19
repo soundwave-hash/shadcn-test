@@ -885,7 +885,7 @@ export default function App() {
 
   if (view === 'geo') {
     return (
-      <div style={{ backgroundColor: T.bg, minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color: T.text }}>
+      <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
         {/* ── Menu bar ── */}
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
@@ -956,7 +956,7 @@ export default function App() {
         `}</style>
         <div
           className="geo-scroll"
-          style={{ height: 'calc(100vh - 40px)', overflowY: 'scroll', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}
+          style={{ flex:1, overflowY: 'scroll', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}
         >
           <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
@@ -1007,10 +1007,10 @@ export default function App() {
   }
 
   return (
-    <div style={{ backgroundColor: T.bg, minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color: T.text }}>
+    <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Menu bar ── */}
-      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
+      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>
           WarehouseIQ
         </span>
@@ -1157,7 +1157,7 @@ export default function App() {
       </div>
 
       {/* ── Dashboard body ── */}
-      <div ref={dashboardRef} style={{ padding:'12px 14px' }}>
+      <div ref={dashboardRef} style={{ flex:1, overflowY:'auto', padding:'14px 20px', scrollbarWidth:'thin', scrollbarColor:`${T.border} ${T.bg}` }}>
 
         {/* KPI cards — draggable */}
         <div className="kpi-grid">
