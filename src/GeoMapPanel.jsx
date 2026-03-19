@@ -182,12 +182,23 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
       </div>
 
       {/* Map */}
-      <div style={{ width: '100%' }} onClick={() => setZoomKey(k => k + 1)}>
+      <div style={{ width: '100%', position: 'relative' }} onClick={() => setZoomKey(k => k + 1)}>
         <style>{`
           @keyframes geo-pulse {
             0%   { transform: scale(1);   opacity: 0.7; }
             70%  { transform: scale(2.0); opacity: 0;   }
             100% { transform: scale(2.0); opacity: 0;   }
+          }
+          @keyframes geo-hint-fade {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+          }
+          @keyframes geo-hint-bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0);   }
+            50%       { transform: translateX(-50%) translateY(7px); }
+          }
+          .geo-hint-wrap {
+            animation: geo-hint-fade 0.8s ease-out forwards, geo-hint-bounce 1.6s ease-in-out 0.8s infinite;
           }
         `}</style>
         <ComposableMap
@@ -323,6 +334,34 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
             })}
           </ZoomableGroup>
         </ComposableMap>
+
+        {/* Scroll hint — positioned below Africa (~51% across, ~82% down the SVG) */}
+        {selectedCountry && (
+          <div
+            key={selectedCountry}
+            className="geo-hint-wrap"
+            style={{
+              position: 'absolute',
+              left: '51%',
+              top: '82%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 5,
+              pointerEvents: 'none',
+            }}
+          >
+            <span style={{ fontSize: 10, color: '#00bcd4', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+              scroll for carrier breakdown
+            </span>
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
+                 style={{ filter: 'drop-shadow(0 2px 8px rgba(0,188,212,0.5))' }}>
+              <circle cx="13" cy="13" r="12" stroke="#00bcd4" strokeWidth="1.5" strokeOpacity="0.55" />
+              <polyline points="8,10 13,17 18,10" stroke="#00bcd4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   )
