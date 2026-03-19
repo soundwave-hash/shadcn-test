@@ -1,9 +1,34 @@
 import { useState, useRef, useEffect } from 'react'
 
 export const USERS = [
-  { id: 1, name: 'Alex Chen',  role: 'Supply Chain Manager', src: '/avatar.jpg'   },
-  { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif' },
+  { id: 1, name: 'Alex Chen',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
+  { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif',
+    imgStyle: { transform: 'scale(1.8) translateY(-8%)', transformOrigin: 'center 25%' } },
 ]
+
+// Renders a circular avatar with per-user zoom/crop applied
+function Avatar({ user, size, border, onClick, title, cursor }) {
+  return (
+    <div
+      onClick={onClick}
+      title={title}
+      style={{
+        width: size, height: size, borderRadius: '50%', overflow: 'hidden',
+        flexShrink: 0, border, cursor: cursor ?? 'default',
+        transition: 'border 0.15s',
+      }}
+    >
+      <img
+        src={user.src}
+        alt={user.name}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+          ...(user.imgStyle ?? {}),
+        }}
+      />
+    </div>
+  )
+}
 
 export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft }) {
   const [open, setOpen] = useState(false)
@@ -19,17 +44,13 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
 
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0, marginLeft: marginLeft ?? 0 }}>
-      <img
-        src={activeUser.src}
-        alt={activeUser.name}
+      <Avatar
+        user={activeUser}
+        size={28}
+        border={open ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`}
         onClick={() => setOpen(o => !o)}
-        title="Switch account"
-        style={{
-          width: 28, height: 28, borderRadius: '50%', objectFit: 'cover',
-          cursor: 'pointer', flexShrink: 0, display: 'block',
-          border: open ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`,
-          transition: 'border 0.15s',
-        }}
+        title="User accounts"
+        cursor="pointer"
       />
 
       {open && (
@@ -65,13 +86,10 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
                 }}
               >
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <img
-                    src={user.src}
-                    alt={user.name}
-                    style={{
-                      width: 36, height: 36, borderRadius: '50%', objectFit: 'cover',
-                      border: active ? '2px solid #00bcd4' : `2px solid ${T.border}`,
-                    }}
+                  <Avatar
+                    user={user}
+                    size={36}
+                    border={active ? '2px solid #00bcd4' : `2px solid ${T.border}`}
                   />
                   {active && (
                     <div style={{
