@@ -831,11 +831,11 @@ export default function App() {
   const [overIdx, setOverIdx]     = useState(null)
   const [pressedIdx, setPressedIdx] = useState(null)
   const [kpiExpanded, setKpiExpanded] = useState(() => {
-    try { return localStorage.getItem('kpiExpanded') === 'true' } catch { return false }
+    return loadPrefs(USERS[0].id).kpiExpanded ?? false
   })
   useEffect(() => {
-    try { localStorage.setItem('kpiExpanded', kpiExpanded) } catch {}
-  }, [kpiExpanded])
+    savePrefs(activeUser.id, { kpiExpanded })
+  }, [kpiExpanded, activeUser])
   const dragNode = useRef(null)
 
   // Restore layout prefs when country or active account changes
@@ -843,6 +843,7 @@ export default function App() {
     const prefs = loadPrefs(activeUser.id)
     setKpiCards(applyKpiOrder([...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2], prefs.kpiOrder))
     setChartOrder(prefs.chartOrder ?? DEFAULT_CHART_ORDER)
+    setKpiExpanded(prefs.kpiExpanded ?? false)
   }, [country, activeUser])
 
   function handleDragStart(e, i) {
