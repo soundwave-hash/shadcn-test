@@ -524,18 +524,18 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
                 style={{ cursor:'pointer', width:12, height:12 }}
               />
               {/* Name */}
-              <span style={{ fontSize:10, color: T.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              <span style={{ fontSize:11, color: T.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                 {row.name}
               </span>
               {/* Unit Sales */}
               <div style={{ textAlign:'center', border:`1px solid ${T.border}`, borderRadius:3, padding:'1px 0' }}>
-                <span style={{ fontSize:10, color: T.text, fontVariantNumeric:'tabular-nums' }}>
+                <span style={{ fontSize:11, color: T.text, fontVariantNumeric:'tabular-nums' }}>
                   {row.avgSales.toLocaleString()}
                 </span>
               </div>
               {/* Inventory */}
               <div style={{ textAlign:'center', border:`1px solid ${T.border}`, borderRadius:3, padding:'1px 0' }}>
-                <span style={{ fontSize:10, color: T.text, fontVariantNumeric:'tabular-nums' }}>
+                <span style={{ fontSize:11, color: T.text, fontVariantNumeric:'tabular-nums' }}>
                   {row.inventory.toLocaleString()}
                 </span>
               </div>
@@ -543,7 +543,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
               {(() => {
                 return (
                   <div style={{ textAlign:'center', border:`1px solid ${T.border}`, borderRadius:3, padding:'1px 0' }}>
-                    <span style={{ fontSize:10, color: STATUS_C[row.status], fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
+                    <span style={{ fontSize:11, color: STATUS_C[row.status], fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
                       {row.wos}
                     </span>
                   </div>
@@ -616,6 +616,7 @@ export default function KpiDetailPage({
   }
   const [checked, setChecked] = useState(() => new Set(BASE_ITEMS.map(i => i.name)))
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
+  const [tldrExpanded, setTldrExpanded] = useState(false)
 
   const locationLabel = selectedCities.length === 0
     ? 'All'
@@ -696,22 +697,22 @@ export default function KpiDetailPage({
   const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
   const HEALTH_MESSAGES = {
     Healthy: [
-      `Carrier on-time performance is tracking at 94%+ this period. Express and ground routes are running on schedule with no significant delay events across the network. Recommendation: Maintain current replenishment cadence and consider opportunistic forward-buying on top 5 SKUs to lock in favorable freight rates before Q3 peak season.`,
-      `Fuel surcharges have stabilized at 12.5%, down from 14.2% last quarter. Unit shipping costs are within budget and no carrier rate increases are expected this period. Recommendation: Reallocate $18K in freight savings toward safety stock builds for high-velocity perishables ahead of the summer demand surge.`,
-      `No active weather advisories affecting distribution lanes. All major corridors are operating normally with seasonal conditions well within standard parameters. Recommendation: Advance next week's replenishment orders by 2 days to take advantage of open lane capacity and reduce weekend stockout risk on dairy and produce.`,
-      `Warehouse throughput is running at 78% utilization — well within optimal range. Dock scheduling is clear and pick-pack cycle times are meeting SLA targets across all active SKUs. Recommendation: Use available dock capacity to pull forward inbound receipts for Eggs and Whole Milk, both trending toward Watch status within 10 days at current velocity.`,
+      `Carrier on-time performance is tracking at 94%+ this period. Express and ground routes are running on schedule with no significant delay events across the network. Inventory turn rates are up 3% versus the prior period, and fill rates are holding above 98% across all active SKUs. Lead times from primary suppliers have shortened by an average of 0.4 days, creating a small buffer to optimize order frequency without increasing holding costs. Demand patterns remain stable and seasonal forecasts are aligned with current stock positions across all distribution centers. Recommendation: Maintain current replenishment cadence and consider opportunistic forward-buying on top 5 SKUs to lock in favorable freight rates before Q3 peak season. Coordinate with procurement to confirm secondary supplier availability as a backup, and flag any SKUs approaching 8-week coverage for a proactive reorder review before month-end.`,
+      `Fuel surcharges have stabilized at 12.5%, down from 14.2% last quarter. Unit shipping costs are within budget and no carrier rate increases are expected this period. Demand signals remain steady with no unusual velocity spikes flagged across the top 10 products. Inventory coverage across perishables is averaging 9.2 weeks — the strongest position recorded this fiscal year. Secondary suppliers have confirmed availability for all tracked SKUs through end of quarter, reducing spot procurement risk at elevated prices. Order accuracy from the primary DC is running at 99.4%, well above the 97% target. Recommendation: Reallocate $18K in freight savings toward safety stock builds for high-velocity perishables ahead of the summer demand surge.`,
+      `No active weather advisories affecting distribution lanes. All major corridors are operating normally with seasonal conditions well within standard parameters. Supplier lead times are consistent and inbound receipt accuracy is running at 99.1% this period. All 20 tracked SKUs are above the 8-week WoS threshold and velocity trends are flat to slightly positive, suggesting demand is holding without unusual draw-down pressure. Transportation cost per case is down 2.1% versus the same period last year, driven by improved route consolidation. Recommendation: Advance next week's replenishment orders by 2 days to take advantage of open lane capacity and reduce weekend stockout risk on dairy and produce.`,
+      `Warehouse throughput is running at 78% utilization — well within optimal range. Dock scheduling is clear and pick-pack cycle times are meeting SLA targets across all active SKUs. Year-over-year unit sales are up 6.2%, and WoS coverage is tracking above 8 weeks for 17 of 20 tracked items. Returns and shrinkage rates are at a 6-month low, improving net inventory accuracy to 98.7%. Carrier scorecards show 4 of 5 primary partners hitting 95%+ on-time delivery this month, reducing the need for expedite spend. No bottlenecks are anticipated through the end of the period. Recommendation: Use available dock capacity to pull forward inbound receipts for Eggs and Whole Milk, both trending toward Watch status within 10 days at current velocity.`,
     ],
     'At Risk': [
-      `Express carrier capacity is tightening due to elevated regional demand. 12% of shipments are experiencing 1–2 day delays; ground routes are absorbing overflow but slowing last-mile delivery. Recommendation: Expedite replenishment for the 4 lowest WoS items via secondary carrier and notify store ops of likely 48-hour shelf gap on Bananas and Baby Spinach.`,
-      `Diesel prices spiked 8% this month, triggering fuel surcharge adjustments from two major carriers. Average shipping cost per unit is up $0.43 versus the prior period. Recommendation: Consolidate the next 3 replenishment runs into 2 combined loads to offset surcharge impact — estimated savings of $2,100 per cycle at current volume.`,
-      `A cold front moving through the region is causing intermittent delays on key distribution corridors. 3–5% of shipments are flagged for weather holds; monitoring in progress. Recommendation: Pre-position 3-day buffer stock for OJ and Butter at the regional DC now — both items have less than 4 weeks of supply and are most exposed to delay-driven stockouts.`,
-      `Inbound freight volumes are running 18% above forecast, stressing dock scheduling. Overtime has been authorized but throughput delays of 6–12 hours are expected during peak windows. Recommendation: Prioritize dock slots for Russet Potatoes, Greek Yogurt, and OJ — all three are below 4 WoS and cannot absorb further receipt delays without hitting zero stock.`,
+      `Express carrier capacity is tightening due to elevated regional demand. 12% of shipments are experiencing 1–2 day delays; ground routes are absorbing overflow but slowing last-mile delivery. Six SKUs have dropped below 6 WoS over the past 5 days, signaling accelerating depletion risk. Historical data shows when carrier capacity tightens in this region, average replenishment cycle time increases by 2.3 days — putting 4 additional items at risk of falling into the critical zone before the next planned order cycle. Store-level OOS complaints are up 18% week-over-week on produce and dairy categories specifically. Recommendation: Expedite replenishment for the 4 lowest WoS items via secondary carrier and notify store ops of likely 48-hour shelf gap on Bananas and Baby Spinach.`,
+      `Diesel prices spiked 8% this month, triggering fuel surcharge adjustments from two major carriers. Average shipping cost per unit is up $0.43 versus the prior period. Simultaneously, 3 high-velocity SKUs are trending below their reorder points with no confirmed inbound receipts scheduled this week. The combination of elevated costs and supply uncertainty is compressing margin on affected SKUs by an estimated 4.2% — above the 3% threshold that typically triggers a procurement review. Secondary sourcing options have been identified for 2 of the 3 at-risk items but lead times are 4 days longer than primary suppliers. Recommendation: Consolidate the next 3 replenishment runs into 2 combined loads to offset surcharge impact — estimated savings of $2,100 per cycle at current volume.`,
+      `A cold front moving through the region is causing intermittent delays on key distribution corridors. 3–5% of shipments are flagged for weather holds; monitoring in progress. Historical data shows similar weather events extend average lead times by 1.8 days, compressing available supply runway for low-WoS items. Four SKUs currently sitting at 4–5 weeks of supply would cross into the critical zone if inbound receipts slip by more than 3 days. The forecast calls for conditions to persist through the next 48 hours before clearing, meaning the earliest reliable delivery window opens mid-week. Recommendation: Pre-position 3-day buffer stock for OJ and Butter at the regional DC now — both items have less than 4 weeks of supply and are most exposed to delay-driven stockouts.`,
+      `Inbound freight volumes are running 18% above forecast, stressing dock scheduling. Overtime has been authorized but throughput delays of 6–12 hours are expected during peak windows. On-shelf availability has dipped to 94.3% this week, down from 97.8% last period, driven primarily by late receipts on produce and dairy. The backlog is currently estimated at 14 hours and growing at approximately 1.5 hours per shift without additional staffing changes. Five SKUs that were in the Healthy zone at the start of the period have moved to Watch status due to delayed put-aways extending effective replenishment lead times. Recommendation: Prioritize dock slots for Russet Potatoes, Greek Yogurt, and OJ — all three are below 4 WoS and cannot absorb further receipt delays without hitting zero stock.`,
     ],
     Critical: [
-      `Major carrier disruptions across two primary lanes are resulting in 24–48 hour delays. Priority rerouting has been activated but backlog is growing — 22% of orders are past SLA. Recommendation: Activate emergency replenishment protocol for the 6 items below 2 WoS. Approve air freight for Butter and Baby Spinach immediately — combined SKU revenue at risk exceeds $340K over the next 7 days.`,
-      `Emergency freight surcharges are in effect due to capacity shortfalls. Air freight has been authorized for critical SKUs, increasing shipping costs by an estimated 34% above budget. Recommendation: Restrict promotional activity on all low-WoS items this week to slow velocity and extend runway. Coordinate with merchandising to pull circular features on OJ and Greek Yogurt until supply stabilizes.`,
-      `Severe weather conditions have suspended ground delivery across key corridors. Recovery is estimated at 4–7 business days pending clearance — expedited routing is strongly advised. Recommendation: Issue a store-level allocation cap of 60% on Bananas, Butter, and Baby Spinach effective immediately to distribute remaining inventory across locations and prevent single-store sellouts.`,
-      `Warehouse is operating at 97% capacity with inbound receipts exceeding available storage. Replenishment shipments are staged in overflow facilities, adding 1–2 days to put-away lead times. Recommendation: Escalate to supply chain leadership — current capacity constraints will cause 8 of 20 tracked SKUs to breach zero stock within 5 days without emergency sourcing or demand-side intervention.`,
+      `Major carrier disruptions across two primary lanes are resulting in 24–48 hour delays. Priority rerouting has been activated but backlog is growing — 22% of orders are past SLA. On-shelf availability has fallen to 87% network-wide, with 6 SKUs already reporting zero-stock events at 3 or more locations. Customer basket analysis shows shoppers are substituting out of category rather than waiting for restocks — representing an estimated $48K in lost revenue over the past 3 days alone. Secondary carriers have limited available capacity and spot market rates are running 62% above contracted levels. Every 24-hour delay in activating emergency protocols adds approximately $28K in projected stockout exposure. Recommendation: Activate emergency replenishment protocol for the 6 items below 2 WoS. Approve air freight for Butter and Baby Spinach immediately — combined SKU revenue at risk exceeds $340K over the next 7 days.`,
+      `Emergency freight surcharges are in effect due to capacity shortfalls. Air freight has been authorized for critical SKUs, increasing shipping costs by an estimated 34% above budget. Customer complaint volumes related to out-of-stock conditions are up 41% week-over-week, with Eggs and Greek Yogurt generating the highest incident rate. The financial impact of current stockouts is estimated at $62K in lost sales over the past week, with an additional $85K at risk if the supply gap extends into the weekend. Procurement has identified 2 spot suppliers that can ship within 48 hours, but at 28% above standard cost. Recommendation: Restrict promotional activity on all low-WoS items this week to slow velocity and extend runway. Coordinate with merchandising to pull circular features on OJ and Greek Yogurt until supply stabilizes.`,
+      `Severe weather conditions have suspended ground delivery across key corridors. Recovery is estimated at 4–7 business days pending clearance — expedited routing is strongly advised. 9 of 20 tracked SKUs now have less than 2 weeks of supply remaining, and demand velocity shows no signs of slowing based on current POS data. Air freight options have been priced at $4.20 per case for priority SKUs — 3.1x the standard ground rate — but may be necessary to prevent widespread stockouts before lanes reopen. Store managers in 4 metro markets have begun implementing informal rationing on high-demand items, which risks brand reputation if not formalized quickly. Recommendation: Issue a store-level allocation cap of 60% on Bananas, Butter, and Baby Spinach effective immediately to distribute remaining inventory across locations and prevent single-store sellouts.`,
+      `Warehouse is operating at 97% capacity with inbound receipts exceeding available storage. Replenishment shipments are staged in overflow facilities, adding 1–2 days to put-away lead times. Slotting conflicts are causing pick errors to rise — accuracy has dropped to 96.1%, introducing additional fulfillment risk on top of the existing supply shortfall. The overflow situation is expected to worsen over the next 48 hours as 3 large inbound loads arrive without corresponding outbound volume to free floor space. Labor productivity has declined 12% as associates navigate congested aisles and staging areas. 8 of 20 SKUs are now in the critical WoS range with time-to-zero on the 3 worst-positioned items estimated at 4 days. Recommendation: Escalate to supply chain leadership — current capacity constraints will cause 8 of 20 tracked SKUs to breach zero stock within 5 days without emergency sourcing or demand-side intervention.`,
     ],
   }
   const msgIdx = (country.length + period.length) % 4
@@ -726,7 +727,7 @@ export default function KpiDetailPage({
   const dropBtn = {
     backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
     fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer',
-    display:'flex', alignItems:'center', gap:6,
+    display:'flex', alignItems:'center', gap:6, height:28,
   }
 
   return (
@@ -876,52 +877,16 @@ export default function KpiDetailPage({
         {/* RIGHT: Meter + Chart */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, minWidth:0 }}>
 
-          {/* Metric Meter */}
-          <div style={{ ...panel, display:'flex', alignItems:'flex-start', gap:24, flexShrink:0, padding:'12px 20px' }}>
-            <div style={{ flex:'0 0 auto' }}>
+          {/* Meter + TL;DR row */}
+          <div style={{ display:'flex', gap:10, flexShrink:0 }}>
+
+            {/* Health Meter module */}
+            <div style={{ ...panel, display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'12px 20px', flexShrink:0 }}>
               <MetricGauge period={period} country={country} selectedCities={selectedCities} checked={checked} T={T}/>
-            </div>
-            <div style={{ flex:1, borderLeft:`1px solid ${T.border}`, paddingLeft:24 }}>
-              <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Inventory Health Context</div>
-
-              {/* Score badge + TL;DR */}
-              <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:10 }}>
-                <div style={{ flexShrink:0, width:60, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:6, padding:'4px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' }}>
-                  <div style={{ fontSize:18, fontWeight:700, color: healthColor }}>{isNaN(healthPct) ? 0 : healthPct}%</div>
-                  <div style={{ fontSize:9, color: healthColor, fontWeight:600 }}>{healthZone}</div>
-                </div>
-                <div style={{ fontSize:12, color: T.textMuted, lineHeight:1.7 }}>
-                  {healthTldr.includes('Recommendation:') ? (
-                    <>
-                      {healthTldr.split('Recommendation:')[0]}
-                      <span style={{ fontWeight:700, color: healthColor }}>Recommendation:</span>
-                      {healthTldr.split('Recommendation:')[1]}
-                    </>
-                  ) : healthTldr}
-                </div>
-              </div>
-
-              {/* At-risk items */}
-              {lowItems.length > 0 && (
-                <div>
-                  <div style={{ fontSize:10, color: T.textDim, marginBottom:4 }}>
-                    Lowest supply — action needed
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                    {lowItems.slice(0,3).map(item => (
-                      <div key={item.name} style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
-                        <span style={{ color: T.textMuted }}>{item.name}</span>
-                        <span style={{ color:'#f44336', fontWeight:600 }}>{item.wos} WOS</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Health range legend */}
-              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
-                <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Health Ranges</div>
-                <div style={{ display:'grid', gridTemplateColumns:'60px auto 1fr', gap:'4px 8px', alignItems:'center' }}>
+              <div style={{ width:'100%', display:'flex', flexDirection:'column', alignItems:'center' }}>
+                <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6, textAlign:'center' }}>Health Ranges</div>
+                <div style={{ display:'grid', gridTemplateColumns:'60px auto auto', gap:'4px 8px', alignItems:'center', width:'fit-content' }}>
                   {[
                     ['#4caf50', 'Healthy',  '≥ 67%', 'Most items adequately stocked'],
                     ['#ff9800', 'At Risk',  '34–66%', 'Multiple items running low'],
@@ -938,6 +903,86 @@ export default function KpiDetailPage({
                 </div>
               </div>
             </div>
+
+            {/* TL;DR module */}
+            <div style={{ ...panel, flex:1, padding:'12px 20px' }}>
+              {/* Score badge + TL;DR + At-risk items */}
+              <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
+                {/* Badge */}
+                <div style={{ flexShrink:0, width:80, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:8, padding:'8px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' }}>
+                  <div style={{ fontSize:26, fontWeight:700, color: healthColor, lineHeight:1.1 }}>{isNaN(healthPct) ? 0 : healthPct}%</div>
+                  <div style={{ fontSize:10, color: healthColor, fontWeight:600, marginTop:3 }}>{healthZone}</div>
+                </div>
+                {/* TL;DR */}
+                {(() => {
+                  const [body, rec] = healthTldr.includes('Recommendation:')
+                    ? healthTldr.split('Recommendation:')
+                    : [healthTldr, null]
+                  const bodyWords = body.trim().split(/\s+/)
+                  const needsTruncation = bodyWords.length > 60
+                  const truncatedBody = needsTruncation ? bodyWords.slice(0, 60).join(' ') : body.trim()
+                  return (
+                    <div style={{ fontSize:14, color: T.textMuted, lineHeight:1.7, maxWidth:'25vw', marginTop:'-0.35em' }}>
+                      {/* Body — truncatable */}
+                      {tldrExpanded ? body.trim() : (
+                        <>
+                          {truncatedBody}
+                          {needsTruncation && (
+                            <span
+                              onMouseDown={() => setTldrExpanded(true)}
+                              style={{ color:'#00bcd4', cursor:'pointer', fontWeight:700, marginLeft:4 }}
+                            >...</span>
+                          )}
+                        </>
+                      )}
+                      {/* Recommendation — always visible, truncated at 30 words */}
+                      {rec && (() => {
+                        const recWords = rec.trim().split(/\s+/)
+                        const recNeedsTrunc = recWords.length > 30
+                        const truncatedRec = recNeedsTrunc && !tldrExpanded ? recWords.slice(0, 30).join(' ') : rec.trim()
+                        return (
+                          <><br /><br /><span style={{ fontWeight:700, color: healthColor }}>Recommendation:</span><br />
+                          {truncatedRec}
+                          {recNeedsTrunc && !tldrExpanded && (
+                            <span
+                              onMouseDown={() => setTldrExpanded(true)}
+                              style={{ color:'#00bcd4', cursor:'pointer', fontWeight:700, marginLeft:4 }}
+                            >...</span>
+                          )}
+                          {tldrExpanded && (
+                            <span
+                              onMouseDown={() => setTldrExpanded(false)}
+                              style={{ color:'#00bcd4', cursor:'pointer', fontSize:11, marginLeft:6, userSelect:'none' }}
+                            >▲</span>
+                          )}</>
+                        )
+                      })()}
+                    </div>
+                  )
+                })()}
+                {/* Separator */}
+                {lowItems.length > 0 && (
+                  <div style={{ width:1, alignSelf:'stretch', backgroundColor: T.border, flexShrink:0, margin:'0 8px' }} />
+                )}
+                {/* At-risk items */}
+                {lowItems.length > 0 && (
+                  <div style={{ flexShrink:0, marginTop:'-0.35em' }}>
+                    <div style={{ fontSize:12, color: T.textDim, marginBottom:6 }}>
+                      Lowest supply — action needed
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'max-content auto', columnGap:12, rowGap:3 }}>
+                      {lowItems.slice(0,3).map(item => (
+                        <React.Fragment key={item.name}>
+                          <span style={{ color: T.textMuted, fontSize:12 }}>{item.name}</span>
+                          <span style={{ color:'#f44336', fontWeight:600, fontSize:12, whiteSpace:'nowrap' }}>{item.wos} WOS</span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
 
           {/* Line Chart */}

@@ -1044,7 +1044,7 @@ export default function App() {
               <button style={{
                 backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
                 fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer',
-                display:'flex', alignItems:'center', gap:6,
+                display:'flex', alignItems:'center', gap:6, height:28,
               }}>
                 {country}
                 <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
@@ -1070,7 +1070,7 @@ export default function App() {
           <span style={{ fontSize:11, color: T.textDim }}>Location:</span>
           <DropdownMenu open={locationMenuOpen} onOpenChange={setLocationMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+              <button style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6, height:28 }}>
                 {locationLabel}
                 <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
               </button>

@@ -243,7 +243,7 @@ export default function InventoryScreen({
   const dropBtn = {
     backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
     fontSize: 12, padding: '3px 9px', borderRadius: 4, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', gap: 6,
+    display: 'flex', alignItems: 'center', gap: 6, height: 28,
   }
   const filterDropBtn = {
     ...dropBtn,
