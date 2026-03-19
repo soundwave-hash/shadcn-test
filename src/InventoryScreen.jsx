@@ -44,6 +44,17 @@ const STICKY_COLS     = COLS.filter(c => c.sticky)
 const NON_STICKY_COLS = COLS.filter(c => !c.sticky)
 const COLS_BY_KEY     = Object.fromEntries(COLS.map(c => [c.key, c]))
 
+// Exchange rates vs USD — hardcoded as of March 2026
+const CURRENCY_BY_COUNTRY = {
+  'United States': { code: 'USD', symbol: '$',   rate: 1.00,  decimals: 2 },
+  'China':         { code: 'CNY', symbol: '¥',   rate: 7.24,  decimals: 2 },
+  'Germany':       { code: 'EUR', symbol: '€',   rate: 0.92,  decimals: 2 },
+  'Japan':         { code: 'JPY', symbol: '¥',   rate: 149.0, decimals: 0 },
+  'Canada':        { code: 'CAD', symbol: 'CA$', rate: 1.38,  decimals: 2 },
+  'Korea':         { code: 'KRW', symbol: '₩',   rate: 1340,  decimals: 0 },
+  'Mexico':        { code: 'MXN', symbol: 'MX$', rate: 17.2,  decimals: 2 },
+}
+
 // Cumulative left offsets for sticky columns (0, 72, 240, 350)
 const STICKY_LEFTS = COLS.reduce((acc, col) => {
   const last = acc.length ? acc[acc.length - 1] : null
@@ -127,12 +138,18 @@ function fillColor(fr) {
   if (fr >= 95) return '#ff9800'
   return '#f44336'
 }
-function fmt(v, key) {
+function fmt(v, key, cur, showUSD) {
   if (key === 'gmPct')    return (v * 100).toFixed(1) + '%'
   if (key === 'fillRate') return v.toFixed(1) + '%'
   if (key === 'wos')      return v.toFixed(1)
   if (key === 'leadTime') return v + 'd'
-  if (['retail','cost','gmDollar'].includes(key)) return '$' + v.toFixed(2)
+  if (['retail','cost','gmDollar'].includes(key)) {
+    if (!cur || showUSD) return '$' + v.toFixed(2)
+    const converted = v * cur.rate
+    return cur.symbol + (cur.decimals === 0
+      ? Math.round(converted).toLocaleString()
+      : converted.toFixed(cur.decimals))
+  }
   return v.toLocaleString()
 }
 
@@ -172,6 +189,17 @@ export default function InventoryScreen({
   const prevCitiesRef                     = useRef(selectedCities)
 
   const isDark = theme === 'dark'
+  const [showUSD, setShowUSD] = useState(false)
+  const currency = CURRENCY_BY_COUNTRY[country] ?? CURRENCY_BY_COUNTRY['United States']
+  const isLocalUSD = currency.code === 'USD'
+
+  useEffect(() => { setShowUSD(false) }, [country])
+
+  function colLabel(col) {
+    if (!showUSD && !isLocalUSD && ['retail','cost','gmDollar'].includes(col.key))
+      return col.label.replace('$', currency.symbol)
+    return col.label
+  }
 
   // Restore column order when active account switches
   useEffect(() => {
@@ -278,7 +306,7 @@ export default function InventoryScreen({
       COLS.map(c => {
         const v = r[c.key]
         if (typeof v === 'string') return `"${v}"`
-        return fmt(v, c.key)
+        return fmt(v, c.key, currency, showUSD)
       }).join(',')
     )
     saveAs(new Blob([[header, ...body].join('\n')], { type: 'text/csv;charset=utf-8;' }), 'inventory.csv')
@@ -474,6 +502,21 @@ export default function InventoryScreen({
         <span style={{ marginLeft: 'auto', fontSize: 11, color: T.textDim }}>
           {rows.length} products
         </span>
+
+        {!isLocalUSD && (
+          <button
+            onClick={() => setShowUSD(s => !s)}
+            title={showUSD ? `Switch to ${currency.code}` : 'Switch to USD'}
+            style={{
+              background: 'none', border: `1px solid ${showUSD ? '#00bcd4' : T.inputBorder}`,
+              color: showUSD ? '#00bcd4' : T.textMuted,
+              fontSize: 11, padding: '3px 10px', borderRadius: 4, cursor: 'pointer',
+              flexShrink: 0, transition: 'all 0.15s',
+            }}
+          >
+            {showUSD ? `${currency.symbol} ${currency.code}` : '$ USD'}
+          </button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -528,7 +571,7 @@ export default function InventoryScreen({
                       letterSpacing: '0.02em',
                       whiteSpace: 'nowrap',
                     }}>
-                      {col.label}{col.tooltip && <span style={{ fontSize: 9, marginLeft: 3, opacity: 0.5 }}>ⓘ</span>}
+                      {colLabel(col)}{col.tooltip && <span style={{ fontSize: 9, marginLeft: 3, opacity: 0.5 }}>ⓘ</span>}
                     </span>
                   </TableHead>
                 )
@@ -584,7 +627,7 @@ export default function InventoryScreen({
                       boxSizing:       'border-box',
                       verticalAlign:   'middle',
                     }}>
-                      {fmt(v, col.key)}
+                      {fmt(v, col.key, currency, showUSD)}
                     </TableCell>
                   )
                 })}
