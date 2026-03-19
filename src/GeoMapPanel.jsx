@@ -254,7 +254,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                   onMouseLeave={() => setHoveredCountry(null)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Hover ring */}
+                  {/* Hover ring — static outline */}
                   {isHovered && !isSelected && (
                     <circle
                       r={scaledR + 5}
@@ -262,6 +262,20 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                       stroke={tier.color}
                       strokeWidth={1}
                       strokeOpacity={0.3}
+                    />
+                  )}
+                  {/* Hover ring — pulsing */}
+                  {isHovered && !isSelected && (
+                    <circle
+                      r={scaledR + 5}
+                      fill="none"
+                      stroke={tier.color}
+                      strokeWidth={1.5}
+                      style={{
+                        transformBox: 'fill-box',
+                        transformOrigin: 'center',
+                        animation: 'geo-pulse 1.8s ease-out infinite',
+                      }}
                     />
                   )}
                   {/* Pulsing ring for selected state */}
