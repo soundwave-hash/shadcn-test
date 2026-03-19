@@ -650,7 +650,7 @@ function ShipmentTooltip({ active, payload, label, coordinate, viewBox, T, forma
       pointerEvents: 'none',
       // toRight: shift right so left edge clears the bar
       // toLeft:  translateX(-100%) moves right edge to wrapper origin, then subtract gap
-      ...(toRight ? { marginLeft: 30 } : { transform: 'translateX(calc(-100% - 70px))' }),
+      ...(toRight ? { marginLeft: 10, marginTop: 10 } : { transform: 'translateX(calc(-100% - 90px))', marginTop: 10 }),
     }}>
       <div style={{ marginBottom:4, fontWeight:600 }}>{label}</div>
       {payload.map(p => (
