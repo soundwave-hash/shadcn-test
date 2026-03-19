@@ -269,7 +269,7 @@ export default function InventoryScreen({
     userSelect:      'none',
     whiteSpace:      'nowrap',
     minWidth:        col.width,
-    width:           col.width,
+    width:           col.sticky ? col.width : undefined,
     boxSizing:       'border-box',
   })
 
@@ -422,7 +422,7 @@ export default function InventoryScreen({
         .inv-row:hover td { background-color: ${T.rowHover} !important; }
       `}</style>
       <div className="inv-scroll" style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', width: 'max-content' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', width: '100%' }}>
           <thead>
             <tr>
               {displayCols.map(col => {
@@ -501,7 +501,7 @@ export default function InventoryScreen({
                       color:           cellColor ?? (col.sticky ? T.text : T.textMuted),
                       whiteSpace:      'nowrap',
                       minWidth:        col.width,
-                      width:           col.width,
+                      width:           col.sticky ? col.width : undefined,
                       boxSizing:       'border-box',
                       verticalAlign:   'middle',
                     }}>
