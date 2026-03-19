@@ -126,8 +126,19 @@ function _daysBack(n) { const d = new Date(_TODAY); d.setDate(d.getDate() - n); 
 function _fmtDate(d)  { return `${_MONTHS[d.getMonth()]} ${d.getDate()}` }
 function _fmt12h(i)   { if (i === 0) return '12 AM'; if (i < 12) return `${i} AM`; if (i === 12) return '12 PM'; return `${i - 12} PM` }
 
+// Get current hour in Pacific time (America/Los_Angeles handles PST/PDT automatically)
+const _pacificHour = () => {
+  const h = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()), 10)
+  return h === 24 ? 0 : h
+}
+const _TODAY_HOUR_PT = _pacificHour()
+
 // Current-position labels used for axis highlight
-const CURRENT_LABEL_1D  = _fmt12h(_TODAY.getHours())
+const CURRENT_LABEL_1D  = _fmt12h(_TODAY_HOUR_PT)
 const CURRENT_LABEL_YTD = _MONTHS[_TODAY.getMonth()]
 
 const PERIOD_CFG = {
@@ -354,7 +365,9 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
     return r
   }, [allRows, selCats, selSubs])
 
-  const subcats = selCats.size === 0 ? [] : [...selCats].flatMap(cat => SUBCATEGORIES_BY_CATEGORY[cat] ?? [])
+  const subcats = selCats.size === 0
+    ? Object.values(SUBCATEGORIES_BY_CATEGORY).flat()
+    : [...selCats].flatMap(cat => SUBCATEGORIES_BY_CATEGORY[cat] ?? [])
 
   const catLabel = selCats.size === 0 ? 'All' : selCats.size === 1 ? [...selCats][0] : `${selCats.size} Depts`
   const subLabel = selSubs.size === 0 ? 'All' : selSubs.size === 1 ? [...selSubs][0] : `${selSubs.size} Subs`
@@ -426,34 +439,32 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Subcategory multi-select — only shown when any department is selected */}
-        {selCats.size > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button style={{
-                backgroundColor: T.inputBg, border:`1px solid ${selSubs.size > 0 ? '#00bcd4' : T.inputBorder}`,
-                color: selSubs.size > 0 ? '#00bcd4' : T.inputText,
-                fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
-                display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
-              }}>
-                <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sub</span>
-                {subLabel} ▾
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:180, zIndex:100 }}>
-              <DropdownMenuItem closeOnClick={false} onClick={() => handleSubToggle('All')}
-                style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.size === 0 ? '#00bcd4' : T.text, backgroundColor: selSubs.size === 0 ? T.activeItemBg : 'transparent' }}>
-                All
+        {/* Subcategory multi-select — always visible */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button style={{
+              backgroundColor: T.inputBg, border:`1px solid ${selSubs.size > 0 ? '#00bcd4' : T.inputBorder}`,
+              color: selSubs.size > 0 ? '#00bcd4' : T.inputText,
+              fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
+              display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
+            }}>
+              <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Cat</span>
+              {subLabel} ▾
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:180, zIndex:100 }}>
+            <DropdownMenuItem closeOnClick={false} onClick={() => handleSubToggle('All')}
+              style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.size === 0 ? '#00bcd4' : T.text, backgroundColor: selSubs.size === 0 ? T.activeItemBg : 'transparent' }}>
+              All
+            </DropdownMenuItem>
+            {subcats.map(sub => (
+              <DropdownMenuItem key={sub} closeOnClick={false} onClick={() => handleSubToggle(sub)}
+                style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.has(sub) ? '#00bcd4' : T.text, backgroundColor: selSubs.has(sub) ? T.activeItemBg : 'transparent' }}>
+                {selSubs.has(sub) ? '✓ ' : ''}{sub}
               </DropdownMenuItem>
-              {subcats.map(sub => (
-                <DropdownMenuItem key={sub} closeOnClick={false} onClick={() => handleSubToggle(sub)}
-                  style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.has(sub) ? '#00bcd4' : T.text, backgroundColor: selSubs.has(sub) ? T.activeItemBg : 'transparent' }}>
-                  {selSubs.has(sub) ? '✓ ' : ''}{sub}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Reset pill */}
         {(selCats.size > 0 || selSubs.size > 0) && (
@@ -686,7 +697,7 @@ export default function KpiDetailPage({
       }))
     }
     if (period === '1D') {
-      const cutIdx = _TODAY.getHours()
+      const cutIdx = _TODAY_HOUR_PT
       return series.map((pt, i) => ({
         ...pt,
         actual:   i <= cutIdx ? pt.thisYear : null,
