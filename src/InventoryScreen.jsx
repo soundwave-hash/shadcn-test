@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import AccountSwitcher from './AccountSwitcher'
 import {
   PRODUCTS,
   CATEGORIES,
@@ -148,6 +149,7 @@ export default function InventoryScreen({
   theme, T, country, selectedCities, countries, cities,
   onCountryChange, onLocationChange, dateRange, onDateRangeChange,
   setView, onThemeToggle,
+  activeUser, onUserSwitch,
 }) {
   const [selDepts, setSelDepts]           = useState(new Set())  // empty = All
   const [selSubs,  setSelSubs]            = useState(new Set())  // empty = All
@@ -383,7 +385,7 @@ export default function InventoryScreen({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <img src="/avatar.jpg" alt="User account" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${T.inputBorder}`, flexShrink: 0 }} />
+          {activeUser && <AccountSwitcher activeUser={activeUser} onSwitch={onUserSwitch} T={T} />}
         </div>
       </div>
 

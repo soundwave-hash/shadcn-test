@@ -14,6 +14,7 @@ import { Sun, Download } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
+import AccountSwitcher, { USERS } from './AccountSwitcher'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -725,6 +726,7 @@ export default function App() {
   const [theme, setTheme] = useState('dark')
   const [dateRange, setDateRange] = useState('1M')
   const [kpiLoading, setKpiLoading] = useState(false)
+  const [activeUser, setActiveUser] = useState(USERS[0])
   // Dashboard doesn't support 1D — clamp to 5D if arriving from unit sales
   const dashboardRange = dateRange === '1D' ? '5D' : dateRange
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
@@ -963,11 +965,7 @@ export default function App() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <img
-              src="/avatar.jpg"
-              alt="User account"
-              style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:4, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
-            />
+            <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={4} />
           </div>
         </div>
         <style>{`
@@ -1001,6 +999,8 @@ export default function App() {
         onDateRangeChange={setDateRange}
         setView={setView}
         onThemeToggle={toggleTheme}
+        activeUser={activeUser}
+        onUserSwitch={setActiveUser}
       />
     )
   }
@@ -1024,6 +1024,8 @@ export default function App() {
         onThemeToggle={toggleTheme}
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
+        activeUser={activeUser}
+        onUserSwitch={setActiveUser}
       />
     )
   }
@@ -1167,11 +1169,7 @@ export default function App() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <img
-            src="/avatar.jpg"
-            alt="User account"
-            style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:8, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
-          />
+          <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={8} />
         </div>
       </div>
 

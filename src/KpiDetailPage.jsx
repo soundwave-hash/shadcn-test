@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
+import AccountSwitcher from './AccountSwitcher'
 import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
 import {
   ComposedChart, Area, Line,
@@ -593,6 +594,7 @@ export default function KpiDetailPage({
   onBack, onCountryChange, onLocationChange,
   theme = 'dark', onThemeToggle,
   dateRange = '1M', onDateRangeChange,
+  activeUser, onUserSwitch,
 }) {
   const T = THEME[theme]
   const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px' }
@@ -880,11 +882,7 @@ export default function KpiDetailPage({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <img
-            src="/avatar.jpg"
-            alt="User account"
-            style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:8, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
-          />
+          {activeUser && <AccountSwitcher activeUser={activeUser} onSwitch={onUserSwitch} T={T} marginLeft={8} />}
         </div>
       </div>
 
