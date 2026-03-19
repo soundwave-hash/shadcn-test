@@ -161,10 +161,15 @@ export default function InventoryScreen({
   const [tooltip, setTooltip]             = useState(null) // { text, x, y }
   const [tableLoading, setTableLoading]   = useState(false)
   const dragColRef                        = useRef(null)
+  const prevCountryRef                    = useRef(country)
+  const prevCitiesRef                     = useRef(selectedCities)
 
   const isDark = theme === 'dark'
 
   useEffect(() => {
+    if (prevCountryRef.current === country && prevCitiesRef.current === selectedCities) return
+    prevCountryRef.current = country
+    prevCitiesRef.current  = selectedCities
     setTableLoading(true)
     const t = setTimeout(() => setTableLoading(false), 350)
     return () => clearTimeout(t)

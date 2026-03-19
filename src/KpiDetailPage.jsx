@@ -263,6 +263,7 @@ function MetricGauge({ period, country, selectedCities, checked, T }) {
   useEffect(() => {
     const startVal = currentRef.current
     const endVal   = targetPct
+    if (startVal === endVal) return
     const duration = 700
     const startTime = performance.now()
     if (animRef.current) cancelAnimationFrame(animRef.current)
@@ -604,8 +605,13 @@ export default function KpiDetailPage({
   const [chartLoading, setChartLoading] = useState(false)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)
+  const prevCountryRef = useRef(country)
+  const prevCitiesRef  = useRef(selectedCities)
 
   useEffect(() => {
+    if (prevCountryRef.current === country && prevCitiesRef.current === selectedCities) return
+    prevCountryRef.current = country
+    prevCitiesRef.current  = selectedCities
     setChartLoading(true)
     const t = setTimeout(() => setChartLoading(false), 350)
     return () => clearTimeout(t)
@@ -1094,20 +1100,20 @@ export default function KpiDetailPage({
                   {/* Lines — always render all three; use hide to toggle so recharts doesn't lose track */}
                   <Line type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
                     dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                    animationDuration={700} animationEasing="ease-in-out"
+                    isAnimationActive={false}
                     hide={['YTD','1D'].includes(period)}/>
                   <Line type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
                     dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                    connectNulls={false} animationDuration={700} animationEasing="ease-in-out"
+                    connectNulls={false} isAnimationActive={false}
                     hide={!['YTD','1D'].includes(period)}/>
                   <Line type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
                     strokeDasharray="4 4" strokeOpacity={0.55}
                     dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
-                    connectNulls={false} animationDuration={700} animationEasing="ease-in-out"
+                    connectNulls={false} isAnimationActive={false}
                     hide={!['YTD','1D'].includes(period)}/>
                   <Line type="monotone" dataKey="lastYear" stroke="#ff9800" strokeWidth={1.5}
                     dot={{ r:2.5, fill:'#ff9800', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
-                    animationDuration={700} animationEasing="ease-in-out"/>
+                    isAnimationActive={false}/>
                 </ComposedChart>
               </ResponsiveContainer>
 
