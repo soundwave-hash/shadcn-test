@@ -240,8 +240,8 @@ export default function SankeyPanel({ country, carrierRows, T, onScrollToMap }) 
           to   { opacity: 1; }
         }
         @keyframes sankey-hint-bounce {
-          0%, 100% { transform: translateX(-50%) translateY(0);   }
-          50%       { transform: translateX(-50%) translateY(-7px); }
+          0%, 100% { transform: translateX(-50%) translateY(-100%);        }
+          50%       { transform: translateX(-50%) translateY(calc(-100% - 7px)); }
         }
         .sankey-hint-wrap {
           animation: sankey-hint-fade 0.8s ease-out forwards, sankey-hint-bounce 1.6s ease-in-out 0.8s infinite;
@@ -254,9 +254,9 @@ export default function SankeyPanel({ country, carrierRows, T, onScrollToMap }) 
           onClick={onScrollToMap}
           style={{
             position: 'absolute',
-            top: 18,
+            top: 0,
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: 'translateX(-50%) translateY(-100%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
