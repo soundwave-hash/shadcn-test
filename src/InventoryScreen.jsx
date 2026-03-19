@@ -519,7 +519,8 @@ export default function InventoryScreen({
     {tooltip && (
       <div style={{
         position:     'fixed',
-        left:         tooltip.x + 12,
+        left:         tooltip.x > window.innerWidth * 0.6 ? undefined : tooltip.x + 12,
+        right:        tooltip.x > window.innerWidth * 0.6 ? window.innerWidth - tooltip.x + 12 : undefined,
         top:          tooltip.y + 16,
         zIndex:       9999,
         background:   isDark ? '#2a2a2a' : '#fff',
