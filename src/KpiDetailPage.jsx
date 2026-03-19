@@ -751,7 +751,7 @@ export default function KpiDetailPage({
             <button key={r} onClick={() => onDateRangeChange(r)} style={{
               background: r === dateRange ? '#00bcd4' : 'transparent',
               color:      r === dateRange ? '#111' : T.textDim,
-              border: `1px solid #00bcd4`, fontSize:11, padding:'1.5px 0', width:42, textAlign:'center',
+              border: `1px solid #00bcd4`, fontSize:12, padding:'3px 0', width:42, textAlign:'center',
               borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
               transition:'all 0.15s',
             }}>{r}</button>
@@ -1081,7 +1081,7 @@ export default function KpiDetailPage({
                   background: p===period ? '#00bcd4' : 'transparent',
                   color:       p===period ? '#111'    : T.textDim,
                   border:     `1px solid #00bcd4`,
-                  fontSize:11, padding:'1.5px 0', width:42, textAlign:'center', borderRadius:4, cursor:'pointer',
+                  fontSize:12, padding:'3px 0', width:42, textAlign:'center', borderRadius:4, cursor:'pointer',
                   fontWeight:  p===period ? 700 : 400, transition:'all 0.15s',
                 }}>
                   {p}
