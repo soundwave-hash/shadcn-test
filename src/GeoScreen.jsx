@@ -31,12 +31,41 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <style>{`
+        @keyframes geo-fade-in {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes geo-bounce {
+          0%, 100% { transform: translateY(0);    }
+          50%       { transform: translateY(7px);  }
+        }
+        .geo-scroll-hint {
+          animation: geo-fade-in 0.7s ease-out forwards, geo-bounce 1.6s ease-in-out 0.7s infinite;
+        }
+      `}</style>
+
       <GeoMapPanel
         selectedCountry={selectedCountry}
         onCountrySelect={setSelectedCountry}
         dateRange={dateRange}
         T={T}
       />
+
+      {selectedCountry && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, margin: '-4px 0 -4px' }}>
+          <span style={{ fontSize: 11, color: T.textDim, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                className="geo-scroll-hint">
+            Scroll for carrier breakdown
+          </span>
+          <svg className="geo-scroll-hint" width="28" height="28" viewBox="0 0 28 28" fill="none"
+               style={{ filter: 'drop-shadow(0 2px 6px rgba(0,188,212,0.35))' }}>
+            <circle cx="14" cy="14" r="13" stroke="#00bcd4" strokeWidth="1.5" strokeOpacity="0.5" />
+            <polyline points="9,11 14,18 19,11" stroke="#00bcd4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
+
       <SankeyPanel
         country={selectedCountry || 'Global'}
         carrierRows={carrierRows}
