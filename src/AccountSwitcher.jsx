@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
 export const USERS = [
-  { id: 1, name: 'Alex Chen',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
+  { id: 1, name: 'Takumi Fujiwara',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
   { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif',
     imgStyle: { transform: 'scale(1.3) translateY(-8%)', transformOrigin: 'center 25%' } },
 ]
