@@ -716,8 +716,29 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
   )
 }
 
+// ── Per-account persistence helpers ───────────────────────────────────────────
+const DEFAULT_CHART_ORDER = ['carrier','time','failure','status']
+
+function loadPrefs(userId) {
+  try { return JSON.parse(localStorage.getItem(`warehouseiq_prefs_${userId}`)) ?? {} } catch { return {} }
+}
+function savePrefs(userId, patch) {
+  try {
+    const cur = loadPrefs(userId)
+    localStorage.setItem(`warehouseiq_prefs_${userId}`, JSON.stringify({ ...cur, ...patch }))
+  } catch {}
+}
+function applyKpiOrder(cards, savedOrder) {
+  if (!savedOrder?.length) return cards
+  const map = Object.fromEntries(cards.map(c => [c.label, c]))
+  const ordered = savedOrder.filter(l => map[l]).map(l => map[l])
+  const rest = cards.filter(c => !savedOrder.includes(c.label))
+  return [...ordered, ...rest]
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [activeUser, setActiveUser] = useState(USERS[0])
   const [country, setCountry] = useState('United States')
   const [selectedCities, setSelectedCities] = useState([])   // [] = "All"
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
@@ -726,7 +747,6 @@ export default function App() {
   const [theme, setTheme] = useState('dark')
   const [dateRange, setDateRange] = useState('1M')
   const [kpiLoading, setKpiLoading] = useState(false)
-  const [activeUser, setActiveUser] = useState(USERS[0])
   // Dashboard doesn't support 1D — clamp to 5D if arriving from unit sales
   const dashboardRange = dateRange === '1D' ? '5D' : dateRange
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
@@ -803,7 +823,10 @@ export default function App() {
   const d = COUNTRY_DATA[country]
 
   // ── KPI drag-and-drop ──
-  const [kpiCards, setKpiCards] = useState([...d.kpi1, ...d.kpi2])
+  const [kpiCards, setKpiCards] = useState(() => {
+    const prefs = loadPrefs(USERS[0].id)
+    return applyKpiOrder([...d.kpi1, ...d.kpi2], prefs.kpiOrder)
+  })
   const [dragIdx, setDragIdx]     = useState(null)
   const [overIdx, setOverIdx]     = useState(null)
   const [pressedIdx, setPressedIdx] = useState(null)
@@ -815,9 +838,12 @@ export default function App() {
   }, [kpiExpanded])
   const dragNode = useRef(null)
 
+  // Restore layout prefs when country or active account changes
   useEffect(() => {
-    setKpiCards([...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2])
-  }, [country])
+    const prefs = loadPrefs(activeUser.id)
+    setKpiCards(applyKpiOrder([...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2], prefs.kpiOrder))
+    setChartOrder(prefs.chartOrder ?? DEFAULT_CHART_ORDER)
+  }, [country, activeUser])
 
   function handleDragStart(e, i) {
     dragNode.current = i
@@ -837,6 +863,7 @@ export default function App() {
       const next = [...prev]
       const [item] = next.splice(from, 1)
       next.splice(i, 0, item)
+      savePrefs(activeUser.id, { kpiOrder: next.map(c => c.label) })
       return next
     })
     setDragIdx(null)
@@ -849,7 +876,10 @@ export default function App() {
   }
 
   // ── Chart drag-and-drop ──
-  const [chartOrder, setChartOrder]         = useState(['carrier','time','failure','status'])
+  const [chartOrder, setChartOrder]         = useState(() => {
+    const prefs = loadPrefs(USERS[0].id)
+    return prefs.chartOrder ?? DEFAULT_CHART_ORDER
+  })
   const [chartDragIdx, setChartDragIdx]     = useState(null)
   const [chartOverIdx, setChartOverIdx]     = useState(null)
   const [chartPressedIdx, setChartPressedIdx] = useState(null)
@@ -872,6 +902,7 @@ export default function App() {
       const next = [...prev]
       const [item] = next.splice(from, 1)
       next.splice(i, 0, item)
+      savePrefs(activeUser.id, { chartOrder: next })
       return next
     })
     setChartDragIdx(null)

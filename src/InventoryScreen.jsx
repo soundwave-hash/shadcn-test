@@ -156,7 +156,12 @@ export default function InventoryScreen({
   const [sortCol, setSortCol]             = useState('weeklySales')
   const [sortAsc, setSortAsc]             = useState(false)
   const [locMenuOpen, setLocMenuOpen]     = useState(false)
-  const [colOrder, setColOrder]           = useState(NON_STICKY_COLS.map(c => c.key))
+  const [colOrder, setColOrder]           = useState(() => {
+    try {
+      const prefs = JSON.parse(localStorage.getItem(`warehouseiq_prefs_${activeUser?.id}`)) ?? {}
+      return prefs.colOrder ?? NON_STICKY_COLS.map(c => c.key)
+    } catch { return NON_STICKY_COLS.map(c => c.key) }
+  })
   const [dragColIdx, setDragColIdx]       = useState(null)
   const [overColIdx, setOverColIdx]       = useState(null)
   const [pressedColIdx, setPressedColIdx] = useState(null)
@@ -167,6 +172,14 @@ export default function InventoryScreen({
   const prevCitiesRef                     = useRef(selectedCities)
 
   const isDark = theme === 'dark'
+
+  // Restore column order when active account switches
+  useEffect(() => {
+    try {
+      const prefs = JSON.parse(localStorage.getItem(`warehouseiq_prefs_${activeUser?.id}`)) ?? {}
+      setColOrder(prefs.colOrder ?? NON_STICKY_COLS.map(c => c.key))
+    } catch { setColOrder(NON_STICKY_COLS.map(c => c.key)) }
+  }, [activeUser])
 
   useEffect(() => {
     if (prevCountryRef.current === country && prevCitiesRef.current === selectedCities) return
@@ -220,6 +233,10 @@ export default function InventoryScreen({
       const next = [...prev]
       const [item] = next.splice(from, 1)
       next.splice(i, 0, item)
+      try {
+        const prefs = JSON.parse(localStorage.getItem(`warehouseiq_prefs_${activeUser?.id}`)) ?? {}
+        localStorage.setItem(`warehouseiq_prefs_${activeUser?.id}`, JSON.stringify({ ...prefs, colOrder: next }))
+      } catch {}
       return next
     })
     setDragColIdx(null)
