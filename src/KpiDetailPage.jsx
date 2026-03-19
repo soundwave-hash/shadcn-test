@@ -26,15 +26,15 @@ const THEME = {
     activeItemBg: '#1a2a2a', sep: '#555',
   },
   light: {
-    bg: '#dcdfe3', navBg: '#f9fafb', panelBg: '#f9fafb',
-    border: '#dde1e7', borderLight: '#e4e7eb',
+    bg: '#cfd3d8', navBg: '#e2e5e8', panelBg: '#e2e5e8',
+    border: '#c7cbcf', borderLight: '#cfd3d8',
     text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#eef0f3', inputBorder: '#dde1e7', inputText: '#333',
-    dropdownBg: '#f9fafb', dropdownBorder: '#dde1e7',
-    rowHover: '#e0eff5', chartMask: '#f4f5f7', chartGrid: '#e4e7eb',
-    cardBg: '#f9fafb', cardBorder: '#dde1e7',
-    axTick: '#888', tooltipBg: '#f9fafb', tooltipBorder: '#dde1e7',
-    activeItemBg: '#d8eef4', sep: '#bbb',
+    inputBg: '#d7dadd', inputBorder: '#c7cbcf', inputText: '#333',
+    dropdownBg: '#e2e5e8', dropdownBorder: '#c7cbcf',
+    rowHover: '#cee6f0', chartMask: '#dadde0', chartGrid: '#cfd3d8',
+    cardBg: '#e2e5e8', cardBorder: '#c7cbcf',
+    axTick: '#6c6c6c', tooltipBg: '#e2e5e8', tooltipBorder: '#c7cbcf',
+    activeItemBg: '#c4dfea', sep: '#aaaaaa',
   },
 }
 

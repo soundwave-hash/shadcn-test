@@ -29,15 +29,15 @@ const THEME = {
     activeItemBg: '#1a2a2a', sep: '#555',
   },
   light: {
-    bg: '#dcdfe3', navBg: '#f9fafb', panelBg: '#f9fafb',
-    border: '#dde1e7', borderLight: '#e4e7eb',
+    bg: '#cfd3d8', navBg: '#e2e5e8', panelBg: '#e2e5e8',
+    border: '#c7cbcf', borderLight: '#cfd3d8',
     text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#eef0f3', inputBorder: '#dde1e7', inputText: '#333',
-    dropdownBg: '#f9fafb', dropdownBorder: '#dde1e7',
-    rowHover: '#e0eff5', chartMask: '#f4f5f7', chartGrid: '#e4e7eb',
-    cardBg: '#f9fafb', cardBorder: '#dde1e7',
-    axTick: '#888', tooltipBg: '#f9fafb', tooltipBorder: '#dde1e7',
-    activeItemBg: '#d8eef4', sep: '#bbb',
+    inputBg: '#d7dadd', inputBorder: '#c7cbcf', inputText: '#333',
+    dropdownBg: '#e2e5e8', dropdownBorder: '#c7cbcf',
+    rowHover: '#cee6f0', chartMask: '#dadde0', chartGrid: '#cfd3d8',
+    cardBg: '#e2e5e8', cardBorder: '#c7cbcf',
+    axTick: '#6c6c6c', tooltipBg: '#e2e5e8', tooltipBorder: '#c7cbcf',
+    activeItemBg: '#c4dfea', sep: '#aaaaaa',
   },
 }
 
@@ -664,7 +664,7 @@ function SwatchLegend({ items, col }) {
   return (
     <div style={{ display:'flex', flexWrap:'wrap', flexDirection: col ? 'column' : 'row', gap: col ? 3 : 8, marginTop:8 }}>
       {items.map(([label, color]) => (
-        <span key={label} style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#888' }}>
+        <span key={label} style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'#888' }}>
           <span style={{ width:9, height:9, backgroundColor:color, display:'inline-block', flexShrink:0 }} />
           {label}
         </span>
@@ -699,7 +699,12 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
       </div>
       <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:8, marginTop:8 }}>
         <div key={primary} className="kpi-flip" style={{ color: T.text, fontSize:26, fontWeight:700, lineHeight:1.1 }}>{animPrimary}</div>
-        <span key={trend} className="kpi-flip" style={{ fontSize:16, fontWeight:700, color: trendColor, whiteSpace:'nowrap' }}>
+        <span key={trend} className="kpi-flip" style={{
+          fontSize:16, fontWeight:700, color: trendColor, whiteSpace:'nowrap',
+          backgroundColor: trendColor + '22',
+          border: `1px solid ${trendColor}`,
+          borderRadius: 6, padding: '2px 8px',
+        }}>
           {arrow} {Math.abs(trend)}%
         </span>
       </div>
@@ -1226,17 +1231,17 @@ export default function App() {
                         }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} horizontal={false} />
-                        <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK} />
+                        <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:11 }} tickFormatter={fmtK} />
                         <YAxis type="category" dataKey="carrier" stroke={T.border} width={160}
-                          tick={{ fill: T.axTick, fontSize:10 }} interval={0} />
-                        <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} />
+                          tick={{ fill: T.axTick, fontSize:11 }} interval={0} />
+                        <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} animationDuration={800} animationEasing="ease-in-out" />
                         {CARRIER_KEYS.map((k, ki) => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             {ki === CARRIER_KEYS.length - 1 && (
                               <LabelList dataKey="_total" position="right"
                                 content={({ x, y, width, height, value }) =>
                                   value > 0
-                                    ? <text x={x+width+4} y={y+height/2} fill={T.textMuted} fontSize={10} dominantBaseline="middle">{value.toLocaleString()}</text>
+                                    ? <text x={x+width+4} y={y+height/2} fill={T.textMuted} fontSize={11} dominantBaseline="middle">{value.toLocaleString()}</text>
                                     : null
                                 }
                               />
@@ -1255,8 +1260,8 @@ export default function App() {
               <div key={id} style={chartPanelStyle} {...dragProps}>
                 <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:10 }}>
                   <span style={{ fontSize:12, fontWeight:600, color: T.text }}>Shipment Count Over Time</span>
-                  <span style={{ fontSize:10, color: T.textDim }}>
-                    — {dashboardRange === '5D' ? 'Last 5 Days' : dashboardRange === '1M' ? 'Last Month' : dashboardRange === '6M' ? 'Last 6 Months' : 'Year to Date'}
+                  <span style={{ fontSize:11, color: T.textDim }}>
+                    - {dashboardRange === '5D' ? 'Last 5 Days' : dashboardRange === '1M' ? 'Last Month' : dashboardRange === '6M' ? 'Last 6 Months' : 'Year to Date'}
                     {dashboardRange !== 'YTD' && ` (${timeData[0]?.date} – ${timeData[timeData.length-1]?.date})`}
                   </span>
                 </div>
@@ -1266,17 +1271,17 @@ export default function App() {
                       <BarChart data={timeData} margin={{ top:10, right:10, bottom:28, left:14 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
                         <XAxis dataKey="date" stroke={T.border}
-                          tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
-                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={fmtK}
-                          label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:10 }} />
-                        <Tooltip content={<ShipmentTooltip T={T} />} allowEscapeViewBox={{ x: true, y: false }} />
+                          tick={{ fill: T.axTick, fontSize:11 }}
+                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:11 }} />
+                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:11 }} tickFormatter={fmtK}
+                          label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:11 }} />
+                        <Tooltip content={<ShipmentTooltip T={T} />} allowEscapeViewBox={{ x: true, y: false }} animationDuration={800} animationEasing="ease-in-out" position={{ y: 10 }} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
                           <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             <LabelList dataKey={k} position="center"
                               content={({ x, y, width, height, value }) =>
                                 value > 800
-                                  ? <text x={x+width/2} y={y+height/2} fill="#fff" fontSize={9} textAnchor="middle" dominantBaseline="middle">{value.toLocaleString()}</text>
+                                  ? <text x={x+width/2} y={y+height/2} fill="#fff" fontSize={11} textAnchor="middle" dominantBaseline="middle">{value.toLocaleString()}</text>
                                   : null
                               }
                             />
@@ -1295,14 +1300,14 @@ export default function App() {
                 <div style={{ fontSize:12, fontWeight:600, marginBottom:10, color: T.text }}>Order Failure Rate</div>
                 <ResponsiveContainer width="100%" height={110}>
                   <BarChart layout="vertical" data={scaledFailure} margin={{ left:10, right:20 }} barSize={30}>
-                    <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }}
+                    <XAxis type="number" stroke={T.border} tick={{ fill: T.axTick, fontSize:11 }}
                       tickFormatter={v => {
                         const total = scaledFailure[0].delivered + scaledFailure[0].failed + scaledFailure[0].canceled
                         return `${Math.round((v / total) * 100)}%`
                       }}
                     />
                     <YAxis type="category" dataKey="name" hide />
-                    <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} />
+                    <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} animationDuration={800} animationEasing="ease-in-out" />
                     <Bar dataKey="delivered" stackId="a" fill={C.delivered} name="DELIVERED">
                       <LabelList dataKey="delivered" position="center"
                         content={({ x, y, width, height, value }) =>
@@ -1314,7 +1319,7 @@ export default function App() {
                     <Bar dataKey="canceled" stackId="a" fill={C.canceled} name="CANCELED" />
                   </BarChart>
                 </ResponsiveContainer>
-                <div style={{ display:'flex', justifyContent:'space-between', color: T.textDim, fontSize:10, marginTop:2 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', color: T.textDim, fontSize:11, marginTop:2 }}>
                   <span>0%</span><span>% of Orders</span><span>100%</span>
                 </div>
                 <SwatchLegend items={[['CANCELED',C.canceled],['FAILED',C.failed],['DELIVERED',C.delivered]]} />
@@ -1330,10 +1335,10 @@ export default function App() {
                       <BarChart data={statusData} margin={{ top:4, right:10, bottom:28, left:14 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false} />
                         <XAxis dataKey="date" stroke={T.border}
-                          tick={{ fill: T.axTick, fontSize:10 }}
-                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:10 }} />
-                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:10 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
-                        <Tooltip content={<ShipmentTooltip T={T} formatter={v => `${v}%`} />} allowEscapeViewBox={{ x: true, y: false }} />
+                          tick={{ fill: T.axTick, fontSize:11 }}
+                          label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:11 }} />
+                        <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:11 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
+                        <Tooltip content={<ShipmentTooltip T={T} formatter={v => `${v}%`} />} allowEscapeViewBox={{ x: true, y: false }} animationDuration={800} animationEasing="ease-in-out" />
                         <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
                         <Bar dataKey="failed"    stackId="a" fill={C.failed}    name="FAILED" />
                         <Bar dataKey="delivered" stackId="a" fill={C.delivered} name="DELIVERED" />
