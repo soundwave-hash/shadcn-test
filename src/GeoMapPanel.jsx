@@ -125,7 +125,7 @@ function getBubbleRadius(country, volumes, dateRange) {
   return minR + t * (maxR - minR)
 }
 
-export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRange = '1M', T }) {
+export default function GeoMapPanel({ selectedCountry, onCountrySelect, onScrollToSankey, dateRange = '1M', T }) {
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [mapView, setMapView] = useState(DEFAULT_VIEW)
   const [zoomKey, setZoomKey] = useState(0)
@@ -340,6 +340,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
           <div
             key={selectedCountry}
             className="geo-hint-wrap"
+            onClick={e => { e.stopPropagation(); onScrollToSankey?.() }}
             style={{
               position: 'absolute',
               left: '51%',
@@ -349,11 +350,12 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
               flexDirection: 'column',
               alignItems: 'center',
               gap: 5,
-              pointerEvents: 'none',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
             }}
           >
             <span style={{ fontSize: 10, color: '#00bcd4', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-              scroll for carrier breakdown
+              {selectedCountry} Sankey Chart
             </span>
             <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,188,212,0.5))' }}>

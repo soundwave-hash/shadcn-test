@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import GeoMapPanel, { COUNTRY_VOLUMES_BY_RANGE } from './GeoMapPanel'
 import SankeyPanel from './SankeyPanel'
 
@@ -15,6 +15,11 @@ const CARRIER_TYPE_RANGE_BIAS = {
 
 export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onDateRangeChange }) {
   const [selectedCountry, setSelectedCountry] = useState(null)
+  const sankeyRef = useRef(null)
+
+  function scrollToSankey() {
+    sankeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const carrierRows = (() => {
     if (!selectedCountry || !countryData[selectedCountry]) return []
@@ -34,14 +39,17 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
       <GeoMapPanel
         selectedCountry={selectedCountry}
         onCountrySelect={setSelectedCountry}
+        onScrollToSankey={scrollToSankey}
         dateRange={dateRange}
         T={T}
       />
-      <SankeyPanel
-        country={selectedCountry || 'Global'}
-        carrierRows={carrierRows}
-        T={T}
-      />
+      <div ref={sankeyRef}>
+        <SankeyPanel
+          country={selectedCountry || 'Global'}
+          carrierRows={carrierRows}
+          T={T}
+        />
+      </div>
     </div>
   )
 }
