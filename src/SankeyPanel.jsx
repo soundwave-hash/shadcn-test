@@ -357,6 +357,27 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                 );
               });
             })()}
+
+            {/* Column totals — one label per node group, 10px above the topmost node */}
+            {['carrier', 'type', 'status'].map(kind => {
+              const groupNodes = layout.nodes.filter(n => n.kind === kind)
+              if (!groupNodes.length) return null
+              const topY    = Math.min(...groupNodes.map(n => n.y0))
+              const centerX = (groupNodes[0].x0 + groupNodes[0].x1) / 2
+              const total   = groupNodes.reduce((s, n) => s + (n.value || 0), 0)
+              return (
+                <g key={kind}>
+                  <text x={centerX} y={topY - 22} textAnchor="middle" dominantBaseline="middle"
+                    fill={T.textDim} fontSize={10} style={{ userSelect: 'none' }}>
+                    Total Units
+                  </text>
+                  <text x={centerX} y={topY - 10} textAnchor="middle" dominantBaseline="middle"
+                    fill={T.text} fontSize={10} fontWeight="bold" style={{ userSelect: 'none' }}>
+                    {total.toLocaleString()}
+                  </text>
+                </g>
+              )
+            })}
           </svg>
         ) : null}
       </div>
