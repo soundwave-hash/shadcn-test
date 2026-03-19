@@ -18,7 +18,29 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
   const sankeyRef = useRef(null)
 
   function scrollToSankey() {
-    sankeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const container = document.querySelector('.geo-scroll')
+    const target    = sankeyRef.current
+    if (!container || !target) return
+
+    const from     = container.scrollTop
+    const to       = target.getBoundingClientRect().top
+                   - container.getBoundingClientRect().top
+                   + container.scrollTop
+    const distance = to - from
+    const duration = 1400
+    const t0       = performance.now()
+
+    function ease(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    }
+
+    function tick(now) {
+      const progress = Math.min((now - t0) / duration, 1)
+      container.scrollTop = from + distance * ease(progress)
+      if (progress < 1) requestAnimationFrame(tick)
+    }
+
+    requestAnimationFrame(tick)
   }
 
   const carrierRows = (() => {
