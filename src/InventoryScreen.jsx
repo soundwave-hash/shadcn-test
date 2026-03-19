@@ -15,7 +15,6 @@ import {
   TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Sun, Download } from 'lucide-react'
 import { saveAs } from 'file-saver'
 
@@ -183,10 +182,7 @@ export default function InventoryScreen({
   const [overColIdx, setOverColIdx]       = useState(null)
   const [pressedColIdx, setPressedColIdx] = useState(null)
   const [tooltip, setTooltip]             = useState(null) // { text, x, y }
-  const [tableLoading, setTableLoading]   = useState(false)
   const dragColRef                        = useRef(null)
-  const prevCountryRef                    = useRef(country)
-  const prevCitiesRef                     = useRef(selectedCities)
 
   const isDark = theme === 'dark'
   const [showUSD, setShowUSD] = useState(false)
@@ -209,14 +205,6 @@ export default function InventoryScreen({
     } catch { setColOrder(NON_STICKY_COLS.map(c => c.key)) }
   }, [activeUser])
 
-  useEffect(() => {
-    if (prevCountryRef.current === country && prevCitiesRef.current === selectedCities) return
-    prevCountryRef.current = country
-    prevCitiesRef.current  = selectedCities
-    setTableLoading(true)
-    const t = setTimeout(() => setTableLoading(false), 350)
-    return () => clearTimeout(t)
-  }, [country, selectedCities])
 
   const subcats = selDepts.size === 0 ? [] : [...selDepts].flatMap(d => SUBCATEGORIES_BY_CATEGORY[d] ?? [])
 
@@ -579,17 +567,7 @@ export default function InventoryScreen({
             </TableRow>
           </TableHeader>
           <TableBody className="[&_tr:last-child]:border-0">
-            {tableLoading
-              ? Array.from({ length: 12 }).map((_, i) => (
-                  <TableRow key={i} className="border-0 hover:bg-transparent">
-                    {displayCols.map(col => (
-                      <TableCell key={col.key} style={{ padding:'4px 6px', height:33, minWidth:col.width, width:col.sticky ? col.width : undefined }}>
-                        <Skeleton style={{ height:14, width:'80%', borderRadius:3 }} />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : rows.map((row, rowIdx) => (
+            {rows.map((row, rowIdx) => (
               <TableRow key={row.sku} className="inv-row border-0 hover:bg-transparent">
                 {displayCols.map(col => {
                   const v = row[col.key]
