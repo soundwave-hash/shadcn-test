@@ -368,11 +368,11 @@ export default function SankeyPanel({ country, carrierRows, T }) {
               return (
                 <g key={kind}>
                   <text x={centerX} y={topY - 22} textAnchor="middle" dominantBaseline="middle"
-                    fill={T.textDim} fontSize={10} fontWeight="bold" style={{ userSelect: 'none' }}>
+                    fill={T.text} fontSize={10} fontWeight="bold" style={{ userSelect: 'none' }}>
                     Total Units
                   </text>
                   <text x={centerX} y={topY - 10} textAnchor="middle" dominantBaseline="middle"
-                    fill={T.text} fontSize={10} style={{ userSelect: 'none' }}>
+                    fill={T.textMuted} fontSize={10} fontWeight="normal" style={{ userSelect: 'none' }}>
                     {total.toLocaleString()}
                   </text>
                 </g>
