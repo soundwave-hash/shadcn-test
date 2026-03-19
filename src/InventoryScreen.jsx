@@ -183,6 +183,14 @@ export default function InventoryScreen({
   const [pressedColIdx, setPressedColIdx] = useState(null)
   const [tooltip, setTooltip]             = useState(null) // { text, x, y }
   const dragColRef                        = useRef(null)
+  const scrollRef                         = useRef(null)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  function handleScroll(e) {
+    const el = e.currentTarget
+    const pct = el.scrollTop / (el.scrollHeight - el.clientHeight)
+    setShowScrollTop(pct >= 0.9)
+  }
 
   const isDark = theme === 'dark'
   const [showUSD, setShowUSD] = useState(false)
@@ -516,7 +524,7 @@ export default function InventoryScreen({
         .inv-scroll::-webkit-scrollbar-corner { background: ${T.panelBg}; }
         .inv-row:hover td { background-color: ${T.rowHover} !important; }
       `}</style>
-      <div className="inv-scroll" style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
+      <div ref={scrollRef} className="inv-scroll" onScroll={handleScroll} style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
         <table style={{ borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed', width: '100%' }}>
           <TableHeader className="[&_tr]:border-0">
             <TableRow className="border-0 hover:bg-transparent">
@@ -616,6 +624,27 @@ export default function InventoryScreen({
         </table>
       </div>
     </div>
+
+    {showScrollTop && (
+      <button
+        onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+        style={{
+          position: 'fixed', bottom: 28, right: 28, zIndex: 9998,
+          width: 44, height: 44, borderRadius: 10,
+          background: '#1e2d5a', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+          transition: 'background 0.15s, transform 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#2a3f7a'}
+        onMouseLeave={e => e.currentTarget.style.background = '#1e2d5a'}
+        title="Back to top"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <polyline points="4,13 10,7 16,13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    )}
 
     {tooltip && (
       <div style={{
