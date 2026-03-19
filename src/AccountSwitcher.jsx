@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 
+const HOVER_STYLE = `
+@keyframes avatarHoverReveal {
+  from { transform: scale(1.22); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.avatar-hover-card {
+  animation: avatarHoverReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+`
+
 export const USERS = [
   { id: 1, name: 'Takumi Fujiwara',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
   { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif',
@@ -32,6 +42,7 @@ function Avatar({ user, size, border, onClick, title, cursor }) {
 
 export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft }) {
   const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -44,14 +55,50 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
 
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0, marginLeft: marginLeft ?? 0 }}>
-      <Avatar
-        user={activeUser}
-        size={28}
-        border={open ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`}
-        onClick={() => setOpen(o => !o)}
-        title="User accounts"
-        cursor="pointer"
-      />
+      <style>{HOVER_STYLE}</style>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ display: 'inline-block' }}
+      >
+        <Avatar
+          user={activeUser}
+          size={28}
+          border={open ? '2px solid #00bcd4' : `1px solid ${T.inputBorder}`}
+          onClick={() => setOpen(o => !o)}
+          title="User accounts"
+          cursor="pointer"
+        />
+      </div>
+
+      {hovered && !open && (
+        <div
+          className="avatar-hover-card"
+          style={{
+            position: 'absolute', top: 36, right: 0,
+            background: T.panelBg,
+            border: `1px solid ${T.border}`,
+            borderRadius: 12,
+            padding: '14px 16px 12px',
+            zIndex: 9998,
+            boxShadow: '0 10px 32px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+            minWidth: 110,
+            pointerEvents: 'none',
+          }}
+        >
+          <Avatar user={activeUser} size={52} border={`2px solid #00bcd4`} />
+          <div style={{
+            fontSize: 12, fontWeight: 700, color: T.text,
+            textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap',
+          }}>
+            {activeUser.name}
+          </div>
+          <div style={{ fontSize: 10, color: T.textDim, textAlign: 'center', whiteSpace: 'nowrap' }}>
+            {activeUser.role}
+          </div>
+        </div>
+      )}
 
       {open && (
         <div style={{
