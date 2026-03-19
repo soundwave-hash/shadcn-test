@@ -218,7 +218,7 @@ export default function InventoryScreen({
   const subcats = selDepts.size === 0 ? [] : [...selDepts].flatMap(d => SUBCATEGORIES_BY_CATEGORY[d] ?? [])
 
   const deptLabel = selDepts.size === 0 ? 'All' : selDepts.size === 1 ? [...selDepts][0] : `${selDepts.size} Depts`
-  const subLabel  = selSubs.size  === 0 ? 'All' : selSubs.size  === 1 ? [...selSubs][0]  : `${selSubs.size} Subs`
+  const subLabel  = selSubs.size  === 0 ? 'All' : selSubs.size  === 1 ? [...selSubs][0]  : `${selSubs.size} Cats`
 
   const filtered = useMemo(() => PRODUCTS.filter(p => {
     if (selDepts.size > 0 && !selDepts.has(p.category))    return false
