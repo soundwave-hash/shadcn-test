@@ -634,11 +634,11 @@ export default function InventoryScreen({
           width: 31, height: 31, borderRadius: 7,
           background: '#0d2f3f', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.4)', opacity: 0.6,
+          boxShadow: '0 4px 14px rgba(0,0,0,0.4)', opacity: 0.8,
           transition: 'background 0.15s, transform 0.15s',
         }}
         onMouseEnter={e => { e.currentTarget.style.background = '#164055'; e.currentTarget.style.opacity = '1' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#0d2f3f'; e.currentTarget.style.opacity = '0.6' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#0d2f3f'; e.currentTarget.style.opacity = '0.8' }}
         title="Back to top"
       >
         <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
