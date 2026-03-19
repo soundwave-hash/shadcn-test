@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 export const USERS = [
   { id: 1, name: 'Alex Chen',    role: 'Supply Chain Manager', src: '/avatar.jpg'   },
   { id: 2, name: 'Sarah Smiles', role: 'Operations Analyst',   src: '/avatar2.avif',
-    imgStyle: { transform: 'scale(1.8) translateY(-8%)', transformOrigin: 'center 25%' } },
+    imgStyle: { transform: 'scale(1.44) translateY(-8%)', transformOrigin: 'center 25%' } },
 ]
 
 // Renders a circular avatar with per-user zoom/crop applied
