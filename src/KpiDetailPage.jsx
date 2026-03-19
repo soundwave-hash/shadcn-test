@@ -773,7 +773,7 @@ export default function KpiDetailPage({
         ))}
         <span style={{ color: T.sep }}>|</span>
         <div style={{ display:'flex', gap:4 }}>
-          {(kpi.label === 'Unit Sales' ? ['1D','5D','1M','6M','YTD'] : ['5D','1M','6M','YTD']).map(r => (
+          {['1D','5D','1M','6M','YTD'].map(r => (
             <button key={r} onClick={() => onDateRangeChange(r)} style={{
               background: r === dateRange ? '#00bcd4' : 'transparent',
               color:      r === dateRange ? '#111' : T.textDim,
@@ -1148,22 +1148,6 @@ export default function KpiDetailPage({
               })()}
             </div>
 
-            {/* Period selector — hidden for Unit Sales (1D added to top nav instead) */}
-            {kpi.label !== 'Unit Sales' && (
-              <div style={{ display:'flex', gap:4, justifyContent:'center', paddingTop:10, flexShrink:0 }}>
-                {PERIODS.map(p=>(
-                  <button key={p} onClick={()=>setPeriod(p)} style={{
-                    background: p===period ? '#00bcd4' : 'transparent',
-                    color:       p===period ? '#111'    : T.textDim,
-                    border:     `1px solid #00bcd4`,
-                    fontSize:12, padding:'3px 0', width:42, textAlign:'center', borderRadius:4, cursor:'pointer',
-                    fontWeight:  p===period ? 700 : 400, transition:'all 0.15s',
-                  }}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
         </div>
