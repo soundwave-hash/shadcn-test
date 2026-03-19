@@ -848,7 +848,9 @@ export default function App() {
     setKpiExpanded(prefs.kpiExpanded ?? false)
   }, [country, activeUser])
 
+  const preDragExpanded = useRef(false)
   function handleDragStart(e, i) {
+    preDragExpanded.current = kpiExpanded
     dragNode.current = i
     setDragIdx(i)
     e.dataTransfer.effectAllowed = 'move'
@@ -871,7 +873,7 @@ export default function App() {
     })
     setDragIdx(null)
     setOverIdx(null)
-    setKpiExpanded(false)
+    setKpiExpanded(preDragExpanded.current)
   }
   function handleDragEnd() {
     setDragIdx(null)
