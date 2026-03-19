@@ -264,12 +264,12 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
                       strokeOpacity={0.3}
                     />
                   )}
-                  {/* Hover ring — pulsing */}
+                  {/* Hover ring — pulsing magenta */}
                   {isHovered && !isSelected && (
                     <circle
                       r={scaledR + 5}
                       fill="none"
-                      stroke={tier.color}
+                      stroke="#e91e63"
                       strokeWidth={1.5}
                       style={{
                         transformBox: 'fill-box',
