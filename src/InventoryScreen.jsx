@@ -260,7 +260,7 @@ export default function InventoryScreen({
     borderBottom:    `2px solid ${T.border}`,
     borderRight:     `1px solid ${T.border}`,
     padding:         '0 6px 2px',
-    height:          32,
+    height:          35,
     textAlign:       col.align,
     fontSize:        11,
     fontWeight:      400,
@@ -422,7 +422,7 @@ export default function InventoryScreen({
         .inv-row:hover td { background-color: ${T.rowHover} !important; }
       `}</style>
       <div className="inv-scroll" style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', width: '100%' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed', width: '100%' }}>
           <thead>
             <tr>
               {displayCols.map(col => {
@@ -495,7 +495,7 @@ export default function InventoryScreen({
                       borderBottom:    `1px solid ${T.borderLight}`,
                       borderRight:     `1px solid ${T.borderLight}`,
                       padding:         '0 6px',
-                      height:          30,
+                      height:          33,
                       textAlign:       col.align,
                       fontSize:        11,
                       color:           cellColor ?? (col.sticky ? T.text : T.textMuted),
