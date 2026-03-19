@@ -1231,7 +1231,7 @@ export default function App() {
           overflow: 'hidden',
           maxHeight: kpiExpanded ? 500 : 0,
           opacity: kpiExpanded ? 1 : 0,
-          transition: 'max-height 0.3s ease, opacity 0.2s ease',
+          transition: 'max-height 0.55s ease-in-out, opacity 0.55s ease-in-out',
           marginBottom: kpiExpanded ? 4 : 0,
         }}>
           <div className="kpi-grid">
