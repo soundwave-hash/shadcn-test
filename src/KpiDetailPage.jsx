@@ -302,8 +302,8 @@ function MetricGauge({ period, country, selectedCities, checked, T }) {
         {/* Filled */}
         <path d={arc(0,pct)} fill="none" stroke={arcColor} strokeWidth={sw} strokeLinecap="round"/>
         {/* Min / Max labels */}
-        <text x={cx-r-2} y={cy+23} fill="#fff" fontSize={10} textAnchor="middle">0%</text>
-        <text x={cx+r+2} y={cy+23} fill="#fff" fontSize={10} textAnchor="middle">100%</text>
+        <text x={cx-r-2} y={cy+25} fill="#fff" fontSize={10} textAnchor="middle">0%</text>
+        <text x={cx+r+2} y={cy+25} fill="#fff" fontSize={10} textAnchor="middle">100%</text>
         {/* Score */}
         <text x={cx} y={cy-14} fill={arcColor} fontSize={34} fontWeight={700} textAnchor="middle" dominantBaseline="middle">
           {rows.length === 0 ? '—' : `${Math.round(pct*100)}%`}
