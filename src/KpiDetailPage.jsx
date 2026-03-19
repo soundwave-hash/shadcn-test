@@ -609,7 +609,7 @@ export default function KpiDetailPage({
     setChartLoading(true)
     const t = setTimeout(() => setChartLoading(false), 350)
     return () => clearTimeout(t)
-  }, [country, period, selectedCities])
+  }, [country, selectedCities])
 
   // ── Export helpers ──
   function exportCSV() {
