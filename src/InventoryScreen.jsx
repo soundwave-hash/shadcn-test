@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   PRODUCTS,
   CATEGORIES,
@@ -10,6 +10,11 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  TableHeader, TableBody, TableRow, TableHead, TableCell,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Sun, Download } from 'lucide-react'
 import { saveAs } from 'file-saver'
 
@@ -144,8 +149,8 @@ export default function InventoryScreen({
   onCountryChange, onLocationChange, dateRange, onDateRangeChange,
   setView, onThemeToggle,
 }) {
-  const [selDept, setSelDept]             = useState('All')
-  const [selSub,  setSelSub]              = useState('All')
+  const [selDepts, setSelDepts]           = useState(new Set())  // empty = All
+  const [selSubs,  setSelSubs]            = useState(new Set())  // empty = All
   const [sortCol, setSortCol]             = useState('weeklySales')
   const [sortAsc, setSortAsc]             = useState(false)
   const [locMenuOpen, setLocMenuOpen]     = useState(false)
@@ -154,17 +159,27 @@ export default function InventoryScreen({
   const [overColIdx, setOverColIdx]       = useState(null)
   const [pressedColIdx, setPressedColIdx] = useState(null)
   const [tooltip, setTooltip]             = useState(null) // { text, x, y }
+  const [tableLoading, setTableLoading]   = useState(false)
   const dragColRef                        = useRef(null)
 
   const isDark = theme === 'dark'
 
-  const subcats = selDept !== 'All' ? (SUBCATEGORIES_BY_CATEGORY[selDept] ?? []) : []
+  useEffect(() => {
+    setTableLoading(true)
+    const t = setTimeout(() => setTableLoading(false), 350)
+    return () => clearTimeout(t)
+  }, [country, selectedCities])
+
+  const subcats = selDepts.size === 0 ? [] : [...selDepts].flatMap(d => SUBCATEGORIES_BY_CATEGORY[d] ?? [])
+
+  const deptLabel = selDepts.size === 0 ? 'All' : selDepts.size === 1 ? [...selDepts][0] : `${selDepts.size} Depts`
+  const subLabel  = selSubs.size  === 0 ? 'All' : selSubs.size  === 1 ? [...selSubs][0]  : `${selSubs.size} Subs`
 
   const filtered = useMemo(() => PRODUCTS.filter(p => {
-    if (selDept !== 'All' && p.category    !== selDept) return false
-    if (selSub  !== 'All' && p.subcategory !== selSub)  return false
+    if (selDepts.size > 0 && !selDepts.has(p.category))    return false
+    if (selSubs.size  > 0 && !selSubs.has(p.subcategory))  return false
     return true
-  }), [selDept, selSub])
+  }), [selDepts, selSubs])
 
   const rows = useMemo(() => {
     const scale = PERIOD_SCALE[dateRange] ?? 1
@@ -221,8 +236,8 @@ export default function InventoryScreen({
       : 'Multiple'
 
   function handleReset() {
-    setSelDept('All')
-    setSelSub('All')
+    setSelDepts(new Set())
+    setSelSubs(new Set())
     setSortCol('weeklySales')
     setSortAsc(false)
   }
@@ -348,9 +363,9 @@ export default function InventoryScreen({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <button onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={iconBtn}>
+          <Button variant="outline" size="icon" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: isDark ? '#1c1c1c' : '#f5f5f5' }}>
             <Sun size={15} color={isDark ? '#fff' : '#333'} />
-          </button>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button title="Export data" style={iconBtn}>
@@ -369,36 +384,51 @@ export default function InventoryScreen({
 
       {/* ── Filters bar ── */}
       <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 48, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0 }}>
-        {/* Department */}
+        {/* Department multi-select */}
         <span style={{ fontSize: 11, color: T.textDim }}>Dept:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button style={filterDropBtn}>{selDept}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span></button>
+            <button style={{ ...filterDropBtn, border: `1px solid ${selDepts.size > 0 ? '#00bcd4' : T.inputBorder}`, color: selDepts.size > 0 ? '#00bcd4' : T.inputText }}>
+              {deptLabel}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth: 160 }}>
-            {['All', ...CATEGORIES].map(c => (
-              <DropdownMenuItem key={c} onClick={() => { setSelDept(c); setSelSub('All') }}
-                style={{ color: c === selDept ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: c === selDept ? T.activeItemBg : 'transparent' }}>
-                {c}
+            <DropdownMenuItem closeOnClick={false} onClick={() => { setSelDepts(new Set()); setSelSubs(new Set()) }}
+              style={{ color: selDepts.size === 0 ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: selDepts.size === 0 ? T.activeItemBg : 'transparent' }}>
+              All
+            </DropdownMenuItem>
+            {CATEGORIES.map(c => (
+              <DropdownMenuItem key={c} closeOnClick={false}
+                onClick={() => {
+                  setSelDepts(prev => { const next = new Set(prev); next.has(c) ? next.delete(c) : next.add(c); return next })
+                  setSelSubs(new Set())
+                }}
+                style={{ color: selDepts.has(c) ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: selDepts.has(c) ? T.activeItemBg : 'transparent' }}>
+                {selDepts.has(c) ? '✓ ' : ''}{c}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Subcategory */}
+        {/* Subcategory multi-select */}
         <span style={{ fontSize: 11, color: T.textDim }}>Category:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button style={{ ...filterDropBtn, opacity: selDept === 'All' ? 0.5 : 1 }} disabled={selDept === 'All'}>
-              {selSub}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span>
+            <button style={{ ...filterDropBtn, opacity: selDepts.size === 0 ? 0.5 : 1, border: `1px solid ${selSubs.size > 0 ? '#00bcd4' : T.inputBorder}`, color: selSubs.size > 0 ? '#00bcd4' : T.inputText }} disabled={selDepts.size === 0}>
+              {subLabel}<span style={{ color: T.textDim, fontSize: 10 }}>▼</span>
             </button>
           </DropdownMenuTrigger>
-          {selDept !== 'All' && (
+          {selDepts.size > 0 && (
             <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth: 180 }}>
-              {['All', ...subcats].map(s => (
-                <DropdownMenuItem key={s} onClick={() => setSelSub(s)}
-                  style={{ color: s === selSub ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: s === selSub ? T.activeItemBg : 'transparent' }}>
-                  {s}
+              <DropdownMenuItem closeOnClick={false} onClick={() => setSelSubs(new Set())}
+                style={{ color: selSubs.size === 0 ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: selSubs.size === 0 ? T.activeItemBg : 'transparent' }}>
+                All
+              </DropdownMenuItem>
+              {subcats.map(s => (
+                <DropdownMenuItem key={s} closeOnClick={false}
+                  onClick={() => setSelSubs(prev => { const next = new Set(prev); next.has(s) ? next.delete(s) : next.add(s); return next })}
+                  style={{ color: selSubs.has(s) ? '#00bcd4' : T.textMuted, fontSize: 12, cursor: 'pointer', backgroundColor: selSubs.has(s) ? T.activeItemBg : 'transparent' }}>
+                  {selSubs.has(s) ? '✓ ' : ''}{s}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -427,8 +457,8 @@ export default function InventoryScreen({
       `}</style>
       <div className="inv-scroll" style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
         <table style={{ borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed', width: '100%' }}>
-          <thead>
-            <tr>
+          <TableHeader className="[&_tr]:border-0">
+            <TableRow className="border-0 hover:bg-transparent">
               {displayCols.map(col => {
                 const active        = sortCol === col.key
                 const nsIdx         = col.sticky ? null : colOrder.indexOf(col.key)
@@ -445,7 +475,7 @@ export default function InventoryScreen({
                   onDragEnd:   handleColDragEnd,
                 }
                 return (
-                  <th key={col.key} onClick={() => handleSort(col.key)}
+                  <TableHead key={col.key} onClick={() => handleSort(col.key)}
                     style={{
                       ...hdrCell(col),
                       cursor:  col.sticky ? 'pointer' : 'grab',
@@ -470,14 +500,24 @@ export default function InventoryScreen({
                     }}>
                       {col.label}{col.tooltip && <span style={{ fontSize: 9, marginLeft: 3, opacity: 0.5 }}>ⓘ</span>}
                     </span>
-                  </th>
+                  </TableHead>
                 )
               })}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIdx) => (
-              <tr key={row.sku} className="inv-row">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="[&_tr:last-child]:border-0">
+            {tableLoading
+              ? Array.from({ length: 12 }).map((_, i) => (
+                  <TableRow key={i} className="border-0 hover:bg-transparent">
+                    {displayCols.map(col => (
+                      <TableCell key={col.key} style={{ padding:'4px 6px', height:33, minWidth:col.width, width:col.sticky ? col.width : undefined }}>
+                        <Skeleton style={{ height:14, width:'80%', borderRadius:3 }} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : rows.map((row, rowIdx) => (
+              <TableRow key={row.sku} className="inv-row border-0 hover:bg-transparent">
                 {displayCols.map(col => {
                   const v = row[col.key]
                   let cellColor = null
@@ -496,7 +536,7 @@ export default function InventoryScreen({
                     ? (isDark ? 'rgba(255,255,255,0.022)' : 'rgba(0,0,0,0.018)')
                     : null
                   return (
-                    <td key={col.key} style={{
+                    <TableCell key={col.key} style={{
                       position:        col.sticky ? 'sticky' : undefined,
                       left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
                       zIndex:          col.sticky ? 2 : 0,
@@ -515,12 +555,13 @@ export default function InventoryScreen({
                       verticalAlign:   'middle',
                     }}>
                       {fmt(v, col.key)}
-                    </td>
+                    </TableCell>
                   )
                 })}
-              </tr>
-            ))}
-          </tbody>
+              </TableRow>
+            ))
+            }
+          </TableBody>
         </table>
       </div>
     </div>

@@ -7,6 +7,8 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowUpDown, Sun, Download } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
@@ -340,23 +342,32 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
   const [sortAsc, setSortAsc]     = useState(true)   // WOS asc = worst first by default
   const [hovered, setHovered]     = useState(null)   // row hover
   const [hovCol, setHovCol]       = useState(null)   // column header hover
-  const [selCat, setSelCat]       = useState('All')  // department filter
-  const [selSub, setSelSub]       = useState('All')  // subcategory filter
+  const [selCats, setSelCats] = useState(new Set())  // empty = All
+  const [selSubs, setSelSubs] = useState(new Set())  // empty = All
 
-  const allRows  = useMemo(() => buildLeaderboard(period, sortField, sortAsc, country, selectedCities), [period, sortField, sortAsc, country, selectedCities])
+  const allRows = useMemo(() => buildLeaderboard(period, sortField, sortAsc, country, selectedCities), [period, sortField, sortAsc, country, selectedCities])
 
   const rows = useMemo(() => {
     let r = allRows
-    if (selCat !== 'All') r = r.filter(row => row.category === selCat)
-    if (selSub !== 'All') r = r.filter(row => row.subcategory === selSub)
+    if (selCats.size > 0) r = r.filter(row => selCats.has(row.category))
+    if (selSubs.size > 0) r = r.filter(row => selSubs.has(row.subcategory))
     return r
-  }, [allRows, selCat, selSub])
+  }, [allRows, selCats, selSubs])
 
-  const subcats = selCat === 'All' ? [] : (SUBCATEGORIES_BY_CATEGORY[selCat] ?? [])
+  const subcats = selCats.size === 0 ? [] : [...selCats].flatMap(cat => SUBCATEGORIES_BY_CATEGORY[cat] ?? [])
 
-  function handleCatChange(cat) {
-    setSelCat(cat)
-    setSelSub('All')
+  const catLabel = selCats.size === 0 ? 'All' : selCats.size === 1 ? [...selCats][0] : `${selCats.size} Depts`
+  const subLabel = selSubs.size === 0 ? 'All' : selSubs.size === 1 ? [...selSubs][0] : `${selSubs.size} Subs`
+
+  function handleCatToggle(cat) {
+    if (cat === 'All') { setSelCats(new Set()); setSelSubs(new Set()); return }
+    setSelCats(prev => { const next = new Set(prev); next.has(cat) ? next.delete(cat) : next.add(cat); return next })
+    setSelSubs(new Set())
+  }
+
+  function handleSubToggle(sub) {
+    if (sub === 'All') { setSelSubs(new Set()); return }
+    setSelSubs(prev => { const next = new Set(prev); next.has(sub) ? next.delete(sub) : next.add(sub); return next })
   }
 
   const maxSales = Math.max(...rows.map(r => r.avgSales), 1)
@@ -386,72 +397,68 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
         <span style={{ fontSize:12, fontWeight:700, color: T.text }}>Product Leaderboard</span>
       </div>
 
-      {/* Department / Category / Subcategory filters */}
+      {/* Department / Subcategory filters */}
       <div style={{ display:'flex', gap:6, marginBottom:8, flexShrink:0, flexWrap:'wrap' }}>
-        {/* Department (category) */}
+        {/* Department multi-select */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button style={{
-              backgroundColor: T.inputBg, border:`1px solid ${selCat !== 'All' ? '#00bcd4' : T.inputBorder}`,
-              color: selCat !== 'All' ? '#00bcd4' : T.inputText,
+              backgroundColor: T.inputBg, border:`1px solid ${selCats.size > 0 ? '#00bcd4' : T.inputBorder}`,
+              color: selCats.size > 0 ? '#00bcd4' : T.inputText,
               fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
               display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
             }}>
               <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Dept</span>
-              {selCat === 'All' ? 'All' : selCat} ▾
+              {catLabel} ▾
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:160, zIndex:100 }}>
-            {['All', ...CATEGORIES].map(cat => (
-              <DropdownMenuItem
-                key={cat}
-                onClick={() => handleCatChange(cat)}
-                style={{
-                  fontSize:11, padding:'5px 12px', cursor:'pointer', color: T.text,
-                  backgroundColor: selCat === cat ? T.activeItemBg : 'transparent',
-                }}
-              >
-                {cat}
+            <DropdownMenuItem closeOnClick={false} onClick={() => handleCatToggle('All')}
+              style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selCats.size === 0 ? '#00bcd4' : T.text, backgroundColor: selCats.size === 0 ? T.activeItemBg : 'transparent' }}>
+              All
+            </DropdownMenuItem>
+            {CATEGORIES.map(cat => (
+              <DropdownMenuItem key={cat} closeOnClick={false} onClick={() => handleCatToggle(cat)}
+                style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selCats.has(cat) ? '#00bcd4' : T.text, backgroundColor: selCats.has(cat) ? T.activeItemBg : 'transparent' }}>
+                {selCats.has(cat) ? '✓ ' : ''}{cat}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Subcategory — only shown when a department is selected */}
-        {selCat !== 'All' && (
+        {/* Subcategory multi-select — only shown when any department is selected */}
+        {selCats.size > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={{
-                backgroundColor: T.inputBg, border:`1px solid ${selSub !== 'All' ? '#00bcd4' : T.inputBorder}`,
-                color: selSub !== 'All' ? '#00bcd4' : T.inputText,
+                backgroundColor: T.inputBg, border:`1px solid ${selSubs.size > 0 ? '#00bcd4' : T.inputBorder}`,
+                color: selSubs.size > 0 ? '#00bcd4' : T.inputText,
                 fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
                 display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap',
               }}>
                 <span style={{ opacity:0.6, fontSize:9, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sub</span>
-                {selSub === 'All' ? 'All' : selSub} ▾
+                {subLabel} ▾
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={{ backgroundColor:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:6, padding:'4px 0', minWidth:180, zIndex:100 }}>
-              {['All', ...subcats].map(sub => (
-                <DropdownMenuItem
-                  key={sub}
-                  onClick={() => setSelSub(sub)}
-                  style={{
-                    fontSize:11, padding:'5px 12px', cursor:'pointer', color: T.text,
-                    backgroundColor: selSub === sub ? T.activeItemBg : 'transparent',
-                  }}
-                >
-                  {sub}
+              <DropdownMenuItem closeOnClick={false} onClick={() => handleSubToggle('All')}
+                style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.size === 0 ? '#00bcd4' : T.text, backgroundColor: selSubs.size === 0 ? T.activeItemBg : 'transparent' }}>
+                All
+              </DropdownMenuItem>
+              {subcats.map(sub => (
+                <DropdownMenuItem key={sub} closeOnClick={false} onClick={() => handleSubToggle(sub)}
+                  style={{ fontSize:11, padding:'5px 12px', cursor:'pointer', color: selSubs.has(sub) ? '#00bcd4' : T.text, backgroundColor: selSubs.has(sub) ? T.activeItemBg : 'transparent' }}>
+                  {selSubs.has(sub) ? '✓ ' : ''}{sub}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
 
-        {/* Reset pill — shown when any filter is active */}
-        {selCat !== 'All' && (
+        {/* Reset pill */}
+        {(selCats.size > 0 || selSubs.size > 0) && (
           <button
-            onClick={() => { setSelCat('All'); setSelSub('All') }}
+            onClick={() => { setSelCats(new Set()); setSelSubs(new Set()) }}
             style={{
               backgroundColor:'transparent', border:`1px solid ${T.border}`,
               color: T.textMuted, fontSize:10, padding:'3px 8px', borderRadius:4, cursor:'pointer',
@@ -583,8 +590,15 @@ export default function KpiDetailPage({
   const period    = dateRange
   const setPeriod = onDateRangeChange ?? (() => {})
   const [activeTooltip, setActiveTooltip] = useState(null)
+  const [chartLoading, setChartLoading] = useState(false)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)
+
+  useEffect(() => {
+    setChartLoading(true)
+    const t = setTimeout(() => setChartLoading(false), 350)
+    return () => clearTimeout(t)
+  }, [country, period, selectedCities])
 
   // ── Export helpers ──
   function exportCSV() {
@@ -813,18 +827,15 @@ export default function KpiDetailPage({
               })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={onThemeToggle}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{
-              width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-              backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              marginLeft:4,
-            }}
+            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5', marginLeft:4 }}
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-          </button>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1025,6 +1036,13 @@ export default function KpiDetailPage({
 
             {/* Chart */}
             <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
+              {chartLoading && (
+                <div style={{ position:'absolute', inset:0, zIndex:10, display:'flex', flexDirection:'column', gap:8, padding:'8px 0' }}>
+                  <Skeleton style={{ height:'70%', width:'100%', borderRadius:4 }} />
+                  <Skeleton style={{ height:12, width:'60%', borderRadius:4 }} />
+                  <Skeleton style={{ height:12, width:'40%', borderRadius:4 }} />
+                </div>
+              )}
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={seriesDisplay}

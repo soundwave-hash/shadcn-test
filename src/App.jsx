@@ -7,6 +7,9 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Sun, Download } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
@@ -682,17 +685,17 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
   const animPrimary   = useAnimatedValue(primary)
   const animSecondary = useAnimatedValue(secondary || '')
   return (
-    <div
+    <Card
       {...dragHandlers}
       style={{
         backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, padding:'18px 20px',
-        display:'flex', flexDirection:'column',
         cursor:'grab',
         opacity: isDragging ? 0.35 : 1,
         outline: (isDragging || isOver) ? '2px solid #00bcd4' : '2px solid transparent',
         transition:'opacity 0.15s, outline 0.1s',
         userSelect:'none',
       }}
+      className="flex flex-col gap-0"
     >
       <div style={{ minHeight:48 }}>
         <div style={{ color:'#80cbc4', fontSize:12, fontWeight:500, lineHeight:1.3 }}>{label}</div>
@@ -708,7 +711,7 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
           {arrow} {Math.abs(trend)}%
         </span>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -721,11 +724,18 @@ export default function App() {
   const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [dateRange, setDateRange] = useState('1M')
+  const [kpiLoading, setKpiLoading] = useState(false)
   // Dashboard doesn't support 1D — clamp to 5D if arriving from unit sales
   const dashboardRange = dateRange === '1D' ? '5D' : dateRange
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
   const T = THEME[theme]
   const dashboardRef = useRef(null)
+
+  useEffect(() => {
+    setKpiLoading(true)
+    const t = setTimeout(() => setKpiLoading(false), 400)
+    return () => clearTimeout(t)
+  }, [country, selectedCities])
 
   // ── Carrier chart: fix tooltip position to top bar (highest orders) ──
   const [carrierTipPos, setCarrierTipPos] = useState(null)
@@ -1115,18 +1125,15 @@ export default function App() {
               })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{
-              width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-              backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              marginLeft:4,
-            }}
+            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5', marginLeft:4 }}
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-          </button>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1166,27 +1173,32 @@ export default function App() {
 
         {/* KPI cards — draggable */}
         <div className="kpi-grid">
-          {displayKpiCards.map((kpi, i) => (
-            <KpiCard
-              key={kpi.label + kpi.primary}
-              {...kpi}
-              country={country}
-              dateRange={dashboardRange}
-              isDragging={dragIdx === i}
-              isOver={(overIdx === i && dragIdx !== i) || pressedIdx === i}
-              T={T}
-              dragHandlers={{
-                draggable: true,
-                onMouseDown: () => setPressedIdx(i),
-                onMouseUp:   () => setPressedIdx(null),
-                onDragStart: e => handleDragStart(e, i),
-                onDragOver:  e => handleDragOver(e, i),
-                onDrop:      e => handleDrop(e, i),
-                onDragEnd:   handleDragEnd,
-                onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
-              }}
-            />
-          ))}
+          {kpiLoading
+            ? Array.from({ length: displayKpiCards.length }).map((_, i) => (
+                <Skeleton key={i} style={{ height: 110, borderRadius: 4, backgroundColor: T.cardBg, opacity: 0.6 }} />
+              ))
+            : displayKpiCards.map((kpi, i) => (
+                <KpiCard
+                  key={kpi.label + kpi.primary}
+                  {...kpi}
+                  country={country}
+                  dateRange={dashboardRange}
+                  isDragging={dragIdx === i}
+                  isOver={(overIdx === i && dragIdx !== i) || pressedIdx === i}
+                  T={T}
+                  dragHandlers={{
+                    draggable: true,
+                    onMouseDown: () => setPressedIdx(i),
+                    onMouseUp:   () => setPressedIdx(null),
+                    onDragStart: e => handleDragStart(e, i),
+                    onDragOver:  e => handleDragOver(e, i),
+                    onDrop:      e => handleDrop(e, i),
+                    onDragEnd:   handleDragEnd,
+                    onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
+                  }}
+                />
+              ))
+          }
         </div>
 
         {/* Section header */}
