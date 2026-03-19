@@ -16,12 +16,11 @@ const CARRIER_TYPE_RANGE_BIAS = {
 export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onDateRangeChange }) {
   const [selectedCountry, setSelectedCountry] = useState(null)
   const sankeyRef = useRef(null)
+  const mapRef    = useRef(null)
 
-  function scrollToSankey() {
+  function smoothScroll(target) {
     const container = document.querySelector('.geo-scroll')
-    const target    = sankeyRef.current
     if (!container || !target) return
-
     const from     = container.scrollTop
     const to       = target.getBoundingClientRect().top
                    - container.getBoundingClientRect().top
@@ -29,19 +28,17 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
     const distance = to - from
     const duration = 1400
     const t0       = performance.now()
-
-    function ease(t) {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-    }
-
+    function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 }
     function tick(now) {
       const progress = Math.min((now - t0) / duration, 1)
       container.scrollTop = from + distance * ease(progress)
       if (progress < 1) requestAnimationFrame(tick)
     }
-
     requestAnimationFrame(tick)
   }
+
+  function scrollToSankey() { smoothScroll(sankeyRef.current) }
+  function scrollToMap()    { smoothScroll(mapRef.current)    }
 
   const carrierRows = (() => {
     if (!selectedCountry || !countryData[selectedCountry]) return []
@@ -58,18 +55,21 @@ export default function GeoScreen({ countryData, theme, T, dateRange = '1M', onD
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <GeoMapPanel
-        selectedCountry={selectedCountry}
-        onCountrySelect={setSelectedCountry}
-        onScrollToSankey={scrollToSankey}
-        dateRange={dateRange}
-        T={T}
-      />
+      <div ref={mapRef}>
+        <GeoMapPanel
+          selectedCountry={selectedCountry}
+          onCountrySelect={setSelectedCountry}
+          onScrollToSankey={scrollToSankey}
+          dateRange={dateRange}
+          T={T}
+        />
+      </div>
       <div ref={sankeyRef}>
         <SankeyPanel
           country={selectedCountry || 'Global'}
           carrierRows={carrierRows}
           T={T}
+          onScrollToMap={scrollToMap}
         />
       </div>
     </div>
