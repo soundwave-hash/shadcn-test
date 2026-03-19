@@ -48,7 +48,7 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
             borderBottom: `1px solid ${T.border}`,
             marginBottom: 6,
           }}>
-            Switch Account
+            User Accounts
           </div>
 
           {USERS.map(user => {
