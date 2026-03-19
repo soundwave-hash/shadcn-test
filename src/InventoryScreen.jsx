@@ -188,8 +188,9 @@ export default function InventoryScreen({
 
   function handleScroll(e) {
     const el = e.currentTarget
-    const pct = el.scrollTop / (el.scrollHeight - el.clientHeight)
-    setShowScrollTop(pct >= 0.9)
+    const visibleRows    = Math.floor((window.innerHeight - 144) / 33)
+    const triggerScrollTop = (visibleRows + 10) * 33
+    setShowScrollTop(el.scrollTop >= triggerScrollTop)
   }
 
   const isDark = theme === 'dark'
