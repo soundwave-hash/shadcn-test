@@ -318,7 +318,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                     {/* "Total Units" header above each node */}
                     <text
                       x={topLabelX}
-                      y={node.y0 - 21}
+                      y={node.y0 - 31}
                       textAnchor={topAnchor}
                       dominantBaseline="middle"
                       fill={T.textDim}
@@ -329,7 +329,7 @@ export default function SankeyPanel({ country, carrierRows, T }) {
                     </text>
                     <text
                       x={topLabelX}
-                      y={node.y0 - 9}
+                      y={node.y0 - 19}
                       textAnchor={topAnchor}
                       dominantBaseline="middle"
                       fill={T.text}
