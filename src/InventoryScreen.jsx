@@ -261,8 +261,8 @@ export default function InventoryScreen({
     left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
     zIndex:          col.sticky ? 4 : 3,
     backgroundColor: T.navBg,
-    borderBottom:    `2px solid ${T.border}`,
-    borderRight:     `1px solid ${T.border}`,
+    borderBottom:    `1.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.13)'}`,
+    borderRight:     `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
     padding:         '0 6px 2px',
     height:          35,
     textAlign:       col.align,
@@ -476,7 +476,7 @@ export default function InventoryScreen({
             </tr>
           </thead>
           <tbody>
-            {rows.map(row => (
+            {rows.map((row, rowIdx) => (
               <tr key={row.sku} className="inv-row">
                 {displayCols.map(col => {
                   const v = row[col.key]
@@ -490,14 +490,19 @@ export default function InventoryScreen({
                   } else if (col.key === 'fillRate') {
                     cellColor = fillColor(v)
                   }
+                  const hLine   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
+                  const vLine   = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+                  const stripe  = !cellBg && rowIdx % 2 === 1
+                    ? (isDark ? 'rgba(255,255,255,0.022)' : 'rgba(0,0,0,0.018)')
+                    : null
                   return (
                     <td key={col.key} style={{
                       position:        col.sticky ? 'sticky' : undefined,
                       left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
                       zIndex:          col.sticky ? 2 : 0,
-                      backgroundColor: cellBg ?? T.panelBg,
-                      borderBottom:    `1px solid ${T.borderLight}`,
-                      borderRight:     `1px solid ${T.borderLight}`,
+                      backgroundColor: cellBg ?? stripe ?? T.panelBg,
+                      borderBottom:    `1px solid ${hLine}`,
+                      borderRight:     `1px solid ${vLine}`,
                       padding:         '0 6px',
                       height:          33,
                       textAlign:       col.align,
