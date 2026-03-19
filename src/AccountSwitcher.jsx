@@ -45,13 +45,23 @@ function Avatar({ user, size, border, onClick, title, cursor }) {
 
 export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft }) {
   const [hovered, setHovered] = useState(false)
+  const leaveTimer = useRef(null)
   const ref = useRef(null)
+
+  function handleMouseEnter() {
+    clearTimeout(leaveTimer.current)
+    setHovered(true)
+  }
+
+  function handleMouseLeave() {
+    leaveTimer.current = setTimeout(() => setHovered(false), 150)
+  }
 
   return (
     <div
       ref={ref}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{ position: 'relative', flexShrink: 0, marginLeft: marginLeft ?? 0 }}
     >
       <style>{HOVER_STYLE}</style>
@@ -92,7 +102,7 @@ export default function AccountSwitcher({ activeUser, onSwitch, T, marginLeft })
               <div
                 key={user.id}
                 className="avatar-user-row"
-                onClick={() => onSwitch(user)}
+                onClick={() => { onSwitch(user); setHovered(false) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '7px 8px', borderRadius: 7,
