@@ -197,7 +197,7 @@ export default function GeoMapPanel({ selectedCountry, onCountrySelect, dateRang
           projectionConfig={{ scale: 130, center: [15, 20] }}
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
-          <ZoomableGroup key={zoomKey} center={mapView.center} zoom={mapView.zoom}>
+          <ZoomableGroup key={zoomKey} center={mapView.center} zoom={mapView.zoom} filterZoomEvent={evt => evt.type !== 'wheel'}>
             <Geographies geography={GEO_URL}>
               {({ geographies }) => {
                 const selectedIso = selectedCountry ? COUNTRY_ISO[selectedCountry] : null
