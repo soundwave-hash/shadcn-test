@@ -15,7 +15,7 @@ const COUNTRY_COORDS = {
   'Mexico':        { lat: 19.5,  lng: -102.5  },
   'Germany':       { lat: 51.2,  lng: 10.4    },
   'Japan':         { lat: 38.5,  lng: 143.0   },
-  'South Korea':   { lat: 33.0,  lng: 126.5   },
+  'Korea':   { lat: 33.0,  lng: 126.5   },
   'China':         { lat: 35.9,  lng: 104.2   },
 }
 
@@ -26,7 +26,7 @@ export const COUNTRY_VOLUMES_BY_RANGE = {
     'Mexico':         4300,
     'Germany':        9700,
     'Japan':         12100,
-    'South Korea':   10900,
+    'Korea':   10900,
     'China':         33200,
   },
   '1M': {
@@ -35,7 +35,7 @@ export const COUNTRY_VOLUMES_BY_RANGE = {
     'Mexico':        25800,
     'Germany':       58200,
     'Japan':         72400,
-    'South Korea':   65200,
+    'Korea':   65200,
     'China':        198400,
   },
   '6M': {
@@ -44,7 +44,7 @@ export const COUNTRY_VOLUMES_BY_RANGE = {
     'Mexico':        154800,
     'Germany':       349200,
     'Japan':         434400,
-    'South Korea':   391200,
+    'Korea':   391200,
     'China':        1190400,
   },
   'YTD': {
@@ -53,7 +53,7 @@ export const COUNTRY_VOLUMES_BY_RANGE = {
     'Mexico':         64500,
     'Germany':        145500,
     'Japan':          181000,
-    'South Korea':    163000,
+    'Korea':    163000,
     'China':          496000,
   },
 }
@@ -90,7 +90,7 @@ const COUNTRY_VIEW = {
   'Mexico':        { zoom: 3, center: [-102.5,  23.6]  },
   'Germany':       { zoom: 3, center: [10.4,    51.2]  },
   'Japan':         { zoom: 3, center: [138.2,   36.2]  },
-  'South Korea':   { zoom: 3, center: [127.8,   35.9]  },
+  'Korea':   { zoom: 3, center: [127.8,   35.9]  },
   'China':         { zoom: 3, center: [104.2,   35.9]  },
 }
 
@@ -101,7 +101,7 @@ const COUNTRY_ISO = {
   'Mexico':        '484',
   'Germany':       '276',
   'Japan':         '392',
-  'South Korea':   '410',
+  'Korea':   '410',
   'China':         '156',
 }
 

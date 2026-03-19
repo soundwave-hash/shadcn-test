@@ -306,7 +306,7 @@ const COUNTRY_DATA = {
     ],
   },
 
-  'South Korea': {
+  'Korea': {
     kpi1: [
       { label:'Shipment Time (hrs) - P95',   sublabel:'',           primary:'3.90',   secondary:'8.40'  },
       { label:'Unit Sales (Daily Avg)', sublabel:'Daily Avg',      primary:'259',    secondary:'31',   secondaryLabel:'Std Dev' },
@@ -412,7 +412,7 @@ const CITY_LISTS = {
   'Mexico':        ['All', 'Mexico City', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana', 'León'],
   'Germany':       ['All', 'Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne', 'Stuttgart'],
   'Japan':         ['All', 'Tokyo', 'Osaka', 'Nagoya', 'Sapporo', 'Fukuoka', 'Kyoto'],
-  'South Korea':   ['All', 'Seoul', 'Busan', 'Incheon', 'Daegu', 'Gwangju', 'Daejeon'],
+  'Korea':   ['All', 'Seoul', 'Busan', 'Incheon', 'Daegu', 'Gwangju', 'Daejeon'],
   'China':         ['All', 'Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Wuhan'],
 }
 
@@ -422,7 +422,7 @@ const CITY_SCALES = {
   'Mexico':        { 'Mexico City': 0.36, 'Guadalajara': 0.20, 'Monterrey': 0.18, 'Puebla': 0.12, 'Tijuana': 0.08, 'León': 0.06 },
   'Germany':       { 'Berlin': 0.22, 'Munich': 0.20, 'Hamburg': 0.18, 'Frankfurt': 0.17, 'Cologne': 0.13, 'Stuttgart': 0.10 },
   'Japan':         { 'Tokyo': 0.38, 'Osaka': 0.24, 'Nagoya': 0.14, 'Sapporo': 0.10, 'Fukuoka': 0.08, 'Kyoto': 0.06 },
-  'South Korea':   { 'Seoul': 0.45, 'Busan': 0.20, 'Incheon': 0.15, 'Daegu': 0.10, 'Gwangju': 0.06, 'Daejeon': 0.04 },
+  'Korea':   { 'Seoul': 0.45, 'Busan': 0.20, 'Incheon': 0.15, 'Daegu': 0.10, 'Gwangju': 0.06, 'Daejeon': 0.04 },
   'China':         { 'Beijing': 0.18, 'Shanghai': 0.24, 'Guangzhou': 0.17, 'Shenzhen': 0.16, 'Chengdu': 0.14, 'Wuhan': 0.11 },
 }
 

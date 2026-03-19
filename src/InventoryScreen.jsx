@@ -50,7 +50,7 @@ const CURRENCY_BY_COUNTRY = {
   'Germany':       { code: 'EUR', symbol: '€',   rate: 0.92,  decimals: 2 },
   'Japan':         { code: 'JPY', symbol: '¥',   rate: 149.0, decimals: 0 },
   'Canada':        { code: 'CAD', symbol: 'CA$', rate: 1.38,  decimals: 2 },
-  'South Korea':   { code: 'KRW', symbol: '₩',   rate: 1340,  decimals: 0 },
+  'Korea':   { code: 'KRW', symbol: '₩',   rate: 1340,  decimals: 0 },
   'Mexico':        { code: 'MXN', symbol: 'MX$', rate: 17.2,  decimals: 2 },
 }
 
