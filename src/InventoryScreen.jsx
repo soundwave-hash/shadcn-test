@@ -247,7 +247,7 @@ export default function InventoryScreen({
   }
   const filterDropBtn = {
     ...dropBtn,
-    padding: '7px 9px',
+    padding: '3px 9px',
   }
   const iconBtn = {
     width: 28, height: 28, borderRadius: 7, cursor: 'pointer', border: `1px solid ${T.inputBorder}`,
@@ -408,7 +408,7 @@ export default function InventoryScreen({
         {/* Reset */}
         <button onClick={handleReset} style={{
           background: 'none', border: `1px solid ${T.inputBorder}`, color: T.textMuted,
-          fontSize: 11, padding: '7px 10px', borderRadius: 4, cursor: 'pointer',
+          fontSize: 11, padding: '3px 10px', borderRadius: 4, cursor: 'pointer',
         }}>Reset</button>
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: T.textDim }}>
