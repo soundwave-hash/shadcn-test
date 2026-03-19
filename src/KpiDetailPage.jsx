@@ -736,7 +736,7 @@ export default function KpiDetailPage({
       <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
         <span style={{ color: T.sep }}>|</span>
-        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}].map(tab => (
+        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
           <button key={tab.id} onClick={() => tab.id === 'dashboard' ? onBack() : onBack(tab.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: tab.id === 'detail' ? 700 : 400,
@@ -745,6 +745,18 @@ export default function KpiDetailPage({
             padding: '0 4px', height:40,
           }}>{tab.label}</button>
         ))}
+        <span style={{ color: T.sep }}>|</span>
+        <div style={{ display:'flex', gap:4 }}>
+          {['5D','1M','6M','YTD'].map(r => (
+            <button key={r} onClick={() => onDateRangeChange(r)} style={{
+              background: r === dateRange ? '#00bcd4' : 'transparent',
+              color:      r === dateRange ? '#111' : T.textDim,
+              border: `1px solid #00bcd4`, fontSize:11, padding:'1.5px 0', width:42, textAlign:'center',
+              borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
+              transition:'all 0.15s',
+            }}>{r}</button>
+          ))}
+        </div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>

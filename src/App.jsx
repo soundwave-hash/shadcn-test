@@ -10,6 +10,7 @@ import {
 import { Sun, Download } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
+import InventoryScreen from './InventoryScreen'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -889,7 +890,7 @@ export default function App() {
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
-          {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}].map(tab => (
+          {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
             <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
@@ -910,7 +911,7 @@ export default function App() {
               }}>{r}</button>
             ))}
           </div>
-          <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
               width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
               backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
@@ -918,6 +919,33 @@ export default function App() {
             }}>
               <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
             </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button title="Export data" style={{
+                  width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}>
+                  <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
+                <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                  <Download size={12} /> Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportPDF} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                  <Download size={12} /> Export PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportChartPNG} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                  <Download size={12} /> Save Charts as PNG
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <img
+              src="/avatar.jpg"
+              alt="User account"
+              style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover', marginLeft:4, border:`1px solid ${T.inputBorder}`, flexShrink:0 }}
+            />
           </div>
         </div>
         <style>{`
@@ -936,9 +964,29 @@ export default function App() {
     )
   }
 
-  if (view === 'detail' && selectedKpiLabel) {
+  if (view === 'inventory') {
+    return (
+      <InventoryScreen
+        theme={theme}
+        T={T}
+        country={country}
+        selectedCities={selectedCities}
+        countries={COUNTRIES}
+        cities={CITY_LISTS[country]}
+        onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
+        onLocationChange={setSelectedCities}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        setView={setView}
+        onThemeToggle={toggleTheme}
+      />
+    )
+  }
+
+  if (view === 'detail') {
+    const kpiLabel = selectedKpiLabel || 'Unit Sales (Daily Avg)'
     const currentKpi = [...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2]
-      .find(k => k.label === selectedKpiLabel) || kpiCards[0]
+      .find(k => k.label === kpiLabel) || kpiCards[0]
     return (
       <KpiDetailPage
         kpi={currentKpi}
@@ -962,12 +1010,12 @@ export default function App() {
     <div style={{ backgroundColor: T.bg, minHeight:'100vh', fontFamily:'Inter, system-ui, sans-serif', color: T.text }}>
 
       {/* ── Menu bar ── */}
-      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:24 }}>
+      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:40, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>
           WarehouseIQ
         </span>
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
-        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}].map(tab => (
+        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
           <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: view === tab.id ? 700 : 400,

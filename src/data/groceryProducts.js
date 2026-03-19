@@ -306,6 +306,43 @@ export const PRODUCTS = [
   { sku:'750005', name:'Trail Mix (9oz)',        category:'Pantry', subcategory:'Snacks',           profile:'Balanced', dailyAvg: 380, inventory:   9500, cost:2.00, retail:4.49 }, // ~3.6 wks Low
 ]
 
+// ── Inventory augmentation (lead time, promo price, on order, in transit, fill rate) ──────────────
+
+const _LEAD_TIME_BY_SUBCATEGORY = {
+  'Fresh Fruits': 3, 'Fresh Vegetables': 3,
+  'Eggs': 4, 'Milk': 4, 'Cheese': 4, 'Yogurt': 4, 'Butter & Margarine': 4, 'Cream': 4,
+  'Beef': 3, 'Poultry': 3, 'Pork': 3, 'Seafood': 4,
+  'Bread & Rolls': 2, 'Tortillas & Wraps': 2, 'Pastries & Desserts': 2,
+  'Frozen Pizza': 7, 'Frozen Meals': 7, 'Frozen Vegetables': 7, 'Ice Cream & Desserts': 7,
+  'Juice & Juice Drinks': 10, 'Water': 10, 'Soft Drinks': 10, 'Coffee & Tea': 10,
+  'Pasta & Rice': 14, 'Cereals & Oatmeal': 14, 'Canned Goods': 14, 'Condiments & Sauces': 14, 'Snacks': 14,
+}
+
+// Deterministic pseudo-random seeded from SKU int + offset
+function _skuRng(sku, offset) {
+  let n = (parseInt(sku, 10) + offset * 9973) | 0
+  n = Math.imul(n ^ (n >>> 16), 0x45d9f3b)
+  n = Math.imul(n ^ (n >>> 16), 0x45d9f3b)
+  return ((n >>> 0) / 0xffffffff)
+}
+
+const _STAPLE_SUBCATS = new Set(['Eggs', 'Milk', 'Bread & Rolls', 'Pasta & Rice', 'Canned Goods', 'Water'])
+
+PRODUCTS.forEach(p => {
+  const lt = _LEAD_TIME_BY_SUBCATEGORY[p.subcategory] ?? 7
+  p.leadTime  = lt
+  const oo    = Math.round(p.dailyAvg * lt * 0.8)
+  p.onOrder   = oo
+  p.inTransit = Math.round(oo * 0.4)
+  // promoPrice: retail × 0.75–0.90 rounded down to nearest .99
+  const discFrac = 0.75 + _skuRng(p.sku, 1) * 0.15
+  p.promoPrice   = Math.floor(p.retail * discFrac) + 0.99
+  // fillRate: 96.5–99.5 for staples, 92.0–99.5 for others
+  const base   = _STAPLE_SUBCATS.has(p.subcategory) ? 96.5 : 92.0
+  const range  = _STAPLE_SUBCATS.has(p.subcategory) ?  3.0 :  7.5
+  p.fillRate   = parseFloat((base + _skuRng(p.sku, 2) * range).toFixed(1))
+})
+
 // ── Derived lookup helpers ─────────────────────────────────────────────────────
 
 export const CATEGORIES = [...new Set(PRODUCTS.map(p => p.category))]
