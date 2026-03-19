@@ -296,7 +296,7 @@ function MetricGauge({ period, country, selectedCities, checked, T }) {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:'100%' }}>
-      <svg width="100%" viewBox="0 0 260 148" style={{ maxWidth:320 }}>
+      <svg width="100%" viewBox="0 0 260 158" style={{ maxWidth:320 }}>
         {/* Track */}
         <path d={arc(0,1)} fill="none" stroke={T.border} strokeWidth={sw+4} strokeLinecap="round"/>
         {/* Filled */}
