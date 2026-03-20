@@ -53,6 +53,8 @@ const PERIOD_SCALE = { '1D':1.0, '5D':1.02, '1M':0.98, '6M':0.92, 'YTD':0.88 }
 
 // Cumulative days per period
 const PERIOD_DAYS = { '1D': 1, '5D': 5, '1M': 30, '6M': 182, 'YTD': 300 }
+// Daily-rate scale per period (longer periods smooth out spikes → lower avg rate)
+const WOS_PERIOD_SCALE = { '1D': 1.0, '5D': 0.97, '1M': 1.04, '6M': 0.93, 'YTD': 0.90 }
 
 // Simplified country scale used ONLY for non-Unit-Sales KPI card baseValue scaling.
 // Unit sales leaderboard and chart use per-product COUNTRY_SALES_PROFILES instead.
@@ -82,13 +84,14 @@ function getProductInvFrac(item, country, cities = []) {
 }
 
 function buildLeaderboard(period, sortField, sortAsc, country = 'All', cities = []) {
-  const days = PERIOD_DAYS[period] || 1
+  const days       = PERIOD_DAYS[period] || 1
+  const rateScale  = WOS_PERIOD_SCALE[period] ?? 1
   const rows = BASE_ITEMS.map(item => {
     const salesFrac = getProductSalesFrac(item, country, cities)
     const invFrac   = getProductInvFrac(item, country, cities)
     const avgSales  = Math.round(item.dailyAvg * days * salesFrac)
     const scaledInv = Math.round(item.inventory * invFrac)
-    const localAvg  = item.dailyAvg * salesFrac
+    const localAvg  = item.dailyAvg * salesFrac * rateScale
     const wos       = localAvg > 0 ? parseFloat((scaledInv / (localAvg * 7)).toFixed(1)) : 0
     const status    = wos >= 8 ? 'good' : wos >= 4 ? 'watch' : 'low'
     return { name:item.name, category:item.category, subcategory:item.subcategory, avgSales, inventory:scaledInv, wos, status }
