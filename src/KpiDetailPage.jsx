@@ -667,7 +667,7 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey }) {
         style={{ height:'100%', overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, whiteSpace:'pre-wrap', paddingRight:12, boxSizing:'border-box' }}
       >
         {phase === 'thinking' ? (
-          <span style={{ color:'#ffffff', fontWeight:700, display:'inline-flex', alignItems:'baseline', gap:1 }}>
+          <span style={{ color:'#ffffff', fontWeight:700, display:'inline-flex', alignItems:'baseline', gap:1, animation:'tldr-fade-in 2s ease forwards' }}>
             Thinking
             {[0,1,2].map(i => (
               <span key={i} style={{
@@ -750,6 +750,10 @@ export default function KpiDetailPage({
   const [lineAnimKey,  setLineAnimKey]  = useState(0)
   const [maxVarHovered, setMaxVarHovered] = useState(false)
   const maxVarDotPos = useRef({ cx: 0, cy: 0 })
+  const prevCheckedSizeRef = useRef(checked.size)
+  const [badgeAnimKey, setBadgeAnimKey] = useState(0)
+  const [tldrReady, setTldrReady] = useState(checked.size > 0)
+  const BADGE_FADE_MS = 2200
 
   const locationLabel = selectedCities.length === 0
     ? 'All'
@@ -818,6 +822,7 @@ export default function KpiDetailPage({
 
   // Max variance callout — find the data point where |thisYear - lastYear| is largest
   const maxVariancePt = useMemo(() => {
+    if (checked.size === 0) return null
     let best = null
     for (const pt of seriesDisplay) {
       const ty = pt.actual ?? pt.thisYear
@@ -827,7 +832,7 @@ export default function KpiDetailPage({
       if (!best || Math.abs(diff) > Math.abs(best.diff)) best = { label: pt.label, diff, ty, ly }
     }
     return best
-  }, [seriesDisplay])
+  }, [checked, seriesDisplay])
 
   const varColor = !maxVariancePt || maxVariancePt.diff >= 0 ? '#4caf50' : '#f44336'
 
@@ -914,6 +919,20 @@ export default function KpiDetailPage({
     : [healthTldr, null]
   const tldrBody = _tldrParts[0].trim()
   const tldrRec  = _tldrParts[1] ? _tldrParts[1].trim() : null
+
+  // Badge fade-in sequence: when transitioning from 0 → >0 selections, fade badge in first,
+  // then reveal TldrPanel after badge animation completes
+  useEffect(() => {
+    const prev = prevCheckedSizeRef.current
+    prevCheckedSizeRef.current = checked.size
+    if (prev === 0 && checked.size > 0) {
+      setBadgeAnimKey(k => k + 1)
+      setTldrReady(false)
+      const t = setTimeout(() => setTldrReady(true), BADGE_FADE_MS)
+      return () => clearTimeout(t)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checked.size])
 
   // Show variance bands first, then draw lines in after a short delay
   const selectedCitiesKey = selectedCities.join(',')
@@ -1106,16 +1125,18 @@ export default function KpiDetailPage({
               </div>
             </div>
 
-            {/* TL;DR module */}
+            {/* TL;DR module — panel always rendered; content gated on selections */}
             <div style={{ ...panel, flex:1, padding:'27px 20px 12px', height:313, overflow:'hidden' }}>
-              {/* Score badge + TL;DR + At-risk items */}
+              <style>{`@keyframes tldr-badge-fadein { from { opacity:0; transform:scale(0.88); } to { opacity:1; transform:scale(1); } }`}</style>
+              {checked.size > 0 && (
               <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
                 {/* Badge */}
-                <div style={{ flexShrink:0, width:80, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:8, padding:'8px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' }}>
+                <div key={badgeAnimKey} style={{ flexShrink:0, width:80, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:8, padding:'8px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', animation:`tldr-badge-fadein ${BADGE_FADE_MS}ms cubic-bezier(0.34,1.56,0.64,1) forwards` }}>
                   <div style={{ fontSize:26, fontWeight:700, color: healthColor, lineHeight:1.1 }}>{isNaN(healthPct) ? 0 : healthPct}%</div>
                   <div style={{ fontSize:10, color: healthColor, fontWeight:600, marginTop:3 }}>{healthZone}</div>
                 </div>
-                {/* TL;DR */}
+                {/* TL;DR — only renders after badge fade-in completes */}
+                {tldrReady && (
                 <TldrPanel
                   body={tldrBody}
                   rec={tldrRec}
@@ -1123,6 +1144,7 @@ export default function KpiDetailPage({
                   T={T}
                   triggerKey={`${period}-${country}-${selectedCitiesKey}`}
                 />
+                )}
                 {/* Separator */}
                 {lowItems.length > 0 && (
                   <div style={{ width:1, alignSelf:'stretch', backgroundColor: T.border, flexShrink:0, margin:'0 8px' }} />
@@ -1144,6 +1166,7 @@ export default function KpiDetailPage({
                   </div>
                 )}
               </div>
+              )}
             </div>
 
           </div>
@@ -1199,7 +1222,7 @@ export default function KpiDetailPage({
                   100% { opacity: 1; }
                 }
                 .maxvar-ring    { transform-box: fill-box; transform-origin: center; animation: maxvar-pulse 1.8s ease-out infinite; }
-                .maxvar-callout { animation: maxvar-fadein 1.2s ease-in forwards; }
+                .maxvar-callout { animation: maxvar-fadein 0.5s ease-in forwards; }
               `}</style>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
@@ -1260,7 +1283,7 @@ export default function KpiDetailPage({
               </ResponsiveContainer>
 
               {/* Inline overlay labels — float above the highest line at the hovered point */}
-              {activeTooltip?.x != null && (() => {
+              {activeTooltip?.x != null && checked.size > 0 && (() => {
                 const { ty, ly, x } = activeTooltip
                 const delta      = ty != null && ly != null ? ty - ly : null
                 const containerH = chartContainerRef.current?.clientHeight ?? 200
