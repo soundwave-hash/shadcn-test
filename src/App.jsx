@@ -10,11 +10,12 @@ import {
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Sun, Download } from 'lucide-react'
+import { Sun, Download, MessageSquare } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
 import AccountSwitcher, { USERS } from './AccountSwitcher'
+import SlackPanel from './SlackPanel'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -739,6 +740,7 @@ function applyKpiOrder(cards, savedOrder) {
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [activeUser, setActiveUser] = useState(USERS[0])
+  const [slackOpen, setSlackOpen] = useState(false)
   const [country, setCountry] = useState('United States')
   const [selectedCities, setSelectedCities] = useState([])   // [] = "All"
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
@@ -1206,6 +1208,18 @@ export default function App() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <button
+            onClick={() => setSlackOpen(o => !o)}
+            title="Slack — #warehouse-ops"
+            style={{
+              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
+              border: slackOpen ? '1px solid #00bcd4' : `1px solid ${T.inputBorder}`,
+              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <MessageSquare size={15} color={slackOpen ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
+          </button>
           <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={8} />
         </div>
       </div>
@@ -1467,6 +1481,8 @@ export default function App() {
           })}
         </div>
       </div>
+
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
     </div>
   )
 }

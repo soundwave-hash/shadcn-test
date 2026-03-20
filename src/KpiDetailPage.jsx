@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import AccountSwitcher from './AccountSwitcher'
+import SlackPanel from './SlackPanel'
 import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
 import {
   ComposedChart, Area, Line, ReferenceLine,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowUpDown, Sun, Download } from 'lucide-react'
+import { ArrowUpDown, Sun, Download, MessageSquare } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -753,6 +754,7 @@ export default function KpiDetailPage({
 
   const period    = dateRange
   const setPeriod = onDateRangeChange ?? (() => {})
+  const [slackOpen, setSlackOpen] = useState(false)
   const [activeTooltip, setActiveTooltip] = useState(null)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)
@@ -1131,6 +1133,18 @@ export default function KpiDetailPage({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <button
+            onClick={() => setSlackOpen(o => !o)}
+            title="Slack — #warehouse-ops"
+            style={{
+              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
+              border: slackOpen ? '1px solid #00bcd4' : `1px solid ${T.inputBorder}`,
+              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <MessageSquare size={15} color={slackOpen ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
+          </button>
           {activeUser && <AccountSwitcher activeUser={activeUser} onSwitch={onUserSwitch} T={T} marginLeft={8} />}
         </div>
       </div>
@@ -1475,6 +1489,8 @@ export default function KpiDetailPage({
 
         </div>
       </div>
+
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
     </div>
   )
 }
