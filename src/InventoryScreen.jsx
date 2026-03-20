@@ -282,7 +282,7 @@ export default function InventoryScreen({
     ? 'All'
     : selectedCities.length === 1
       ? selectedCities[0]
-      : 'Multiple'
+      : `${selectedCities.length} Cities`
 
   function handleReset() {
     setSelDepts(new Set())

@@ -925,7 +925,7 @@ export default function App() {
     ? 'All'
     : selectedCities.length === 1
       ? selectedCities[0]
-      : 'Multiple'
+      : `${selectedCities.length} Cities`
   const rangeJitter = RANGE_KPI_JITTER[dashboardRange] ?? RANGE_KPI_JITTER['1M']
   const displayKpiCards = kpiCards.map((k, i) => {
     const factor = cityScale * (rangeJitter[i] ?? 1)

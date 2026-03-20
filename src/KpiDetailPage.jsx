@@ -644,7 +644,7 @@ export default function KpiDetailPage({
 
   const locationLabel = selectedCities.length === 0
     ? 'All'
-    : selectedCities.length === 1 ? selectedCities[0] : 'Multiple'
+    : selectedCities.length === 1 ? selectedCities[0] : `${selectedCities.length} Cities`
 
   // kpiCityScale: used only for non-Unit-Sales KPI card baseValue
   const kpiCountrySc = KPI_COUNTRY_SCALE[country] ?? 1
