@@ -160,6 +160,47 @@ const PERIOD_CFG = {
   'YTD': { count:10, lbl: i => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'][i] },
 }
 
+// ── Forecast tick tooltip content ──────────────────────────────────────────────
+const YTD_FORECAST_TIPS = {
+  Jan: { headline:'January: Forecast Rationale', body:'Model anchors to a trailing 3 year January average with a +1.4% CAGR adjustment. Post holiday demand contraction is a structurally consistent pattern across this assortment — the forecast reflects a controlled velocity reset rather than a structural decline. Consumer panel data shows basket size compressing but trip frequency holding, supporting the flattish unit volume projection.', confidence:'Model confidence: High · 3 yr comp basis' },
+  Feb: { headline:'February: Forecast Rationale', body:'Valentine\'s Day creates a predictable 4 day demand concentration that the model weights at 1.8x the daily baseline for Feb 12–15. The short calendar month introduces a timing risk — the forecast assumes normal carrier availability. If inbound lead times extend beyond 3 days, the model flags a 6–9% downside scenario on confection and snack categories.', confidence:'Model confidence: High · Event driven signal' },
+  Mar: { headline:'March: Current Month in Progress', body:'Actuals through today are tracking 2.3% above the March forecast. The model originally projected a modest spring lift driven by seasonal produce resets and St. Patrick\'s Day pull. Easter\'s early positioning this year introduces incremental upside not fully captured in the base case — revised estimate carries a +4% adjustment flag.', confidence:'Model confidence: Medium · Revision pending' },
+  Apr: { headline:'April: Forecast Rationale', body:'Easter weekend is the primary demand lever for this forecast, contributing an estimated 11% of monthly unit volume in a compressed 4 day window. The model uses a day of week adjusted Easter demand curve calibrated on 4 prior years. Post Easter normalization is modeled at 6 days — any extension beyond 8 days would pressure the monthly total by approximately 3%.', confidence:'Model confidence: High · Event calendar anchored' },
+  May: { headline:'May: Forecast Rationale', body:'The Memorial Day demand signal accounts for roughly 18% of projected May volume. The model identifies a consistent front loading pattern in this assortment — consumers begin stocking grilling, snack, and beverage categories 9–12 days before the holiday. The forecast carries a +2.1% upside adjustment reflecting above average consumer confidence indices for Q2.', confidence:'Model confidence: High · Holiday curve applied' },
+  Jun: { headline:'June: Forecast Rationale', body:'Summer onset triggers a sustained velocity uplift that the model projects at +9% above the May run rate. The forecast is anchored to a seasonality index built on 5 years of June POS data, weighted toward the back half of the month when outdoor entertaining behavior peaks. Weather scenario analysis adds a ±4% band around the base case.', confidence:'Model confidence: Medium · Weather sensitive' },
+  Jul: { headline:'July: Forecast Rationale', body:'4th of July creates the highest single event demand concentration in the annual forecast. The model applies a 3 day spike multiplier of 2.4x on beverages, proteins, and snacks, then models a 10 day normalization tail. This forecast assumes no supply disruption — a 1 day carrier delay during the pre holiday build window historically results in a 7–12% fulfillment shortfall.', confidence:'Model confidence: High · Event multiplier applied' },
+  Aug: { headline:'August: Forecast Rationale', body:'Back to school is the primary demand driver, with the model projecting peak pull in weeks 2 and 3. The forecast reflects a modest sequential deceleration from July\'s peak as summer beverage velocity normalizes. Consumer sentiment data for this cohort shows strong pantry stocking intent, supporting the breakfast and lunch category uplift embedded in the August projection.', confidence:'Model confidence: High · Category level signal' },
+  Sep: { headline:'September: Forecast Rationale', body:'Labor Day provides a positive demand opening, but the model accounts for a mid month lull that is statistically consistent across 4 of the last 5 Septembers. The net forecast reflects this offset. The fall category transition — soups, warm beverages, and root produce — begins contributing incremental volume in week 3, which the model captures via a seasonal index crossover applied at the SKU level.', confidence:'Model confidence: Medium · Transition month volatility' },
+  Oct: { headline:'October: Forecast Rationale', body:'Halloween driven demand is modeled as a 2 week acceleration window (Oct 18–31) calibrated on confection, snack, and seasonal produce velocity from prior years. The model also embeds an early holiday pantry stocking signal that typically emerges in week 3, representing roughly 4% of monthly volume. Freight tightening in late October is factored into the inventory positioning assumptions, not the demand forecast itself.', confidence:'Model confidence: High · Seasonal index + event overlay' },
+}
+
+const HOUR_FORECAST_TIPS = {
+  '12 AM':{ headline:'12 AM: Forecast Rationale', body:'The model projects near floor demand for this hour based on a 5 year hourly POS curve. Transactions at midnight account for less than 0.3% of daily volume and are structurally driven by automated subscription fulfillment and digital orders, not in store traffic. Forecast variance at this hour is minimal — the confidence interval is the tightest of any hour in the 1D model.', confidence:'Model confidence: Very High · Structural floor' },
+  '1 AM': { headline:'1 AM: Forecast Rationale', body:'Demand at 1 AM is almost entirely composed of e-commerce auto replenishment and late night convenience channel activity. The model applies a flat multiplier derived from 90 day rolling actuals at this hour. Forecast deviation from actuals at 1 AM historically averages less than 1.2%, making this one of the most stable hours in the intraday curve.', confidence:'Model confidence: Very High · Low variance hour' },
+  '2 AM': { headline:'2 AM: Forecast Rationale', body:'Projected velocity reflects minimum baseline demand with no meaningful consumer initiated transaction signal. The model isolates this hour as a DC throughput window rather than a consumer demand window — any units forecasted here represent scheduled auto fulfillment orders processed during the overnight batch cycle.', confidence:'Model confidence: Very High · Batch fulfillment driven' },
+  '3 AM': { headline:'3 AM: Forecast Rationale', body:'The 3 AM forecast is anchored almost entirely to pre scheduled replenishment orders and cross dock activity. Consumer demand contribution is statistically indistinguishable from zero. The model flags this hour as a leading indicator for shelf availability at open — any forecast miss here propagates into a morning OOS risk signal.', confidence:'Model confidence: Very High · Pre open indicator' },
+  '4 AM': { headline:'4 AM: Forecast Rationale', body:'Early open consumer traffic begins contributing a measurable signal at 4 AM, primarily from 24 hour format locations. The model projects a +40% step up from the 3 AM floor based on format mix in this region. The forecast for this hour is the first in the day where consumer behavior — rather than automated systems — becomes a meaningful demand driver.', confidence:'Model confidence: High · Format mix adjusted' },
+  '5 AM': { headline:'5 AM: Forecast Rationale', body:'Commuter and early open traffic produces a sharp velocity inflection that the model captures via a ramp coefficient derived from foot traffic data. The 5 AM hour is the first with meaningful cross category breadth — grab and go, coffee, and fresh beverages all registering above minimum threshold simultaneously. The model projects a 3.2x step up from the 4 AM level.', confidence:'Model confidence: High · Foot traffic anchored' },
+  '6 AM': { headline:'6 AM: Forecast Rationale', body:'The model projects significant acceleration at 6 AM, driven by the breakfast commuter cohort. POS velocity data from comparable dayparts across 3 years shows a consistent 55–65% above baseline signal for this hour. The forecast embeds a weather sensitivity coefficient — precipitation events historically compress 6 AM velocity by 8–14% as commuter footfall drops.', confidence:'Model confidence: High · Weather adjusted' },
+  '7 AM': { headline:'7 AM: Forecast Rationale', body:'7 AM represents the morning demand apex in the 1D model. The forecast is built on a 90th percentile intraday velocity curve, reflecting the highest sustained transaction rate of the morning window. Consumer basket data shows the broadest category mix at this hour — the model weights 14 of 20 tracked SKUs as active velocity contributors, the highest cross SKU engagement of any morning hour.', confidence:'Model confidence: Very High · Peak hour calibration' },
+  '8 AM': { headline:'8 AM: Forecast Rationale', body:'The model sustains a near peak forecast for 8 AM based on the pre work shopping segment, which shows strong dwell time and basket depth signals in panel data. While absolute transaction count begins declining from the 7 AM peak, revenue per transaction reaches its morning high at 8 AM as consumers add planned pantry items to commuter driven purchases.', confidence:'Model confidence: High · Basket depth signal' },
+  '9 AM': { headline:'9 AM: Forecast Rationale', body:'Post commute traffic shifts the demand profile toward planned household shopping. The model projects continued strength anchored by the caregiver and household manager cohort, which drives above average basket sizes and strong fresh category pull. Historical 9 AM actuals have tracked within 3.5% of forecast for 11 of the last 12 comparable periods.', confidence:'Model confidence: High · Cohort behavioral signal' },
+  '10 AM':{ headline:'10 AM: Forecast Rationale', body:'The model identifies 10 AM as a transition hour between the commuter led morning peak and the lunch driven midday surge. Two demand waves overlap here — trailing morning shoppers and early lunch planners — producing a velocity floor that is structurally above the pre 9 AM run rate. The forecast reflects this overlap with a composite demand signal weighted 60/40 between the two cohorts.', confidence:'Model confidence: High · Dual cohort model' },
+  '11 AM':{ headline:'11 AM: Forecast Rationale', body:'11 AM carries one of the highest forecast confidence scores in the 1D model. The lunch demand signal is fully established by this hour and historical actuals show very low variance against the seasonal baseline. The model projects sustained near peak velocity driven by fresh, deli, and prepared categories, with a secondary snack and beverage contribution from early lunch break shoppers.', confidence:'Model confidence: Very High · Low historical variance' },
+  '12 PM':{ headline:'12 PM: Forecast Rationale', body:'Noon is the single highest confidence hour in the 1D demand model. Five years of POS data produce a tight confidence interval of ±2.1% around the midday baseline. The forecast reflects peak transaction density across the broadest category spread of any hour — all 20 tracked SKUs register active velocity simultaneously at noon. Revenue concentration per hour is at its daily maximum.', confidence:'Model confidence: Very High · Tightest CI in model' },
+  '1 PM': { headline:'1 PM: Forecast Rationale', body:'The model projects a modest post noon step down anchored to a consistent 1 PM taper observed across 48 of the last 52 comparable weeks. Snack and convenience categories maintain elevated velocity as the afternoon snacking occasion layer begins. The forecast assumes the lunch demand tail runs approximately 45 minutes past noon before the velocity curve begins its sustained afternoon decline.', confidence:'Model confidence: High · Taper curve applied' },
+  '2 PM': { headline:'2 PM: Forecast Rationale', body:'Afternoon demand at 2 PM is modeled with a dual channel lens — in store traffic moderating while BOPIS and delivery order volume holds steady. The model embeds a school pickup demand pulse at 2:30 PM for regions with high family segment penetration, contributing an estimated 4–6% incremental unit lift in fresh and snack categories relative to the 1 PM baseline.', confidence:'Model confidence: Medium · Channel mix sensitivity' },
+  '3 PM': { headline:'3 PM: Forecast Rationale', body:'The model identifies 3 PM as the trough of the mid afternoon demand valley before the commuter driven evening rebuild begins. Historical actuals cluster tightly around the forecast at this hour — in store traffic is structurally lower than both the morning and evening peaks, creating a stable and predictable demand signal that the model captures with high accuracy.', confidence:'Model confidence: High · Midday trough calibration' },
+  '4 PM': { headline:'4 PM: Forecast Rationale', body:'The commuter demand signal activates sharply at 4 PM in the model. Trip mission data shows a clear shift from convenience led to meal planning led shopping behavior starting at this hour — basket size increases 22% on average vs 3 PM and protein, produce, and dairy velocity accelerates disproportionately. The forecast embeds a day of week modifier — Friday 4 PM runs 14% above the weekly average.', confidence:'Model confidence: High · Mission shift signal' },
+  '5 PM': { headline:'5 PM: Forecast Rationale', body:'5 PM is the second daily demand peak and carries the highest revenue per hour forecast of the evening window. The model weights this hour using a commuter density index calibrated to regional transit and office occupancy patterns. Consumer intent data shows peak meal planning confidence at this hour — the broadest dinner category basket composition of any evening hour is projected at 5 PM.', confidence:'Model confidence: Very High · Commuter density indexed' },
+  '6 PM': { headline:'6 PM: Forecast Rationale', body:'The model projects sustained elevated demand at 6 PM, driven by post work shoppers who index heavily on prepared foods, grab and go, and convenience categories. The velocity curve flattens rather than declines sharply — the forecast reflects a 7% sequential softening from 5 PM, consistent with the average observed across 3 years of comparable evening periods.', confidence:'Model confidence: High · Convenience cohort signal' },
+  '7 PM': { headline:'7 PM: Forecast Rationale', body:'7 PM marks the inflection point in the evening wind down. The model forecasts a steeper velocity decline than prior hours, driven by a structural drop in new trip initiations after 7 PM. Late mission shoppers — predominantly top up and convenience — sustain the floor. The forecast holds above the seasonal mean due to above average regional consumer confidence scores embedded in this month\'s model inputs.', confidence:'Model confidence: Medium · Wind down inflection point' },
+  '8 PM': { headline:'8 PM: Forecast Rationale', body:'The model projects continued deceleration at 8 PM, with velocity settling toward the lower quartile of the daily range. Remaining transaction volume is concentrated in convenience, snack, and beverage — the model applies a late evening category mix adjustment that narrows the active SKU set from 20 to approximately 9 high velocity convenience items.', confidence:'Model confidence: High · Category mix narrowing' },
+  '9 PM': { headline:'9 PM: Forecast Rationale', body:'The 9 PM forecast reflects the transition from consumer led to fulfillment led demand. Remaining in store transactions are structurally predictable — the model captures them via a closing hour behavioral curve with a historical fit of 94.2%. Any forecast beat at this hour typically signals an unplanned demand event such as a local promotion or competitor OOS driving incremental trip migration.', confidence:'Model confidence: High · Closing curve applied' },
+  '10 PM':{ headline:'10 PM: Forecast Rationale', body:'Demand at 10 PM is structurally bounded by store format and operating hours. The model applies a hard ceiling based on historical maximum transaction counts at this hour across the active store base. Forecast variance is almost entirely explained by format mix — 24 hour stores contribute disproportionately and any change in format weighting shifts the 10 PM total materially.', confidence:'Model confidence: High · Format ceiling bound' },
+  '11 PM':{ headline:'11 PM: Forecast Rationale', body:'The model projects near floor demand for 11 PM, consistent with closing hour transaction patterns. The forecast is largely invariant to macroeconomic inputs at this hour — demand is structurally constrained by shopper access and store hours. The primary forecast risk is a positive surprise from digital/BOPIS order cutoff windows that route last minute orders into this hour\'s fulfillment queue.', confidence:'Model confidence: Very High · Structurally constrained' },
+}
+
 function buildSeries(baseValue, period) {
   const { count, lbl } = PERIOD_CFG[period] || PERIOD_CFG['1D']
   return Array.from({ length:count }, (_,i) => {
@@ -309,9 +350,9 @@ function MetricGauge({ period, country, selectedCities, checked, T }) {
         {/* Min / Max labels */}
         <text x={cx-r-2} y={cy+25} fill="#fff" fontSize={10} textAnchor="middle">0%</text>
         <text x={cx+r+2} y={cy+25} fill="#fff" fontSize={10} textAnchor="middle">100%</text>
-        {/* Score */}
+        {/* Score — use unclamped weightedPct so text matches the TL;DR badge */}
         <text x={cx} y={cy-14} fill={arcColor} fontSize={34} fontWeight={700} textAnchor="middle" dominantBaseline="middle">
-          {rows.length === 0 ? '—' : `${Math.round(pct*100)}%`}
+          {rows.length === 0 ? '—' : `${Math.round(weightedPct*100)}%`}
         </text>
         <text x={cx} y={cy+12} fill="#fff" fontSize={11} textAnchor="middle">Inventory Health</text>
       </svg>
@@ -754,6 +795,7 @@ export default function KpiDetailPage({
   const [badgeAnimKey, setBadgeAnimKey] = useState(0)
   const [tldrReady, setTldrReady] = useState(checked.size > 0)
   const BADGE_FADE_MS = 2200
+  const [forecastTipHovered, setForecastTipHovered] = useState(null)
 
   const locationLabel = selectedCities.length === 0
     ? 'All'
@@ -819,6 +861,12 @@ export default function KpiDetailPage({
     // For other periods, include null actual/forecast so recharts data shape stays consistent
     return series.map(pt => ({ ...pt, actual: null, forecast: null }))
   }, [period, series])
+
+  // Labels that have forecast data — used to identify which ticks get tooltips
+  const forecastLabels = useMemo(
+    () => new Set(seriesDisplay.filter(p => p.forecast != null).map(p => p.label)),
+    [seriesDisplay]
+  )
 
   // Max variance callout — find the data point where |thisYear - lastYear| is largest
   const maxVariancePt = useMemo(() => {
@@ -920,6 +968,11 @@ export default function KpiDetailPage({
   const tldrBody = _tldrParts[0].trim()
   const tldrRec  = _tldrParts[1] ? _tldrParts[1].trim() : null
 
+  // Clear forecast tooltip when all items are deselected
+  useEffect(() => {
+    if (checked.size === 0) setForecastTipHovered(null)
+  }, [checked.size])
+
   // Badge fade-in sequence: when transitioning from 0 → >0 selections, fade badge in first,
   // then reveal TldrPanel after badge animation completes
   useEffect(() => {
@@ -938,6 +991,7 @@ export default function KpiDetailPage({
   const selectedCitiesKey = selectedCities.join(',')
   useEffect(() => {
     setLinesVisible(false)
+    setForecastTipHovered(null)
     const timer = setTimeout(() => {
       setLinesVisible(true)
       setLineAnimKey(k => k + 1)
@@ -1240,19 +1294,21 @@ export default function KpiDetailPage({
                   <XAxis dataKey="label" stroke={T.border} interval={0} tickLine={false} tick={({ x, y, payload }) => {
                     const isNow = (period === '1D'  && payload.value === CURRENT_LABEL_1D)
                                || (period === 'YTD' && payload.value === CURRENT_LABEL_YTD)
-                    const angled = period === '1D'
-                    return (
+                    const isForecast = ['YTD','1D'].includes(period) && forecastLabels.has(payload.value)
+                    const shouldAngle = period === '1D' || (period === 'YTD' && isForecast)
+                    const textEl = (
                       <text
                         x={x} y={y + 4}
-                        textAnchor={angled ? 'end' : 'middle'}
+                        textAnchor={shouldAngle ? 'end' : 'middle'}
                         fontSize={11}
-                        fill={isNow ? '#00bcd4' : T.axTick}
+                        fill={isNow ? '#00bcd4' : isForecast ? 'rgba(0,188,212,0.65)' : T.axTick}
                         fontWeight={isNow ? 700 : 400}
-                        transform={angled ? `rotate(-35, ${x}, ${y + 4})` : undefined}
+                        transform={shouldAngle ? `rotate(-35, ${x}, ${y + 4})` : undefined}
                       >
                         {payload.value}
                       </text>
                     )
+                    return textEl
                   }}/>
                   <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
                   <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
@@ -1283,7 +1339,7 @@ export default function KpiDetailPage({
               </ResponsiveContainer>
 
               {/* Inline overlay labels — float above the highest line at the hovered point */}
-              {activeTooltip?.x != null && checked.size > 0 && (() => {
+              {activeTooltip?.x != null && checked.size > 0 && !forecastTipHovered && (() => {
                 const { ty, ly, x } = activeTooltip
                 const delta      = ty != null && ly != null ? ty - ly : null
                 const containerH = chartContainerRef.current?.clientHeight ?? 200
@@ -1343,6 +1399,72 @@ export default function KpiDetailPage({
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.55 }}>
                       {tip}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Forecast tick hit areas — HTML divs avoid recharts SVG pointer-events:none */}
+              {linesVisible && checked.size > 0 && ['YTD','1D'].includes(period) && (() => {
+                const containerW = chartContainerRef.current?.clientWidth ?? 0
+                if (!containerW) return null
+                const leftOffset = 8 + 46   // margin.left + yAxisWidth
+                const rightMargin = 16
+                const plotW = containerW - leftOffset - rightMargin
+                const count = period === 'YTD' ? 10 : 24
+                const bottomH = period === '1D' ? 80 : 60
+                return seriesDisplay.map((pt, idx) => {
+                  if (!forecastLabels.has(pt.label)) return null
+                  const cx = leftOffset + (idx + 0.5) * (plotW / count)
+                  return (
+                    <div
+                      key={`fchit-${pt.label}`}
+                      onMouseEnter={() => { setForecastTipHovered({ label: pt.label, x: cx }); setActiveTooltip(null) }}
+                      onMouseLeave={() => setForecastTipHovered(null)}
+                      style={{
+                        position: 'absolute', bottom: 0,
+                        left: cx - 36, width: 72, height: bottomH,
+                        cursor: 'default', zIndex: 10,
+                      }}
+                    />
+                  )
+                })
+              })()}
+
+              {/* Forecast tick tooltip */}
+              {forecastTipHovered && checked.size > 0 && (() => {
+                const tip = period === 'YTD'
+                  ? YTD_FORECAST_TIPS[forecastTipHovered.label]
+                  : HOUR_FORECAST_TIPS[forecastTipHovered.label]
+                if (!tip) return null
+                const containerW = chartContainerRef.current?.clientWidth ?? 600
+                const leftPx = Math.min(Math.max(forecastTipHovered.x, 140), containerW - 140)
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    // chart bottom margin + label height + 15px gap above label
+                    bottom: (period === '1D' ? 40 : 8) + 11 + 30,
+                    left: leftPx,
+                    transform: 'translateX(-50%)',
+                    width: 'max-content',
+                    minWidth: 280,
+                    maxWidth: 420,
+                    pointerEvents: 'none',
+                    backgroundColor: T.tooltipBg,
+                    border: '1px solid rgba(0,188,212,0.4)',
+                    borderRadius: 8,
+                    padding: '11px 14px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                    zIndex: 20,
+                  }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'#00bcd4', marginBottom:6, letterSpacing:'0.03em' }}>
+                      {tip.headline}
+                    </div>
+                    <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.65 }}>
+                      {tip.body}
+                    </div>
+                    <div style={{ fontSize:9, fontWeight:600, color:'rgba(0,188,212,0.55)', marginTop:8, paddingTop:6, borderTop:`1px solid ${T.border}`, letterSpacing:'0.04em', textTransform:'uppercase', whiteSpace:'nowrap' }}>
+                      {tip.confidence}
                     </div>
                   </div>
                 )
