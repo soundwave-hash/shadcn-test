@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import AccountSwitcher from './AccountSwitcher'
 import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
 import {
-  ComposedChart, Area, Line,
+  ComposedChart, Area, Line, ReferenceLine,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import {
@@ -323,7 +323,7 @@ function MetricGauge({ period, country, selectedCities, checked, T }) {
 function ExtendedCursor({ x, y, height }) {
   if (x == null) return null
   return (
-    <line x1={x} y1={y - 20} x2={x} y2={y + height}
+    <line x1={x} y1={y} x2={x} y2={y + height}
       stroke="#444" strokeWidth={1} strokeDasharray="4 3" />
   )
 }
@@ -748,6 +748,8 @@ export default function KpiDetailPage({
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
   const [linesVisible, setLinesVisible] = useState(false)
   const [lineAnimKey,  setLineAnimKey]  = useState(0)
+  const [maxVarHovered, setMaxVarHovered] = useState(false)
+  const maxVarDotPos = useRef({ cx: 0, cy: 0 })
 
   const locationLabel = selectedCities.length === 0
     ? 'All'
@@ -814,6 +816,63 @@ export default function KpiDetailPage({
     return series.map(pt => ({ ...pt, actual: null, forecast: null }))
   }, [period, series])
 
+  // Max variance callout — find the data point where |thisYear - lastYear| is largest
+  const maxVariancePt = useMemo(() => {
+    let best = null
+    for (const pt of seriesDisplay) {
+      const ty = pt.actual ?? pt.thisYear
+      const ly = pt.lastYear
+      if (ty == null || ly == null) continue
+      const diff = ty - ly
+      if (!best || Math.abs(diff) > Math.abs(best.diff)) best = { label: pt.label, diff, ty, ly }
+    }
+    return best
+  }, [seriesDisplay])
+
+  const varColor = !maxVariancePt || maxVariancePt.diff >= 0 ? '#4caf50' : '#f44336'
+
+  const MAX_VAR_TIPS_POS = [
+    "A regional promo on dairy and produce pulled 3 weeks of demand into this window, spiking units well above the prior year baseline.",
+    "Early seasonal stocking ahead of a holiday weekend inflated velocity significantly above what was ordered in the same period last year.",
+    "A key competitor ran out of stock across multiple retail locations, redirecting demand to this assortment for several consecutive weeks.",
+    "New DC capacity added mid-period introduced incremental order flow that had no prior year equivalent in this region.",
+  ]
+  const MAX_VAR_TIPS_NEG = [
+    "Port congestion at the primary inbound hub delayed 4 loads, pulling available units well below the prior year fulfillment level.",
+    "A cold front disrupted ground freight across the region, extending inbound lead times by 3 to 4 days and compressing fill rates.",
+    "A supplier quality hold on two high-velocity SKUs reduced fill rates for 10 consecutive days vs the same window last year.",
+    "Carrier capacity tightened ahead of peak season, pushing allocation below contracted volumes and limiting units available this period.",
+  ]
+
+  // Custom dot renderer — normal dot for every point, pulsing ring + chip at max variance point
+  const renderMaxVarDot = (dotProps, baseR, baseFill) => {
+    const { cx, cy, payload } = dotProps
+    if (!linesVisible || !maxVariancePt || payload.label !== maxVariancePt.label)
+      return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={baseR} fill={baseFill} />
+    maxVarDotPos.current = { cx, cy }
+    const diff = maxVariancePt.diff
+    const absDiff = Math.abs(diff)
+    const num = absDiff >= 1e6
+      ? `${(absDiff / 1e6).toFixed(1)}M`
+      : absDiff >= 1e3
+        ? `${(absDiff / 1e3).toFixed(1)}K`
+        : String(Math.round(absDiff))
+    const chip = `${diff >= 0 ? '▲ +' : '▼ '}${num} vs LY`
+    const chipW = 92, chipH = 18, chipX = cx - chipW / 2, chipY = cy - 38
+    return (
+      <g key={`maxvar-${cx}-${cy}`} className="maxvar-callout"
+        onMouseEnter={() => setMaxVarHovered(true)}
+        onMouseLeave={() => setMaxVarHovered(false)}
+        style={{ cursor: 'default' }}
+      >
+        <circle cx={cx} cy={cy} r={13} fill="none" stroke={varColor} strokeWidth={2} className="maxvar-ring" />
+        <circle cx={cx} cy={cy} r={baseR + 1} fill={varColor} />
+        <rect x={chipX} y={chipY} width={chipW} height={chipH} rx={4} fill={varColor} fillOpacity={0.92} />
+        <text x={cx} y={chipY + 13} textAnchor="middle" fontSize={10} fontWeight="700" fill="#fff">{chip}</text>
+      </g>
+    )
+  }
+
   // Inventory health stats for context panel
   const healthRows = useMemo(() => {
     const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
@@ -828,22 +887,22 @@ export default function KpiDetailPage({
   const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
   const HEALTH_MESSAGES = {
     Healthy: [
-      `Brent crude has stabilized near $82/barrel after a 6-week run-up driven by OPEC+ production cuts. Global container availability is improving as post-pandemic shipping backlogs continue to clear across major Pacific and Atlantic routes. No active tropical systems are threatening major shipping corridors and the 10-day forecast is clear across all primary freight lanes.\n\nFreight lanes serving ${country} are running at normal capacity and carrier contracts are holding within budget. No active tariff changes or import restrictions are affecting inbound goods for this region.\n\nCarrier on-time performance is at 94%+ this period. Fill rates are holding above 98% across all active SKUs and primary supplier lead times have shortened 0.4 days on average, giving a small buffer to tighten order frequency without adding holding costs. Recommendation: Hold the current replenishment schedule and look at forward-buying on the top 5 SKUs to lock in freight rates before Q3 peak. Confirm secondary supplier availability with procurement and flag any SKUs approaching 8-week coverage for a reorder review before month-end.`,
-      `Diesel futures softened this week on lower-than-expected demand from European manufacturing. Port dwell times at major US hubs are averaging 2.1 days, near a 2-year low, easing inbound lead time pressure across the network.\n\nDistribution infrastructure serving ${country} is operating without disruption. Fuel surcharges from regional carriers have settled at 12.5%, down from 14.2% last quarter, improving freight economics for this region specifically.\n\nUnit shipping costs are on budget and no carrier rate increases are expected this period. Inventory coverage on perishables is averaging 9.2 weeks, the strongest position this fiscal year. Order accuracy out of the primary DC is 99.4%, well above the 97% target. Recommendation: Move $18K in freight savings into safety stock builds for high-velocity perishables before the summer demand pickup.`,
-      `No active conflict escalation is affecting key agricultural export corridors this period. Grain and produce supply chains from primary growing regions are running on normal seasonal schedules with no disruption to global commodity flows. Above-average rainfall across key growing regions this season has supported strong crop yields, keeping fresh produce and grain pipelines well-stocked heading into the distribution cycle.\n\nNo weather advisories or infrastructure issues are affecting distribution lanes in ${country}. Seasonal conditions are within standard operating ranges and inbound receipt accuracy for the region is at 99.1%.\n\nAll 20 tracked SKUs are above 8 weeks WoS and velocity trends are flat to slightly positive, so no unusual draw-down pressure is visible. Transportation cost per case is down 2.1% versus the same period last year on better route consolidation. Recommendation: Pull next week's replenishment orders forward by 2 days to take advantage of open lane capacity and lower the weekend stockout risk on dairy and produce.`,
-      `Labor markets in the freight sector have loosened slightly, with truck driver availability up 4% quarter-over-quarter in key logistics corridors. No significant port strikes or terminal closures are expected in the near term across North American or European hubs.\n\nWarehouse capacity in the ${country} region is well-distributed with no known bottlenecks at key distribution nodes. Four of five primary carriers on routes into ${country} are hitting 95%+ on-time delivery this month.\n\nWarehouse throughput is at 78% utilization, comfortably within the optimal range. Year-over-year unit sales are up 6.2% and WoS coverage is above 8 weeks for 17 of 20 tracked items. Returns and shrinkage are at a 6-month low, bringing net inventory accuracy to 98.7%. Recommendation: Use the available dock capacity to pull forward inbound receipts for Eggs and Whole Milk, both trending toward Watch status within 10 days at current pace.`,
+      `Brent crude has stabilized near $82/barrel after a 6 week run driven by OPEC+ production cuts. Global container availability is improving as shipping backlogs continue to clear across major Pacific and Atlantic routes. No active tropical systems are threatening major shipping corridors and the 10 day forecast is clear across all primary freight lanes.\n\nFreight lanes serving ${country} are running at normal capacity and carrier contracts are holding within budget. No active tariff changes or import restrictions are affecting inbound goods for this region.\n\nCarrier on time performance is at 94%+ this period. Fill rates are holding above 98% across all active SKUs and primary supplier lead times have shortened 0.4 days on average, giving a small buffer to tighten order frequency without adding holding costs. Recommendation: Hold the current replenishment schedule and look at forward-buying on the top 5 SKUs to lock in freight rates before Q3 peak. Confirm secondary supplier availability with procurement and flag any SKUs approaching 8 week coverage for a reorder review before month-end.`,
+      `Diesel futures softened this week on lower than expected demand from European manufacturing. Port dwell times at major US hubs are averaging 2.1 days, near a 2 year low, easing inbound lead time pressure across the network.\n\nDistribution infrastructure serving ${country} is operating without disruption. Fuel surcharges from regional carriers have settled at 12.5%, down from 14.2% last quarter, improving freight economics for this region specifically.\n\nUnit shipping costs are on budget and no carrier rate increases are expected this period. Inventory coverage on perishables is averaging 9.2 weeks, the strongest position this fiscal year. Order accuracy out of the primary DC is 99.4%, well above the 97% target. Recommendation: Move $18K in freight savings into safety stock builds for high velocity perishables before the summer demand pickup.`,
+      `No active conflict escalation is affecting key agricultural export corridors this period. Grain and produce supply chains from primary growing regions are running on normal seasonal schedules with no disruption to global commodity flows. Above average rainfall across key growing regions this season has supported strong crop yields, keeping fresh produce and grain pipelines well stocked heading into the distribution cycle.\n\nNo weather advisories or infrastructure issues are affecting distribution lanes in ${country}. Seasonal conditions are within standard operating ranges and inbound receipt accuracy for the region is at 99.1%.\n\nAll 20 tracked SKUs are above 8 weeks WoS and velocity trends are flat to slightly positive, so no unusual draw down pressure is visible. Transportation cost per case is down 2.1% versus the same period last year on better route consolidation. Recommendation: Pull next week's replenishment orders forward by 2 days to take advantage of open lane capacity and lower the weekend stockout risk on dairy and produce.`,
+      `Labor markets in the freight sector have loosened slightly, with truck driver availability up 4% quarter over quarter in key logistics corridors. No significant port strikes or terminal closures are expected in the near term across North American or European hubs.\n\nWarehouse capacity in the ${country} region is well distributed with no known bottlenecks at key distribution nodes. Four of five primary carriers on routes into ${country} are hitting 95%+ on time delivery this month.\n\nWarehouse throughput is at 78% utilization, comfortably within the optimal range. Year over year unit sales are up 6.2% and WoS coverage is above 8 weeks for 17 of 20 tracked items. Returns and shrinkage are at a 6 month low, bringing net inventory accuracy to 98.7%. Recommendation: Use the available dock capacity to pull forward inbound receipts for Eggs and Whole Milk, both trending toward Watch status within 10 days at current pace.`,
     ],
     'At Risk': [
-      `Rising fuel surcharges tied to a recent oil price spike are tightening carrier margins across North American freight networks. Atlantic hurricane season activity is running above the 30-year average this period, adding uncertainty to Gulf Coast and East Coast freight corridors that handle a significant share of inbound consumer goods. Spot freight rates have climbed 11% over the past 3 weeks as capacity tightens ahead of peak season, with no near-term relief expected.\n\nExpress carrier capacity serving ${country} is under pressure from elevated regional demand. 12% of shipments are seeing 1-2 day delays and ground routes absorbing overflow are slowing last-mile times across the ${country} network.\n\nSix SKUs have dropped below 6 WoS over the past 5 days. When carrier capacity tightens in this region, average replenishment cycle time historically rises by 2.3 days, which would push 4 more items into the critical zone before the next order cycle. Store-level OOS complaints on produce and dairy are up 18% week-over-week. Recommendation: Expedite replenishment for the 4 lowest WoS items through a secondary carrier and give store ops a heads-up on a likely 48-hour shelf gap for Bananas and Baby Spinach.`,
-      `Diesel prices jumped 8% this month after a Gulf Coast hurricane made landfall last week, disrupting operations at three major refineries and tightening diesel supply faster than the market anticipated. Two major carriers have issued fuel surcharge adjustments that take effect this billing cycle, compressing freight economics across all shipping categories.\n\nThe surcharge adjustments are hitting routes into ${country} harder than average due to longer haul distances from the primary distribution hub. Average shipping cost per unit for ${country} is up $0.43 over the prior period, putting the region above its freight budget threshold.\n\nThree high-velocity SKUs are trending below their reorder points with no confirmed inbound receipts this week. The margin hit on affected SKUs is running at 4.2%, above the 3% threshold that typically kicks off a procurement review. Secondary sourcing options exist for 2 of the 3 items but lead times run 4 days longer. Recommendation: Combine the next 3 replenishment runs into 2 loads to offset the surcharge impact. Estimated savings of $2,100 per cycle at current volume.`,
-      `A cold front system moving across the interior is affecting road freight in multiple regions. National weather data shows similar events in recent years have extended average ground transit times by 1.5 to 2 days before clearing, creating compounding delays for time-sensitive shipments.\n\nDistribution corridors into ${country} are experiencing 3-5% of shipments flagged for weather holds. Monitoring is ongoing and the earliest reliable delivery window for ${country} is expected to open mid-week as conditions improve.\n\nFour SKUs at 4-5 weeks of supply would cross into the critical zone if inbound receipts slip more than 3 days. OJ and Butter are the most exposed, both under 4 weeks of supply with no buffer stock staged locally. Recommendation: Move 3 days of buffer stock for OJ and Butter to the regional DC now. Both items are under 4 weeks of supply and most exposed to delay-driven stockouts.`,
-      `Import volumes at key entry ports are running above seasonal norms, driven by pre-tariff pull-forward activity across consumer goods categories. Port dwell times have risen from 2.1 to 3.4 days over the past 3 weeks, adding days to inbound supply chains across all import-dependent categories.\n\nThe elevated import volumes are flowing through distribution hubs serving ${country}, pushing inbound freight 18% above forecast. Dock scheduling in ${country} is under strain and overtime has been authorized, but throughput delays of 6-12 hours are likely during peak windows.\n\nOn-shelf availability dropped to 94.3% this week from 97.8% last period, mostly from late produce and dairy receipts. The backlog is at 14 hours and adding about 1.5 hours per shift. Five SKUs have moved from Healthy to Watch status due to delayed put-aways. Recommendation: Lock in dock priority for Russet Potatoes, Greek Yogurt, and OJ. All three are below 4 WoS and any more receipt delays will push them to zero stock.`,
+      `Rising fuel surcharges tied to a recent oil price spike are tightening carrier margins across North American freight networks. Atlantic hurricane season activity is running above the 30 year average this period, adding uncertainty to Gulf Coast and East Coast freight corridors that handle a significant share of inbound consumer goods. Spot freight rates have climbed 11% over the past 3 weeks as capacity tightens ahead of peak season, with no near term relief expected.\n\nExpress carrier capacity serving ${country} is under pressure from elevated regional demand. 12% of shipments are seeing 1 to 2 day delays and ground routes absorbing overflow are slowing last mile times across the ${country} network.\n\nSix SKUs have dropped below 6 WoS over the past 5 days. When carrier capacity tightens in this region, average replenishment cycle time historically rises by 2.3 days, which would push 4 more items into the critical zone before the next order cycle. Store level OOS complaints on produce and dairy are up 18% week over week. Recommendation: Expedite replenishment for the 4 lowest WoS items through a secondary carrier and give store ops a heads-up on a likely 48 hour shelf gap for Bananas and Baby Spinach.`,
+      `Diesel prices jumped 8% this month after a Gulf Coast hurricane made landfall last week, disrupting operations at three major refineries and tightening diesel supply faster than the market anticipated. Two major carriers have issued fuel surcharge adjustments that take effect this billing cycle, compressing freight economics across all shipping categories.\n\nThe surcharge adjustments are hitting routes into ${country} harder than average due to longer haul distances from the primary distribution hub. Average shipping cost per unit for ${country} is up $0.43 over the prior period, putting the region above its freight budget threshold.\n\nThree high velocity SKUs are trending below their reorder points with no confirmed inbound receipts this week. The margin hit on affected SKUs is running at 4.2%, above the 3% threshold that typically kicks off a procurement review. Secondary sourcing options exist for 2 of the 3 items but lead times run 4 days longer. Recommendation: Combine the next 3 replenishment runs into 2 loads to offset the surcharge impact. Estimated savings of $2,100 per cycle at current volume.`,
+      `A cold front system moving across the interior is affecting road freight in multiple regions. National weather data shows similar events in recent years have extended average ground transit times by 1.5 to 2 days before clearing, creating compounding delays for time sensitive shipments.\n\nDistribution corridors into ${country} are experiencing 3 to 5% of shipments flagged for weather holds. Monitoring is ongoing and the earliest reliable delivery window for ${country} is expected to open mid-week as conditions improve.\n\nFour SKUs at 4 to 5 weeks of supply would cross into the critical zone if inbound receipts slip more than 3 days. OJ and Butter are the most exposed, both under 4 weeks of supply with no buffer stock staged locally. Recommendation: Move 3 days of buffer stock for OJ and Butter to the regional DC now. Both items are under 4 weeks of supply and most exposed to delay driven stockouts.`,
+      `Import volumes at key entry ports are running above seasonal norms, driven by pull-forward activity ahead of expected tariff increases across consumer goods categories. Port dwell times have risen from 2.1 to 3.4 days over the past 3 weeks, adding days to inbound supply chains across all import dependent categories.\n\nThe elevated import volumes are flowing through distribution hubs serving ${country}, pushing inbound freight 18% above forecast. Dock scheduling in ${country} is under strain and overtime has been authorized, but throughput delays of 6 to 12 hours are likely during peak windows.\n\nOn shelf availability dropped to 94.3% this week from 97.8% last period, mostly from late produce and dairy receipts. The backlog is at 14 hours and adding about 1.5 hours per shift. Five SKUs have moved from Healthy to Watch status due to delayed put-aways. Recommendation: Lock in dock priority for Russet Potatoes, Greek Yogurt, and OJ. All three are below 4 WoS and any more receipt delays will push them to zero stock.`,
     ],
     Critical: [
-      `A major carrier consortium has declared force majeure on two primary freight lanes following infrastructure damage from severe weather events. Spot market rates across affected corridors are running 62% above contracted levels with limited alternative capacity available globally.\n\nRoutes serving ${country} are among the most severely impacted, with 22% of orders past SLA. Priority rerouting is active but the backlog is growing, and secondary carriers covering ${country} have limited available capacity.\n\nOn-shelf availability has dropped to 87% network-wide and 6 SKUs have already hit zero stock at 3 or more locations. Shoppers are substituting out of category, accounting for roughly $48K in lost revenue over the past 3 days. Each additional 24 hours adds about $28K in stockout exposure. Recommendation: Activate emergency replenishment for the 6 items below 2 WoS. Approve air freight for Butter and Baby Spinach now. Combined revenue at risk on those two SKUs exceeds $340K over the next 7 days.`,
-      `A combination of labor action at major freight terminals and equipment availability shortfalls has triggered emergency surcharges across most carrier tiers. A prolonged drought across key agricultural growing regions has reduced rail freight loads of bulk commodities, indirectly tightening road carrier capacity as shippers shift modes. Aviation fuel costs have spiked simultaneously, making air freight a last-resort option for all but the most critical shipments.\n\nAir freight has been approved for critical SKUs in ${country}, pushing shipping costs up roughly 34% over budget. OOS-related customer complaints in ${country} are up 41% week-over-week, with Eggs and Greek Yogurt driving most of the volume.\n\nStockout losses are running at $62K over the past week and another $85K is at risk if the gap extends into the weekend. Procurement has two spot suppliers that can ship within 48 hours, but both are pricing 28% above standard cost. Recommendation: Pull promotional activity on all low-WoS items this week to slow sell-through and buy time. Work with merchandising to remove circular features on OJ and Greek Yogurt until supply catches up.`,
-      `Severe weather systems have suspended ground freight across multiple corridors, with no recovery timeline confirmed by any major carrier. The National Weather Service is tracking conditions that may extend road closures through the end of the week, affecting inbound supply chains across the entire affected zone.\n\nGround delivery to ${country} is suspended and recovery is estimated at 4-7 business days. Air freight into ${country} is priced at $4.20 per case for priority items, 3.1x the standard ground rate, but is the only viable option before lanes reopen.\n\nNine of 20 tracked SKUs have less than 2 weeks of supply left and demand hasn't slowed. Store managers in 4 metro markets have started informal rationing on high-demand items, which needs to be formalized quickly before it creates customer friction. Recommendation: Issue a 60% allocation cap on Bananas, Butter, and Baby Spinach at store level immediately to spread remaining inventory across locations and prevent individual stores from selling out.`,
-      `A surge in import activity ahead of anticipated tariff increases has overwhelmed warehouse and distribution capacity at nodes across the network. An extended drought across key growing regions has simultaneously reduced outbound agricultural shipments, freeing limited port capacity but creating secondary cold-chain pressure as produce volumes shift to higher-cost air and expedited lanes. The combined effect is compressing storage and labor resources with no near-term relief expected.\n\nThe ${country} warehouse is at 97% capacity with inbound receipts coming in faster than storage is opening up. Three more large inbound loads are arriving in the next 48 hours with no matching outbound volume to free floor space in the ${country} facility.\n\nPick errors are rising from slotting conflicts and accuracy has fallen to 96.1%. Labor productivity is down 12% as staff work around congested aisles and staging areas. Eight of 20 SKUs are in the critical WoS range and the 3 worst-positioned items are at roughly 4 days to zero. Recommendation: Escalate to supply chain leadership. At current capacity, 8 of 20 tracked SKUs will hit zero stock within 5 days without emergency sourcing or some form of demand reduction.`,
+      `A major carrier consortium has declared force majeure on two primary freight lanes following infrastructure damage from severe weather events. Spot market rates across affected corridors are running 62% above contracted levels with limited alternative capacity available globally.\n\nRoutes serving ${country} are among the most severely impacted, with 22% of orders past SLA. Priority rerouting is active but the backlog is growing, and secondary carriers covering ${country} have limited available capacity.\n\nOn shelf availability has dropped to 87% network-wide and 6 SKUs have already hit zero stock at 3 or more locations. Shoppers are substituting out of category, accounting for roughly $48K in lost revenue over the past 3 days. Each additional 24 hours adds about $28K in stockout exposure. Recommendation: Activate emergency replenishment for the 6 items below 2 WoS. Approve air freight for Butter and Baby Spinach now. Combined revenue at risk on those two SKUs exceeds $340K over the next 7 days.`,
+      `A combination of labor action at major freight terminals and equipment availability shortfalls has triggered emergency surcharges across most carrier tiers. A prolonged drought across key agricultural growing regions has reduced rail freight loads of bulk commodities, indirectly tightening road carrier capacity as shippers shift modes. Aviation fuel costs have spiked simultaneously, making air freight a last resort option for all but the most critical shipments.\n\nAir freight has been approved for critical SKUs in ${country}, pushing shipping costs up roughly 34% over budget. OOS related customer complaints in ${country} are up 41% week over week, with Eggs and Greek Yogurt driving most of the volume.\n\nStockout losses are running at $62K over the past week and another $85K is at risk if the gap extends into the weekend. Procurement has two spot suppliers that can ship within 48 hours, but both are pricing 28% above standard cost. Recommendation: Pull promotional activity on all low WoS items this week to slow sell-through and buy time. Work with merchandising to remove circular features on OJ and Greek Yogurt until supply catches up.`,
+      `Severe weather systems have suspended ground freight across multiple corridors, with no recovery timeline confirmed by any major carrier. The National Weather Service is tracking conditions that may extend road closures through the end of the week, affecting inbound supply chains across the entire affected zone.\n\nGround delivery to ${country} is suspended and recovery is estimated at 4 to 7 business days. Air freight into ${country} is priced at $4.20 per case for priority items, 3.1x the standard ground rate, but is the only viable option before lanes reopen.\n\nNine of 20 tracked SKUs have less than 2 weeks of supply left and demand hasn't slowed. Store managers in 4 metro markets have started informal rationing on high demand items, which needs to be formalized quickly before it creates customer friction. Recommendation: Issue a 60% allocation cap on Bananas, Butter, and Baby Spinach at store level immediately to spread remaining inventory across locations and prevent individual stores from selling out.`,
+      `A surge in import activity ahead of anticipated tariff increases has overwhelmed warehouse and distribution capacity at nodes across the network. An extended drought across key growing regions has simultaneously reduced outbound agricultural shipments, freeing limited port capacity but creating secondary cold chain pressure as produce volumes shift to higher cost air and expedited lanes. The combined effect is compressing storage and labor resources with no near term relief expected.\n\nThe ${country} warehouse is at 97% capacity with inbound receipts coming in faster than storage is opening up. Three more large inbound loads are arriving in the next 48 hours with no matching outbound volume to free floor space in the ${country} facility.\n\nPick errors are rising from slotting conflicts and accuracy has fallen to 96.1%. Labor productivity is down 12% as staff work around congested aisles and staging areas. Eight of 20 SKUs are in the critical WoS range and the 3 worst-positioned items are at roughly 4 days to zero. Recommendation: Escalate to supply chain leadership. At current capacity, 8 of 20 tracked SKUs will hit zero stock within 5 days without emergency sourcing or some form of demand reduction.`,
     ],
   }
   const msgIdx = (country.length + period.length) % 4
@@ -1103,14 +1162,14 @@ export default function KpiDetailPage({
                       : ''}
                 </span>
               </div>
-              <div style={{ display:'flex', gap:14, alignItems:'center' }}>
+              <div style={{ display:'flex', gap:14, alignItems:'center', marginBottom:2 }}>
                 <div style={{ display:'flex', gap:12 }}>
                   {[
                     ['This Year','#00bcd4','solid'],
                     ['Last Year','#ff9800','dashed'],
                     ...(['YTD','1D'].includes(period) ? [['Forecast','#00bcd4','dotted']] : []),
                   ].map(([l,c,d])=>(
-                    <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:c }}>
+                    <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:c }}>
                       <svg width={22} height={10}>
                         <line x1={0} y1={5} x2={22} y2={5} stroke={c} strokeWidth={d==='solid'?2:1.5}
                           strokeDasharray={d==='dashed'?'4 3':d==='dotted'?'3 3':undefined} strokeOpacity={d==='dotted'?0.6:1}/>
@@ -1119,7 +1178,7 @@ export default function KpiDetailPage({
                       {l}
                     </span>
                   ))}
-                  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:'#fff' }}>
+                  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#fff' }}>
                     <span style={{ width:18, height:8, backgroundColor:'rgba(0,188,212,0.18)', borderRadius:2, display:'inline-block' }}/>
                     Variance
                   </span>
@@ -1129,6 +1188,19 @@ export default function KpiDetailPage({
 
             {/* Chart */}
             <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
+              <style>{`
+                @keyframes maxvar-pulse {
+                  0%   { transform: scale(1);   opacity: 0.75; }
+                  70%  { transform: scale(2.0); opacity: 0;    }
+                  100% { transform: scale(2.0); opacity: 0;    }
+                }
+                @keyframes maxvar-fadein {
+                  0%   { opacity: 0; }
+                  100% { opacity: 1; }
+                }
+                .maxvar-ring    { transform-box: fill-box; transform-origin: center; animation: maxvar-pulse 1.8s ease-out infinite; }
+                .maxvar-callout { animation: maxvar-fadein 1.2s ease-in forwards; }
+              `}</style>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={seriesDisplay}
@@ -1142,7 +1214,7 @@ export default function KpiDetailPage({
                   }}
                   onMouseLeave={() => setActiveTooltip(null)}
                 >
-                  <XAxis dataKey="label" stroke={T.border} interval={0} tick={({ x, y, payload }) => {
+                  <XAxis dataKey="label" stroke={T.border} interval={0} tickLine={false} tick={({ x, y, payload }) => {
                     const isNow = (period === '1D'  && payload.value === CURRENT_LABEL_1D)
                                || (period === 'YTD' && payload.value === CURRENT_LABEL_YTD)
                     const angled = period === '1D'
@@ -1169,20 +1241,20 @@ export default function KpiDetailPage({
                   {/* Lines — always render all three; use hide to toggle so recharts doesn't lose track */}
                   <Line key={`ly-${lineAnimKey}`} type="monotone" dataKey="lastYear" stroke="#ff9800" strokeWidth={1.5}
                     dot={{ r:2.5, fill:'#ff9800', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
-                    animationDuration={2200} animationEasing="ease-in-out"
+                    animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible}/>
                   <Line key={`ty-${lineAnimKey}`} type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
-                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                    animationDuration={2200} animationEasing="ease-in-out"
+                    dot={(p) => renderMaxVarDot(p, 3, '#00bcd4')} activeDot={{ r:5 }} name="This Year"
+                    animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible || ['YTD','1D'].includes(period)}/>
                   <Line key={`ac-${lineAnimKey}`} type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
-                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
-                    connectNulls={false} animationDuration={2200} animationEasing="ease-in-out"
+                    dot={(p) => renderMaxVarDot(p, 3, '#00bcd4')} activeDot={{ r:5 }} name="This Year"
+                    connectNulls={false} animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible || !['YTD','1D'].includes(period)}/>
                   <Line key={`fc-${lineAnimKey}`} type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
                     strokeDasharray="4 4" strokeOpacity={0.55}
                     dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
-                    connectNulls={false} animationDuration={2200} animationEasing="ease-in-out"
+                    connectNulls={false} animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible || !['YTD','1D'].includes(period)}/>
                 </ComposedChart>
               </ResponsiveContainer>
@@ -1190,13 +1262,13 @@ export default function KpiDetailPage({
               {/* Inline overlay labels — float above the highest line at the hovered point */}
               {activeTooltip?.x != null && (() => {
                 const { ty, ly, x } = activeTooltip
-                const delta = ty != null && ly != null ? ty - ly : null
+                const delta      = ty != null && ly != null ? ty - ly : null
                 const containerH = chartContainerRef.current?.clientHeight ?? 200
-                const plotH      = containerH - 8 - 8        // top + bottom margin
+                const plotH      = containerH - 8 - 8
                 const maxVal     = Math.max(ty ?? 0, ly ?? 0)
                 const yFrac      = (maxVal - yDomain[0]) / (yDomain[1] - yDomain[0])
-                const yPx        = 8 + plotH * (1 - yFrac)  // pixel Y of the highest line
-                const topPx      = Math.max(2, yPx - 73)    // 73px above it; clamp to top
+                const yPx        = 8 + plotH * (1 - yFrac)
+                const topPx      = Math.max(2, yPx - 73)
                 return (
                   <div style={{
                     position:'absolute', top: topPx, left:x,
@@ -1219,6 +1291,36 @@ export default function KpiDetailPage({
                         {delta >= 0 ? '+' : ''}{fmtWhole(delta)}
                       </span>
                     )}
+                  </div>
+                )
+              })()}
+
+              {/* Max variance hover tooltip — expands above the chip on dot hover */}
+              {maxVarHovered && maxVariancePt && (() => {
+                const { cx, cy } = maxVarDotPos.current
+                const tipIdx = (country.length + period.length) % 4
+                const tip = maxVariancePt.diff >= 0 ? MAX_VAR_TIPS_POS[tipIdx] : MAX_VAR_TIPS_NEG[tipIdx]
+                const title = maxVariancePt.diff >= 0 ? 'Why the gap is up' : 'Why the gap is down'
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    top: Math.max(4, cy - 38 - 96),
+                    left: cx,
+                    transform: 'translateX(-50%)',
+                    pointerEvents: 'none',
+                    backgroundColor: T.panelBg,
+                    border: `1px solid ${varColor}88`,
+                    borderRadius: 7,
+                    padding: '8px 12px',
+                    width: 210,
+                    boxShadow: `0 4px 16px rgba(0,0,0,0.4)`,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: varColor, marginBottom: 5, letterSpacing: '0.03em' }}>
+                      {title}
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.55 }}>
+                      {tip}
+                    </div>
                   </div>
                 )
               })()}
