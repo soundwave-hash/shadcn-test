@@ -10,12 +10,13 @@ import {
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Sun, Download, MessageSquare } from 'lucide-react'
+import { Sun, Download, Mic } from 'lucide-react'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
 import AccountSwitcher, { USERS } from './AccountSwitcher'
 import SlackPanel from './SlackPanel'
+import VoiceAssistant from './VoiceAssistant'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -741,6 +742,7 @@ function applyKpiOrder(cards, savedOrder) {
 export default function App() {
   const [activeUser, setActiveUser] = useState(USERS[0])
   const [slackOpen, setSlackOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const [country, setCountry] = useState('United States')
   const [selectedCities, setSelectedCities] = useState([])   // [] = "All"
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
@@ -1209,6 +1211,18 @@ export default function App() {
             </DropdownMenuContent>
           </DropdownMenu>
           <button
+            onClick={() => setVoiceOpen(o => !o)}
+            title="WarehouseIQ Assistant"
+            style={{
+              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
+              border: voiceOpen ? '1px solid #f59e0b' : `1px solid ${T.inputBorder}`,
+              background: voiceOpen ? 'rgba(245,158,11,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <Mic size={15} color={voiceOpen ? '#f59e0b' : (theme === 'dark' ? '#fff' : '#333')} />
+          </button>
+          <button
             onClick={() => setSlackOpen(o => !o)}
             title="Slack — #warehouse-ops"
             style={{
@@ -1218,7 +1232,16 @@ export default function App() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <MessageSquare size={15} color={slackOpen ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
+            <svg width="15" height="15" viewBox="73 73 125 125" xmlns="http://www.w3.org/2000/svg" style={{ opacity: slackOpen ? 1 : (theme === 'dark' ? 0.85 : 0.7) }}>
+              <path d="M99.4 151.2c0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A"/>
+              <path d="M105.9 151.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9v-32.3z" fill="#E01E5A"/>
+              <path d="M118.8 99.4c-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9v12.9h-12.9z" fill="#36C5F0"/>
+              <path d="M118.8 105.9c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H86.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3z" fill="#36C5F0"/>
+              <path d="M170.6 118.8c0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9h-12.9v-12.9z" fill="#2EB67D"/>
+              <path d="M164.1 118.8c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V86.5c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3z" fill="#2EB67D"/>
+              <path d="M151.2 170.6c7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9v-12.9h12.9z" fill="#ECB22E"/>
+              <path d="M151.2 164.1c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9h-32.3z" fill="#ECB22E"/>
+            </svg>
           </button>
           <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={8} />
         </div>
@@ -1483,6 +1506,7 @@ export default function App() {
       </div>
 
       <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
     </div>
   )
 }
