@@ -352,7 +352,7 @@ function ChartTooltip({ active, payload, label, template, ttipStyle }) {
 function Leaderboard({ period, country, selectedCities, checked, onCheckedChange, T }) {
   const setChecked = onCheckedChange
   const [sortField, setSortField] = useState('wos')
-  const [sortAsc, setSortAsc]     = useState(true)   // WOS asc = worst first by default
+  const [sortAsc, setSortAsc]     = useState(true)   // WOS asc = lowest WoS (critical) first
   const [hovered, setHovered]     = useState(null)   // row hover
   const [hovCol, setHovCol]       = useState(null)   // column header hover
   const [selCats, setSelCats] = useState(new Set())  // empty = All
@@ -395,7 +395,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 
   function handleColSort(field) {
     if (sortField === field) setSortAsc(a => !a)
-    else { setSortField(field); setSortAsc(field === 'wos') } // WOS defaults asc, others desc
+    else { setSortField(field); setSortAsc(field === 'wos') } // WoS → ascending, others → descending
   }
 
   const colHeaders = [
@@ -507,7 +507,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
                 background:'none', border:'none', cursor:'pointer', padding:'0 0 2px 0',
                 fontSize:9, color,
                 textTransform:'uppercase', letterSpacing:'0.04em',
-                textAlign:'center', display:'block', position:'relative', left:-30,
+                textAlign:'center', display:'block', position:'relative', left:-14,
                 fontWeight: active ? 700 : 400,
                 borderBottom: active ? '1px solid #00bcd4' : '1px solid transparent',
                 transition:'color 0.15s',
@@ -564,7 +564,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
                 return (
                   <div style={{ textAlign:'center', border:`1px solid ${T.border}`, borderRadius:3, padding:'1px 0' }}>
                     <span style={{ fontSize:11, color: STATUS_C[row.status], fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
-                      {row.wos}
+                      {row.wos.toFixed(1)}
                     </span>
                   </div>
                 )
@@ -676,7 +676,7 @@ export default function KpiDetailPage({
     : !allItemsChecked && checked.size > 1 ? `${checked.size} items selected` : null
 
   const series = useMemo(() => {
-    const s = kpi.label === 'Unit Sales'
+    const s = kpi.label.startsWith('Unit Sales')
       ? buildUnitSalesSeries(period, 1, selectedDailyTotal, country)
       : buildSeries(baseValue, period)
     if (period === '1D') console.log('1D series[0..3]:', s.slice(0,4).map(p => ({label:p.label, ty:p.thisYear, ly:p.lastYear})), '...noon:', {label:s[12]?.label, ty:s[12]?.thisYear})
@@ -997,7 +997,7 @@ export default function KpiDetailPage({
                       Lowest supply — action needed
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'max-content auto', columnGap:12, rowGap:3 }}>
-                      {lowItems.slice(0,3).map(item => (
+                      {lowItems.slice(0,5).map(item => (
                         <React.Fragment key={item.name}>
                           <span style={{ color: T.textMuted, fontSize:12 }}>{item.name}</span>
                           <span style={{ color:'#f44336', fontWeight:600, fontSize:12, whiteSpace:'nowrap' }}>{item.wos} WOS</span>
