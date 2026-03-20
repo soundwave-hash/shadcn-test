@@ -607,20 +607,8 @@ export default function KpiDetailPage({
   const period    = dateRange
   const setPeriod = onDateRangeChange ?? (() => {})
   const [activeTooltip, setActiveTooltip] = useState(null)
-  const [chartLoading, setChartLoading] = useState(false)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)
-  const prevCountryRef = useRef(country)
-  const prevCitiesRef  = useRef(selectedCities)
-
-  useEffect(() => {
-    if (prevCountryRef.current === country && prevCitiesRef.current === selectedCities) return
-    prevCountryRef.current = country
-    prevCitiesRef.current  = selectedCities
-    setChartLoading(true)
-    const t = setTimeout(() => setChartLoading(false), 350)
-    return () => clearTimeout(t)
-  }, [country, selectedCities])
 
   // ── Export helpers ──
   function exportCSV() {
@@ -1054,13 +1042,6 @@ export default function KpiDetailPage({
 
             {/* Chart */}
             <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
-              {chartLoading && (
-                <div style={{ position:'absolute', inset:0, zIndex:10, display:'flex', flexDirection:'column', gap:8, padding:'8px 0' }}>
-                  <Skeleton style={{ height:'70%', width:'100%', borderRadius:4 }} />
-                  <Skeleton style={{ height:12, width:'60%', borderRadius:4 }} />
-                  <Skeleton style={{ height:12, width:'40%', borderRadius:4 }} />
-                </div>
-              )}
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={seriesDisplay}
