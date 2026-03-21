@@ -8,9 +8,9 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #F5F5F7;
-  --border: oklch(0.922 0 0);
+  --border: hsl(240 5% 77%);         /* was oklch(0.922 0 0) — #C4C4C8, visible but not heavy */
   --code-bg: #f4f3ec;
-  --accent: oklch(0.97 0 0);
+  --accent: hsl(240 5% 90%);         /* was oklch(0.97 0 0) — #E4E4E7 hover surfaces */
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
@@ -36,7 +36,7 @@
   }
 
   /* Before → After (reason) */
-  --background: hsl(220 18% 94%); /* Pass 3: was #F8F9FA — darker for card shadow contrast */
+  --background: hsl(240 5% 96%);  /* was hsl(220 18% 94%) — #F4F4F5 zinc-100 page bg */
 
   --foreground: #18181B;          /* was oklch(0.145 0 0) — softer near-black */
 
@@ -50,33 +50,34 @@
 
   --primary: #18181B;             /* was oklch(0.205 0 0) */
 
-  --primary-foreground: oklch(0.985 0 0);
+  --primary-foreground: #FFFFFF;          /* was oklch(0.985 0 0) — white on primary buttons */
 
-  --secondary: #F4F4F5;           /* was oklch(0.97 0 0) — matches inputBg */
+  --secondary: hsl(240 4% 32%);   /* was #F4F4F5 — #52525B secondary text */
 
-  --secondary-foreground: #18181B; /* was oklch(0.205 0 0) */
+  --secondary-foreground: hsl(240 4% 32%); /* was #18181B — #52525B */
 
-  --muted: #F4F4F5;               /* was oklch(0.97 0 0) */
+  --muted: hsl(240 5% 90%);       /* was #F4F4F5 — #E4E4E7 muted surfaces zinc-200 */
 
   --muted-foreground: #71717A;    /* was oklch(0.556 0 0) — slate gray */
 
   --accent-foreground: #18181B;   /* was oklch(0.205 0 0) */
 
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: hsl(0 72% 56%);          /* was oklch(0.577 0.245 27.325) — #DC3545 */
+  --destructive-foreground: #FFFFFF;
 
-  --input: #D4D4D8;               /* was oklch(0.922 0 0) — visible input border */
+  --input: hsl(240 5% 77%);       /* was #D4D4D8 — #C4C4C8 matches border */
 
-  --ring: #A1A1AA;                /* was oklch(0.708 0 0) — lighter focus ring */
+  --ring: hsl(240 5% 65%);        /* was #A1A1AA — focus ring */
 
-  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-1: #0E8A7A;  /* was oklch(0.809 0.105 251.813) — deep teal PRIMARY */
 
-  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-2: #DC3545;  /* was oklch(0.623 0.214 259.815) — red */
 
-  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-3: #E07B18;  /* was oklch(0.546 0.245 262.881) — amber-orange */
 
-  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-4: #198754;  /* was oklch(0.488 0.243 264.376) — forest green */
 
-  --chart-5: oklch(0.424 0.199 265.638);
+  --chart-5: #6F42C1;  /* was oklch(0.424 0.199 265.638) — medium purple */
 
   --radius: 0.625rem;
 
@@ -288,3 +289,10 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+/* ── Light mode card elevation ────────────────────────────────────────────── */
+:root .card,
+.light .card,
+[data-theme="light"] .card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06);
+}

@@ -39,38 +39,34 @@ const THEME = {
     navShadow: undefined, tabActive: '#00bcd4',
   },
   light: {
-    // Before → After (reason)
-    // Pass 3: bg darkened so white cards are actually visible against page (was hsl(220,20%,96.5%) ≈ #F5F6F8 — invisible from white)
-    bg: 'hsl(220, 18%, 94%)',           // was hsl(220,20%,96.5%) — noticeably cool off-white; white cards now float
+    bg: 'hsl(240, 5%, 96%)',            // was hsl(220,18%,94%) — #F4F4F5 zinc-100 page bg
     navBg: '#FFFFFF',
     panelBg: '#FFFFFF',
-    border: 'hsl(220, 13%, 91%)',
+    border: '#C4C4C8',                  // was hsl(220,13%,91%) — visible but not heavy
     borderLight: 'rgba(0,0,0,0.05)',
     text: '#18181B',
     textMuted: '#52525B',
     textDim: '#A1A1AA',
     textFaint: '#D4D4D8',
     inputBg: '#F4F4F5',
-    inputBorder: '#D4D4D8',
+    inputBorder: '#C4C4C8',             // was #D4D4D8 — matches border
     inputText: '#18181B',
     dropdownBg: '#FFFFFF',
-    dropdownBorder: 'hsl(220, 13%, 91%)',
+    dropdownBorder: '#C4C4C8',          // was hsl(220,13%,91%)
     rowHover: 'rgba(0,188,212,0.06)',
-    chartMask: 'hsl(220, 18%, 94%)',    // was hsl(220,20%,96.5%) — must match bg for area chart masking
+    chartMask: 'hsl(240, 5%, 96%)',     // must match bg — was hsl(220,18%,94%)
     chartGrid: 'rgba(0,0,0,0.06)',
     cardBg: '#FFFFFF',
-    cardBorder: 'hsl(220, 13%, 91%)',
-    // Pass 3: bumped from 0.06 — shadows need to be visible against the darker page bg
+    cardBorder: '#C4C4C8',              // was hsl(220,13%,91%)
     cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06)',
-    axTick: '#A1A1AA',
+    axTick: '#52525B',                  // was #A1A1AA — readable axis labels
     tooltipBg: '#FFFFFF',
-    tooltipBorder: 'hsl(220, 13%, 91%)',
+    tooltipBorder: '#C4C4C8',          // was hsl(220,13%,91%)
     activeItemBg: 'rgba(0,188,212,0.08)',
-    sep: 'hsl(220, 13%, 91%)',
+    sep: '#C4C4C8',                     // was hsl(220,13%,91%)
     kpiLabel: '#0e7490',
     accentHover: '#0e7490',
-    chartBorder: 'hsl(220, 13%, 89%)',
-    // Pass 3: bumped spread + opacity — chart panels are large surfaces that need more lift
+    chartBorder: '#C4C4C8',             // was hsl(220,13%,89%)
     chartShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.07)',
     navShadow: '0 1px 3px rgba(0,0,0,0.05)',
     tabActive: 'hsl(185, 55%, 38%)',
@@ -92,19 +88,19 @@ const C = {
   canceled:  '#757575',
 }
 
-// ── Colors — light mode (desaturated ~15-20% for white backgrounds) ───────────
+// ── Colors — light mode palette (tuned for white/light backgrounds) ───────────
 const C_LIGHT = {
-  express:   'hsl(185, 60%, 42%)',  // was #00bcd4 hsl(186,100%,42%) — desaturated teal
-  ground:    'hsl(0, 65%, 50%)',    // was #f44336 hsl(4,89%,58%) — deeper, less aggressive red
-  priority:  'hsl(142, 50%, 40%)', // was #4caf50 hsl(123,39%,49%) — deeper green
-  sameDay:   'hsl(38, 75%, 50%)',  // was #ff9800 hsl(36,100%,50%) — amber, less blinding
-  standard:  '#4958a3',            // was #3f51b5 — slightly desaturated indigo
-  freight:   '#cc1f5c',            // was #e91e63 — darker pink
-  returns:   '#6ea835',            // was #8bc34a — deeper olive green
-  unknown:   '#909090',            // was #9e9e9e — slightly darker gray
-  delivered: 'hsl(142, 50%, 40%)', // matches priority
-  failed:    'hsl(0, 65%, 50%)',   // matches ground
-  canceled:  '#6b6b6b',            // was #757575 — slightly darker for contrast
+  express:   '#0E8A7A',  // was hsl(185,60%,42%) — deep teal PRIMARY
+  ground:    '#DC3545',  // was hsl(0,65%,50%) — muted red
+  priority:  '#198754',  // was hsl(142,50%,40%) — forest green
+  sameDay:   '#E07B18',  // was hsl(38,75%,50%) — amber-orange
+  standard:  '#0D6EFD',  // was #4958a3 — standard blue
+  freight:   '#6F42C1',  // was #cc1f5c — medium purple
+  returns:   '#8D9197',  // was #6ea835 — cool neutral gray
+  unknown:   '#8D9197',  // was #909090 — cool neutral gray
+  delivered: '#198754',  // matches priority — forest green
+  failed:    '#DC3545',  // matches ground — red
+  canceled:  '#8D9197',  // was #6b6b6b — cool neutral gray
 }
 
 // ── Per-country mock data ─────────────────────────────────────────────────────

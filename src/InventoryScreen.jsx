@@ -330,11 +330,10 @@ export default function InventoryScreen({
     top:             0,
     left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
     zIndex:          col.sticky ? 4 : 3,
-    // Light mode: distinct off-white bg with stronger border for visual weight
-    // was: T.navBg for all modes
-    backgroundColor: isDark ? T.navBg : 'hsl(220, 18%, 96%)',
-    // was: 1.5px rgba(0,0,0,0.13) — upgraded to 2px in light for clear section separator
-    borderBottom:    isDark ? '1.5px solid rgba(255,255,255,0.14)' : '2px solid hsl(220, 13%, 88%)',
+    // Light mode: distinct muted bg (#E4E4E7) with strong border for visual weight
+    backgroundColor: isDark ? T.navBg : '#E4E4E7',
+    // Light mode: 2px solid border for clear section separator
+    borderBottom:    isDark ? '1.5px solid rgba(255,255,255,0.14)' : '2px solid #C4C4C8',
     borderRight:     `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
     padding:         '0 6px 2px',
     height:          35,

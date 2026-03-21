@@ -34,35 +34,35 @@ const THEME = {
     navShadow: undefined, tabActive: '#00bcd4',
   },
   light: {
-    bg: 'hsl(220, 18%, 94%)',        // Pass 3: was hsl(220,20%,96.5%) — darker page bg for card contrast
+    bg: 'hsl(240, 5%, 96%)',            // was hsl(220,18%,94%) — #F4F4F5 zinc-100 page bg
     navBg: '#FFFFFF',
     panelBg: '#FFFFFF',
-    border: 'hsl(220, 13%, 91%)',
+    border: '#C4C4C8',                  // was hsl(220,13%,91%) — visible but not heavy
     borderLight: 'rgba(0,0,0,0.05)',
     text: '#18181B',
     textMuted: '#52525B',
     textDim: '#A1A1AA',
     textFaint: '#D4D4D8',
     inputBg: '#F4F4F5',
-    inputBorder: '#D4D4D8',
+    inputBorder: '#C4C4C8',             // was #D4D4D8 — matches border
     inputText: '#18181B',
     dropdownBg: '#FFFFFF',
-    dropdownBorder: 'hsl(220, 13%, 91%)',
+    dropdownBorder: '#C4C4C8',          // was hsl(220,13%,91%)
     rowHover: 'rgba(0,188,212,0.06)',
-    chartMask: 'hsl(220, 18%, 94%)',  // Pass 3: must match bg
+    chartMask: 'hsl(240, 5%, 96%)',     // must match bg — was hsl(220,18%,94%)
     chartGrid: 'rgba(0,0,0,0.06)',
     cardBg: '#FFFFFF',
-    cardBorder: 'hsl(220, 13%, 91%)',
-    cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06)', // Pass 3: bumped opacity
-    axTick: '#A1A1AA',
+    cardBorder: '#C4C4C8',              // was hsl(220,13%,91%)
+    cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06)',
+    axTick: '#52525B',                  // was #A1A1AA — readable axis labels
     tooltipBg: '#FFFFFF',
-    tooltipBorder: 'hsl(220, 13%, 91%)',
+    tooltipBorder: '#C4C4C8',          // was hsl(220,13%,91%)
     activeItemBg: 'rgba(0,188,212,0.08)',
-    sep: 'hsl(220, 13%, 91%)',
+    sep: '#C4C4C8',                     // was hsl(220,13%,91%)
     kpiLabel: '#0e7490',
     accentHover: '#0e7490',
-    chartBorder: 'hsl(220, 13%, 89%)',
-    chartShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.07)', // Pass 3: bumped
+    chartBorder: '#C4C4C8',             // was hsl(220,13%,89%)
+    chartShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.07)',
     navShadow: '0 1px 3px rgba(0,0,0,0.05)',
     tabActive: 'hsl(185, 55%, 38%)',
   },
@@ -1628,8 +1628,8 @@ export default function KpiDetailPage({
                   <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
                   <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
                   {/* Shading band. Drawn before grid so grid renders on top */}
-                  {/* fill opacity reduced to 0.12 in light mode — whispers on white bg, was 0.15 */}
-                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.10)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
+                  {/* fill opacity 0.12 in light mode with new teal PRIMARY, 0.15 in dark */}
+                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(14,138,122,0.12)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>
