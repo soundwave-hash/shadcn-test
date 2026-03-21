@@ -637,14 +637,15 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 // ── TL;DR panel (isolated so typing state never re-renders the chart) ─────────
 const TLDR_HEIGHT = 256  // fixed px height. Chart never moves
 
-function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange }) {
+function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange, riskStartPos }) {
   const [phase, setPhase]       = useState('thinking')
   const [bodyLen, setBodyLen]   = useState(0)
   const [recLen, setRecLen]     = useState(0)
   const [dots, setDots]         = useState(0)
-  const bodyRef    = useRef(body)
-  const recRef     = useRef(rec)
-  const scrollRef  = useRef(null)
+  const bodyRef        = useRef(body)
+  const recRef         = useRef(rec)
+  const scrollRef      = useRef(null)
+  const riskFiredRef   = useRef(false)
   bodyRef.current  = body
   recRef.current   = rec
 
@@ -656,7 +657,17 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange }) {
     setBodyLen(0)
     setRecLen(0)
     setDots(0)
+    riskFiredRef.current = false
   }, [triggerKey])
+
+  // Notify parent when body cursor enters the risk paragraph
+  useEffect(() => {
+    if (phase !== 'typing-body') return
+    if (!riskFiredRef.current && riskStartPos != null && bodyLen >= riskStartPos) {
+      riskFiredRef.current = true
+      onPhaseChange?.('typing-risk')
+    }
+  }, [phase, bodyLen])
 
   // Thinking → typing-body
   useEffect(() => {
@@ -1457,13 +1468,14 @@ export default function KpiDetailPage({
                   T={T}
                   triggerKey={`${period}-${country}-${selectedCitiesKey}`}
                   onPhaseChange={setTldrPhase}
+                  riskStartPos={_signal.length + 2}
                 />
                 )}
                 {/* Bullets column */}
                 {tldrBullets.length > 0 && (
                   <div style={{ width:1, alignSelf:'stretch', backgroundColor: T.border, flexShrink:0, margin:'0 8px' }} />
                 )}
-                {tldrBullets.length > 0 && (tldrPhase === 'typing-rec' || tldrPhase === 'done') && (
+                {tldrBullets.length > 0 && (tldrPhase === 'typing-risk' || tldrPhase === 'typing-rec' || tldrPhase === 'done') && (
                   <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 400ms ease forwards' }}>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:6 }}>FACTS</div>
                     {tldrBullets.map((b, idx) => (
