@@ -213,12 +213,11 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
   return (
     <div style={{
-      width: 360, flexShrink: 0,
+      position: 'absolute', top: 0, right: 0, bottom: 0, width: 360, zIndex: 10,
       backgroundColor: T.cardBg,
       borderLeft: `1px solid ${T.border}`,
-      boxShadow: isDark ? '-4px 0 20px rgba(0,0,0,0.4)' : '-4px 0 20px rgba(0,0,0,0.08)',
+      boxShadow: isDark ? '-4px 0 24px rgba(0,0,0,0.5)' : '-4px 0 24px rgba(0,0,0,0.10)',
       display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
       animation: 'wiq-slide-in-right 0.22s ease',
     }}>
 
@@ -704,8 +703,8 @@ export default function InventoryScreen({
         .inv-scroll::-webkit-scrollbar-corner { background: ${T.panelBg}; }
         .inv-row:hover td { background-color: ${T.rowHover} !important; }
       `}</style>
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-      <div ref={scrollRef} className="inv-scroll" onScroll={handleScroll} style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <div ref={scrollRef} className="inv-scroll" onScroll={handleScroll} style={{ position: 'absolute', inset: 0, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
         <table style={{ borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed', width: '100%' }}>
           <TableHeader className="[&_tr]:border-0">
             <TableRow className="border-0 hover:bg-transparent">
@@ -810,13 +809,7 @@ export default function InventoryScreen({
           </TableBody>
         </table>
       </div>
-      {selectedRow && (
-        <div style={{ width: 360, flexShrink: 0, backgroundColor: T.cardBg, borderLeft: `1px solid ${T.border}`, padding: 16, overflow: 'auto' }}>
-          <p style={{ color: T.text, fontSize: 13, fontWeight: 700 }}>{selectedRow.name}</p>
-          <p style={{ color: T.textMuted, fontSize: 11, marginTop: 4 }}>WOS: {selectedRow.wos}</p>
-          <button onClick={() => setSelectedSku(null)} style={{ marginTop: 12, fontSize: 11, color: T.textMuted, background: 'none', border: `1px solid ${T.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>Close</button>
-        </div>
-      )}
+      <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />
       </div>
     </div>
 
