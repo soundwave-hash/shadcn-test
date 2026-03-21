@@ -1140,12 +1140,12 @@ export default function KpiDetailPage({
             title="WarehouseIQ Assistant"
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
-              border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${T.inputBorder}`,
-              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              border: voiceOpen ? '1px solid rgba(0,188,212,0.5)' : `1px solid ${T.inputBorder}`,
+              background: voiceOpen ? 'rgba(0,188,212,0.12)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Mic size={15} color={voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#333')} />
+            <Mic size={15} color={voiceOpen ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
           </button>
           <button
             onClick={() => setSlackOpen(o => !o)}
