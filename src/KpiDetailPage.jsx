@@ -764,7 +764,6 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange }) {
                 <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
                   ACTION PLAN
                 </div>
-                <br />
                 {phase === 'typing-rec' ? rec.slice(0, recLen) : rec}
               </>
             )}
