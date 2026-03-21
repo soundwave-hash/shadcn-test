@@ -838,8 +838,6 @@ function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, r
   )
 }
 
-const ACTION_PLAN_LIFT = { Healthy: 0.06, 'At Risk': 0.11, Critical: 0.18 }
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function KpiDetailPage({
   kpi, country, selectedCities = [], cities, cityScales, countries,
@@ -945,19 +943,6 @@ export default function KpiDetailPage({
     return [Math.max(0, Math.floor(lo - pad)), Math.ceil(hi + pad)]
   }, [series])
 
-  // Inventory health stats — computed here so healthZone is available for seriesDisplay below
-  const healthRows = useMemo(() => {
-    const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
-    return checked.size === 0 ? [] : allItemsChecked ? all : all.filter(r => checked.has(r.name))
-  }, [period, country, selectedCities, checked, allItemsChecked])
-  const goodItems   = healthRows.filter(r => r.status === 'good')
-  const lowItems    = healthRows.filter(r => r.status === 'low').sort((a,b) => a.wos - b.wos)
-  const totalSales  = healthRows.reduce((s, r) => s + r.avgSales, 0)
-  const _rawPct     = totalSales === 0 ? 0 : goodItems.reduce((s, r) => s + r.avgSales, 0) / totalSales * 100
-  const healthPct   = isNaN(_rawPct) ? 0 : Math.round(_rawPct)
-  const healthZone  = healthPct >= 67 ? 'Healthy' : healthPct >= 34 ? 'At Risk' : 'Critical'
-  const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
-
   // Split thisYear into actual (solid) and forecast (dashed) for periods with a meaningful "now" cutoff
   const seriesDisplay = useMemo(() => {
     if (period === 'YTD') {
@@ -1053,7 +1038,18 @@ export default function KpiDetailPage({
     )
   }
 
-  // Inventory health stats for context panel — defined earlier (before seriesDisplay)
+  // Inventory health stats for context panel
+  const healthRows = useMemo(() => {
+    const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
+    return checked.size === 0 ? [] : allItemsChecked ? all : all.filter(r => checked.has(r.name))
+  }, [period, country, selectedCities, checked, allItemsChecked])
+  const goodItems   = healthRows.filter(r => r.status === 'good')
+  const lowItems    = healthRows.filter(r => r.status === 'low').sort((a,b) => a.wos - b.wos)
+  const totalSales  = healthRows.reduce((s, r) => s + r.avgSales, 0)
+  const _rawPct     = totalSales === 0 ? 0 : goodItems.reduce((s, r) => s + r.avgSales, 0) / totalSales * 100
+  const healthPct   = isNaN(_rawPct) ? 0 : Math.round(_rawPct)
+  const healthZone = healthPct >= 67 ? 'Healthy' : healthPct >= 34 ? 'At Risk' : 'Critical'
+  const healthColor = healthPct >= 67 ? '#4caf50' : healthPct >= 34 ? '#ff9800' : '#f44336'
   const HEALTH_SIGNAL = {
     Healthy: [
       `Global freight conditions are stable following a period of OPEC-driven oil price movement, with no active weather systems or infrastructure disruptions affecting major shipping corridors.`,
@@ -1277,6 +1273,8 @@ export default function KpiDetailPage({
       `We believe that escalating to supply chain leadership today will unlock sourcing or demand reduction options before the most exposed items reach zero stock, as measured by stabilizing daily revenue losses below $25K within 48 hours of authorization and preventing additional SKUs from crossing into zero coverage within the 5-day action window, by authorizing options beyond standard replenishment protocols before the window closes.`,
     ],
   }
+  const ACTION_PLAN_LIFT = { Healthy: 0.06, 'At Risk': 0.11, Critical: 0.18 }
+
   const msgIdx = (country.length + period.length) % 4
   const _signal   = (HEALTH_SIGNAL[healthZone]   ?? HEALTH_SIGNAL.Healthy)[msgIdx]
   const _risk     = (COUNTRY_RISK[healthZone]    ?? COUNTRY_RISK.Healthy)[country]
