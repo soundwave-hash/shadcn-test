@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import NewsTicker from './NewsTicker'
 import AccountSwitcher from './AccountSwitcher'
 import {
@@ -203,7 +204,7 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
     topActions.push(`${row.name} is performing within normal parameters. Monitor weekly velocity and WOS. No immediate action required.`)
   }
 
-  const tile = (children, extra = {}) => ({
+  const tile = (extra = {}) => ({
     background: T.bg,
     border: `1px solid ${T.border}`,
     borderRadius: 7,
@@ -831,7 +832,10 @@ export default function InventoryScreen({
       </button>
     )}
 
-    <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />
+    {createPortal(
+      <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />,
+      document.body
+    )}
 
     {tooltip && (
       <div style={{
