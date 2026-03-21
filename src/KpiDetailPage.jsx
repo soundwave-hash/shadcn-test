@@ -1337,7 +1337,10 @@ export default function KpiDetailPage({
                   <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 400ms ease forwards' }}>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:6 }}>FACTS</div>
                     {tldrBullets.map((b, idx) => (
-                      <div key={idx} style={{ fontSize:12, color: T.textMuted, lineHeight:1.6, marginBottom:6 }}>{b}</div>
+                      <div key={idx} style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
+                        <span style={{ fontSize:9, fontWeight:700, color: T.textDim, letterSpacing:'0.04em', flexShrink:0 }}>{String(idx + 1).padStart(2, '0')}</span>
+                        <span style={{ fontSize:12, color: T.textMuted, lineHeight:1.6 }}>{b}</span>
+                      </div>
                     ))}
                   </div>
                 )}
