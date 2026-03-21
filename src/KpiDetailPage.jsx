@@ -1476,7 +1476,7 @@ export default function KpiDetailPage({
                   <div style={{ width:1, alignSelf:'stretch', backgroundColor: T.border, flexShrink:0, margin:'0 8px' }} />
                 )}
                 {tldrBullets.length > 0 && (tldrPhase === 'typing-risk' || tldrPhase === 'typing-rec' || tldrPhase === 'done') && (
-                  <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 400ms ease forwards' }}>
+                  <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 1400ms ease forwards' }}>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:6 }}>FACTS</div>
                     {tldrBullets.map((b, idx) => (
                       <div key={idx} style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
