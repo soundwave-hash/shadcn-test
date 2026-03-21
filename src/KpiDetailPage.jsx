@@ -29,17 +29,37 @@ const THEME = {
     cardBg: '#181818', cardBorder: '#222',
     axTick: '#666', tooltipBg: '#1a1a1a', tooltipBorder: '#3a3a3a',
     activeItemBg: '#1a2a2a', sep: '#555',
+    kpiLabel: '#80cbc4', accentHover: '#80cbc4',
   },
   light: {
-    bg: '#cfd3d8', navBg: '#e2e5e8', panelBg: '#e2e5e8',
-    border: 'rgba(0,0,0,0.09)', borderLight: 'rgba(0,0,0,0.05)',
-    text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#d7dadd', inputBorder: 'rgba(0,0,0,0.09)', inputText: '#333',
-    dropdownBg: '#e2e5e8', dropdownBorder: 'rgba(0,0,0,0.09)',
-    rowHover: '#cee6f0', chartMask: '#dadde0', chartGrid: 'rgba(0,0,0,0.07)',
-    cardBg: '#e2e5e8', cardBorder: 'rgba(0,0,0,0.09)',
-    axTick: '#6c6c6c', tooltipBg: '#e2e5e8', tooltipBorder: 'rgba(0,0,0,0.09)',
-    activeItemBg: '#c4dfea', sep: '#aaaaaa',
+    // Before → After (reason)
+    bg: '#F8F9FA',              // was #cfd3d8 — off-white page bg, not dark gray
+    navBg: '#FFFFFF',           // was #e2e5e8 — white nav creates real elevation
+    panelBg: '#FFFFFF',         // was #e2e5e8 — white panels lift off the page bg
+    border: '#E4E4E7',          // was rgba(0,0,0,0.09) — crisp, visible border
+    borderLight: 'rgba(0,0,0,0.05)',
+    text: '#18181B',            // was #111 — softer near-black
+    textMuted: '#52525B',       // was #555 — slate gray hierarchy
+    textDim: '#A1A1AA',         // was #888 — lighter dim text
+    textFaint: '#D4D4D8',       // was #aaa — very faint
+    inputBg: '#F4F4F5',         // was #d7dadd — near-white input bg
+    inputBorder: '#D4D4D8',     // was rgba(0,0,0,0.09) — visible input border
+    inputText: '#18181B',       // was #333
+    dropdownBg: '#FFFFFF',      // was #e2e5e8 — white dropdowns
+    dropdownBorder: '#E4E4E7',  // was rgba(0,0,0,0.09)
+    rowHover: 'rgba(0,188,212,0.06)', // was #cee6f0 — subtle teal tint on hover
+    chartMask: '#F8F9FA',       // was #dadde0 — match page bg
+    chartGrid: 'rgba(0,0,0,0.06)',    // was 0.07 — lighter gridlines on white
+    cardBg: '#FFFFFF',          // was #e2e5e8 — white cards (the critical fix)
+    cardBorder: '#E4E4E7',      // was rgba(0,0,0,0.09)
+    cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)', // new — elevation
+    axTick: '#A1A1AA',          // was #6c6c6c — lighter axis labels
+    tooltipBg: '#FFFFFF',       // was #e2e5e8 — white tooltip
+    tooltipBorder: '#E4E4E7',   // was rgba(0,0,0,0.09)
+    activeItemBg: 'rgba(0,188,212,0.08)', // was #c4dfea — subtle teal tint
+    sep: '#E4E4E7',             // was #aaaaaa — matches border
+    kpiLabel: '#0e7490',        // was (hardcoded) #80cbc4 — readable teal on white
+    accentHover: '#0e7490',     // was (hardcoded) #80cbc4
   },
 }
 
@@ -542,7 +562,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
         {colHeaders.map(({ label, field }) => {
           const active  = field && sortField === field
           const isHov   = field && hovCol === field
-          const color   = active ? '#00bcd4' : isHov ? '#80cbc4' : T.textDim
+          const color   = active ? '#00bcd4' : isHov ? T.accentHover : T.textDim
           return field ? (
             <button
               key={label}
@@ -829,7 +849,7 @@ export default function KpiDetailPage({
   activeUser, onUserSwitch,
 }) {
   const T = THEME[theme]
-  const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px' }
+  const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px', boxShadow: T.cardShadow }
   const ttip   = { backgroundColor:T.tooltipBg, border:`1px solid ${T.tooltipBorder}`, color:T.text, fontSize:11, borderRadius:6 }
   const axTick = { fill:T.axTick, fontSize:11 }
 
@@ -1386,7 +1406,7 @@ export default function KpiDetailPage({
             size="icon"
             onClick={onThemeToggle}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5', marginLeft:4 }}
+            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg, marginLeft:4 }}
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </Button>
@@ -1397,7 +1417,7 @@ export default function KpiDetailPage({
                 title="Export data"
                 style={{
                   width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
                   display:'flex', alignItems:'center', justifyContent:'center',
                 }}
               >
@@ -1423,7 +1443,7 @@ export default function KpiDetailPage({
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
               border: voiceOpen ? '1px solid rgba(0,188,212,0.5)' : `1px solid ${T.inputBorder}`,
-              background: voiceOpen ? 'rgba(0,188,212,0.12)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              background: voiceOpen ? 'rgba(0,188,212,0.12)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -1435,7 +1455,7 @@ export default function KpiDetailPage({
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
               border: slackOpen ? '1px solid #00bcd4' : `1px solid ${T.inputBorder}`,
-              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -1682,7 +1702,7 @@ export default function KpiDetailPage({
                     borderRadius: 7,
                     padding: '8px 12px',
                     width: 210,
-                    boxShadow: `0 4px 16px rgba(0,0,0,0.4)`,
+                    boxShadow: theme === 'dark' ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.12)',
                   }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: varColor, marginBottom: 5, letterSpacing: '0.03em' }}>
                       {title}
@@ -1744,7 +1764,7 @@ export default function KpiDetailPage({
                     border: '1px solid rgba(0,188,212,0.4)',
                     borderRadius: 8,
                     padding: '11px 14px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                    boxShadow: theme === 'dark' ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.12)',
                     zIndex: 20,
                   }}>
                     <div style={{ fontSize:11, fontWeight:700, color:'#00bcd4', marginBottom:6, letterSpacing:'0.03em' }}>

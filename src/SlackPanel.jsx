@@ -64,10 +64,10 @@ function TypingBubble({ user, isMine, dark, border, text }) {
           <div style={{
             padding: '10px 14px',
             borderRadius: isMine ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
-            background: isMine ? (dark ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.12)') : (dark ? '#252525' : '#f0f0f0'),
+            background: isMine ? (dark ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.10)') : (dark ? '#252525' : '#F4F4F5'),
             border: isMine ? '1px solid rgba(0,188,212,0.3)' : `1px solid ${border}`,
             display: 'flex', gap: 4, alignItems: 'center',
-            color: dark ? '#aaa' : '#888',
+            color: dark ? '#aaa' : '#A1A1AA',
           }}>
             <span className="slack-dot" />
             <span className="slack-dot" />
@@ -92,8 +92,8 @@ function UserAvatar({ user }) {
 }
 
 function DateDivider({ dark }) {
-  const lineColor = dark ? '#2a2a2a' : '#e0e0e0'
-  const textColor = dark ? '#666' : '#aaa'
+  const lineColor = dark ? '#2a2a2a' : '#E4E4E7'   // was #e0e0e0 — matches border system
+  const textColor = dark ? '#666' : '#A1A1AA'      // was #aaa — slate gray
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 6px' }}>
       <div style={{ flex: 1, height: 1, background: lineColor }} />
@@ -112,9 +112,9 @@ function DateDivider({ dark }) {
 
 function Reactions({ reactions, dark }) {
   if (!reactions?.length) return null
-  const bg       = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
-  const border   = dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)'
-  const textColor= dark ? 'rgba(255,255,255,0.65)' : '#555'
+  const bg       = dark ? 'rgba(255,255,255,0.06)' : '#F4F4F5'            // was rgba(0,0,0,0.05)
+  const border   = dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E4E4E7' // was rgba(0,0,0,0.1)
+  const textColor= dark ? 'rgba(255,255,255,0.65)' : '#52525B'           // was #555 — slate gray
   return (
     <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
       {reactions.map(r => (
@@ -179,13 +179,13 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const dark        = theme === 'dark'
-  const panelBg     = dark ? '#1a1a1a' : '#ffffff'
-  const border      = dark ? '#2a2a2a' : '#e0e0e0'
-  const text        = dark ? '#fff'    : '#111'
-  const textDim     = dark ? '#888'    : '#888'
-  const inputBg     = dark ? '#252525' : '#f9f9f9'
-  const inputBorder = dark ? '#3a3a3a' : '#d0d0d0'
-  const toolbarBorder = dark ? '#2e2e2e' : '#e8e8e8'
+  const panelBg     = dark ? '#1a1a1a' : '#FFFFFF'
+  const border      = dark ? '#2a2a2a' : '#E4E4E7'   // was #e0e0e0 — matches dashboard border system
+  const text        = dark ? '#fff'    : '#18181B'   // was #111 — softer near-black
+  const textDim     = dark ? '#888'    : '#71717A'   // was #888 — slate gray (readable on white)
+  const inputBg     = dark ? '#252525' : '#F4F4F5'   // was #f9f9f9 — matches THEME.light.inputBg
+  const inputBorder = dark ? '#3a3a3a' : '#D4D4D8'   // was #d0d0d0 — matches THEME.light.inputBorder
+  const toolbarBorder = dark ? '#2e2e2e' : '#E4E4E7' // was #e8e8e8 — matches border system
 
   return (
     <>
@@ -238,13 +238,13 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
 
         {/* ── Channel header ── */}
         <div style={{
-          background: dark ? '#161616' : '#f5f5f5',
+          background: dark ? '#161616' : '#F8F9FA',  // was #f5f5f5 — matches page bg
           borderBottom: `1px solid ${border}`,
           padding: '8px 14px 9px',
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 15, color: dark ? 'rgba(255,255,255,0.35)' : '#bbb', fontWeight: 400, lineHeight: 1 }}>#</span>
+            <span style={{ fontSize: 15, color: dark ? 'rgba(255,255,255,0.35)' : '#A1A1AA', fontWeight: 400, lineHeight: 1 }}>#</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: text }}>warehouse-ops</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
@@ -252,7 +252,7 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
               {USERS.map((u, i) => (
                 <div key={u.id} style={{
                   width: 16, height: 16, borderRadius: '50%', overflow: 'hidden',
-                  border: `1.5px solid ${dark ? '#161616' : '#f5f5f5'}`,
+                  border: `1.5px solid ${dark ? '#161616' : '#F8F9FA'}`,
                   marginLeft: i === 0 ? 0 : -5,
                 }}>
                   <img src={u.src} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'cover', ...(u.imgStyle ?? {}) }} />
@@ -262,7 +262,7 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: textDim }}>2 members online</span>
           </div>
-          <div style={{ fontSize: 10, color: dark ? '#555' : '#bbb', marginTop: 5, fontStyle: 'italic' }}>
+          <div style={{ fontSize: 10, color: dark ? '#555' : '#A1A1AA', marginTop: 5, fontStyle: 'italic' }}>
             Ops alerts, inventory flags, and fulfillment updates
           </div>
         </div>
@@ -293,8 +293,8 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
                     padding: '7px 11px',
                     borderRadius: isMine ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
                     background: isMine
-                      ? (dark ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.12)')
-                      : (dark ? '#252525' : '#f0f0f0'),
+                      ? (dark ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.10)')
+                      : (dark ? '#252525' : '#F4F4F5'),  // was #f0f0f0 — matches inputBg
                     border: isMine ? '1px solid rgba(0,188,212,0.3)' : `1px solid ${border}`,
                     fontSize: 12, color: text, lineHeight: 1.55,
                   }}>

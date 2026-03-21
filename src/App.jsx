@@ -33,17 +33,37 @@ const THEME = {
     cardBg: '#181818', cardBorder: '#222',
     axTick: '#666', tooltipBg: '#1a1a1a', tooltipBorder: '#3a3a3a',
     activeItemBg: '#1a2a2a', sep: '#555',
+    kpiLabel: '#80cbc4', accentHover: '#80cbc4',
   },
   light: {
-    bg: '#cfd3d8', navBg: '#e2e5e8', panelBg: '#e2e5e8',
-    border: 'rgba(0,0,0,0.09)', borderLight: 'rgba(0,0,0,0.05)',
-    text: '#111', textMuted: '#555', textDim: '#888', textFaint: '#aaa',
-    inputBg: '#d7dadd', inputBorder: 'rgba(0,0,0,0.09)', inputText: '#333',
-    dropdownBg: '#e2e5e8', dropdownBorder: 'rgba(0,0,0,0.09)',
-    rowHover: '#cee6f0', chartMask: '#dadde0', chartGrid: 'rgba(0,0,0,0.07)',
-    cardBg: '#e2e5e8', cardBorder: 'rgba(0,0,0,0.09)',
-    axTick: '#6c6c6c', tooltipBg: '#e2e5e8', tooltipBorder: 'rgba(0,0,0,0.09)',
-    activeItemBg: '#c4dfea', sep: '#aaaaaa',
+    // Before → After (reason)
+    bg: '#F8F9FA',              // was #cfd3d8 — off-white page bg, not dark gray
+    navBg: '#FFFFFF',           // was #e2e5e8 — white nav creates real elevation
+    panelBg: '#FFFFFF',         // was #e2e5e8 — white panels lift off the page bg
+    border: '#E4E4E7',          // was rgba(0,0,0,0.09) — crisp, visible border
+    borderLight: 'rgba(0,0,0,0.05)',
+    text: '#18181B',            // was #111 — softer near-black
+    textMuted: '#52525B',       // was #555 — slate gray hierarchy
+    textDim: '#A1A1AA',         // was #888 — lighter dim text
+    textFaint: '#D4D4D8',       // was #aaa — very faint
+    inputBg: '#F4F4F5',         // was #d7dadd — near-white input bg
+    inputBorder: '#D4D4D8',     // was rgba(0,0,0,0.09) — visible input border
+    inputText: '#18181B',       // was #333
+    dropdownBg: '#FFFFFF',      // was #e2e5e8 — white dropdowns
+    dropdownBorder: '#E4E4E7',  // was rgba(0,0,0,0.09)
+    rowHover: 'rgba(0,188,212,0.06)', // was #cee6f0 — subtle teal tint on hover
+    chartMask: '#F8F9FA',       // was #dadde0 — match page bg
+    chartGrid: 'rgba(0,0,0,0.06)',    // was 0.07 — lighter gridlines on white
+    cardBg: '#FFFFFF',          // was #e2e5e8 — white cards (the critical fix)
+    cardBorder: '#E4E4E7',      // was rgba(0,0,0,0.09)
+    cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)', // new — elevation
+    axTick: '#A1A1AA',          // was #6c6c6c — lighter axis labels
+    tooltipBg: '#FFFFFF',       // was #e2e5e8 — white tooltip
+    tooltipBorder: '#E4E4E7',   // was rgba(0,0,0,0.09)
+    activeItemBg: 'rgba(0,188,212,0.08)', // was #c4dfea — subtle teal tint
+    sep: '#E4E4E7',             // was #aaaaaa — matches border
+    kpiLabel: '#0e7490',        // was (hardcoded) #80cbc4 — readable teal on white
+    accentHover: '#0e7490',     // was (hardcoded) #80cbc4
   },
 }
 
@@ -692,6 +712,7 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
       {...dragHandlers}
       style={{
         backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, padding:'18px 20px',
+        boxShadow: T.cardShadow,
         cursor:'grab',
         opacity: isDragging ? 0.35 : 1,
         outline: (isDragging || isOver) ? '2px solid #00bcd4' : '2px solid transparent',
@@ -701,7 +722,7 @@ function KpiCard({ label, sublabel, primary, secondary, secondaryLabel, country,
       className="flex flex-col gap-0"
     >
       <div style={{ minHeight:48 }}>
-        <div style={{ color:'#80cbc4', fontSize:12, fontWeight:500, lineHeight:1.3 }}>{label}</div>
+        <div style={{ color: T.kpiLabel, fontSize:12, fontWeight:500, lineHeight:1.3 }}>{label}</div>
       </div>
       <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:8, marginTop:8 }}>
         <div key={primary} className="kpi-flip" style={{ color: T.text, fontSize:26, fontWeight:700, lineHeight:1.1 }}>{animPrimary}</div>
@@ -822,7 +843,7 @@ export default function App() {
     })
     canvas.toBlob(blob => saveAs(blob, `warehouseiq-charts-${country.replace(/\s+/g, '-').toLowerCase()}-${dashboardRange}.png`))
   }
-  const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px' }
+  const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px', boxShadow: T.cardShadow }
   const ttip  = { backgroundColor: T.tooltipBg, border: `1px solid ${T.tooltipBorder}`, color: T.text, fontSize:11 }
   const d = COUNTRY_DATA[country]
 
@@ -979,7 +1000,7 @@ export default function App() {
           <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
               width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-              backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+              backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
               display:'flex', alignItems:'center', justifyContent:'center',
             }}>
               <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
@@ -988,7 +1009,7 @@ export default function App() {
               <DropdownMenuTrigger asChild>
                 <button title="Export data" style={{
                   width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
                   display:'flex', alignItems:'center', justifyContent:'center',
                 }}>
                   <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
@@ -1180,7 +1201,7 @@ export default function App() {
             size="icon"
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5', marginLeft:4 }}
+            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg, marginLeft:4 }}
           >
             <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
           </Button>
@@ -1191,7 +1212,7 @@ export default function App() {
                 title="Export data"
                 style={{
                   width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-                  backgroundColor: theme === 'dark' ? '#1c1c1c' : '#f5f5f5',
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
                   display:'flex', alignItems:'center', justifyContent:'center',
                 }}
               >
@@ -1216,7 +1237,7 @@ export default function App() {
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
               border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${T.inputBorder}`,
-              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -1228,7 +1249,7 @@ export default function App() {
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
               border: slackOpen ? '1px solid #00bcd4' : `1px solid ${T.inputBorder}`,
-              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >

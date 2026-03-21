@@ -321,7 +321,7 @@ export default function InventoryScreen({
   }
   const iconBtn = {
     width: 28, height: 28, borderRadius: 7, cursor: 'pointer', border: `1px solid ${T.inputBorder}`,
-    backgroundColor: isDark ? '#1c1c1c' : '#f5f5f5',
+    backgroundColor: isDark ? '#1c1c1c' : T.inputBg,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }
 
@@ -418,7 +418,7 @@ export default function InventoryScreen({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="icon" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: isDark ? '#1c1c1c' : '#f5f5f5' }}>
+          <Button variant="outline" size="icon" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: isDark ? '#1c1c1c' : T.inputBg }}>
             <Sun size={15} color={isDark ? '#fff' : '#333'} />
           </Button>
           <DropdownMenu>
