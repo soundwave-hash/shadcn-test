@@ -34,7 +34,7 @@ const THEME = {
     navShadow: undefined, tabActive: '#00bcd4',
   },
   light: {
-    bg: 'hsl(220, 20%, 96.5%)',
+    bg: 'hsl(220, 18%, 94%)',        // Pass 3: was hsl(220,20%,96.5%) — darker page bg for card contrast
     navBg: '#FFFFFF',
     panelBg: '#FFFFFF',
     border: 'hsl(220, 13%, 91%)',
@@ -49,11 +49,11 @@ const THEME = {
     dropdownBg: '#FFFFFF',
     dropdownBorder: 'hsl(220, 13%, 91%)',
     rowHover: 'rgba(0,188,212,0.06)',
-    chartMask: 'hsl(220, 20%, 96.5%)',
+    chartMask: 'hsl(220, 18%, 94%)',  // Pass 3: must match bg
     chartGrid: 'rgba(0,0,0,0.06)',
     cardBg: '#FFFFFF',
     cardBorder: 'hsl(220, 13%, 91%)',
-    cardShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)',
+    cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06)', // Pass 3: bumped opacity
     axTick: '#A1A1AA',
     tooltipBg: '#FFFFFF',
     tooltipBorder: 'hsl(220, 13%, 91%)',
@@ -62,7 +62,7 @@ const THEME = {
     kpiLabel: '#0e7490',
     accentHover: '#0e7490',
     chartBorder: 'hsl(220, 13%, 89%)',
-    chartShadow: '0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06)',
+    chartShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.07)', // Pass 3: bumped
     navShadow: '0 1px 3px rgba(0,0,0,0.05)',
     tabActive: 'hsl(185, 55%, 38%)',
   },
@@ -1629,7 +1629,7 @@ export default function KpiDetailPage({
                   <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
                   {/* Shading band. Drawn before grid so grid renders on top */}
                   {/* fill opacity reduced to 0.12 in light mode — whispers on white bg, was 0.15 */}
-                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.12)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
+                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.10)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>

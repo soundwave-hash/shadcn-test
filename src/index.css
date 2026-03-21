@@ -36,7 +36,7 @@
   }
 
   /* Before → After (reason) */
-  --background: #F8F9FA;          /* was #F5F5F7 — off-white page bg */
+  --background: hsl(220 18% 94%); /* Pass 3: was #F8F9FA — darker for card shadow contrast */
 
   --foreground: #18181B;          /* was oklch(0.145 0 0) — softer near-black */
 

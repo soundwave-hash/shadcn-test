@@ -40,10 +40,11 @@ const THEME = {
   },
   light: {
     // Before → After (reason)
-    bg: 'hsl(220, 20%, 96.5%)',     // was #F8F9FA — cool off-white that makes white cards pop
+    // Pass 3: bg darkened so white cards are actually visible against page (was hsl(220,20%,96.5%) ≈ #F5F6F8 — invisible from white)
+    bg: 'hsl(220, 18%, 94%)',           // was hsl(220,20%,96.5%) — noticeably cool off-white; white cards now float
     navBg: '#FFFFFF',
     panelBg: '#FFFFFF',
-    border: 'hsl(220, 13%, 91%)',   // was #E4E4E7 — blue-tinted border matches page tone
+    border: 'hsl(220, 13%, 91%)',
     borderLight: 'rgba(0,0,0,0.05)',
     text: '#18181B',
     textMuted: '#52525B',
@@ -55,11 +56,12 @@ const THEME = {
     dropdownBg: '#FFFFFF',
     dropdownBorder: 'hsl(220, 13%, 91%)',
     rowHover: 'rgba(0,188,212,0.06)',
-    chartMask: 'hsl(220, 20%, 96.5%)',  // was #F8F9FA — matches page bg
+    chartMask: 'hsl(220, 18%, 94%)',    // was hsl(220,20%,96.5%) — must match bg for area chart masking
     chartGrid: 'rgba(0,0,0,0.06)',
     cardBg: '#FFFFFF',
-    cardBorder: 'hsl(220, 13%, 91%)',   // was #E4E4E7
-    cardShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)', // was 0.08 first stop
+    cardBorder: 'hsl(220, 13%, 91%)',
+    // Pass 3: bumped from 0.06 — shadows need to be visible against the darker page bg
+    cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.06)',
     axTick: '#A1A1AA',
     tooltipBg: '#FFFFFF',
     tooltipBorder: 'hsl(220, 13%, 91%)',
@@ -67,11 +69,11 @@ const THEME = {
     sep: 'hsl(220, 13%, 91%)',
     kpiLabel: '#0e7490',
     accentHover: '#0e7490',
-    // New tokens — second pass
-    chartBorder: 'hsl(220, 13%, 89%)',  // new — slightly stronger border for chart panels
-    chartShadow: '0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06)', // new — deeper shadow for chart surfaces
-    navShadow: '0 1px 3px rgba(0,0,0,0.05)',  // new — separates nav from page
-    tabActive: 'hsl(185, 55%, 38%)',           // was #00bcd4 — deeper teal for light bg
+    chartBorder: 'hsl(220, 13%, 89%)',
+    // Pass 3: bumped spread + opacity — chart panels are large surfaces that need more lift
+    chartShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.07)',
+    navShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    tabActive: 'hsl(185, 55%, 38%)',
   },
 }
 
