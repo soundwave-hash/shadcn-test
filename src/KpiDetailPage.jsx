@@ -30,36 +30,41 @@ const THEME = {
     axTick: '#666', tooltipBg: '#1a1a1a', tooltipBorder: '#3a3a3a',
     activeItemBg: '#1a2a2a', sep: '#555',
     kpiLabel: '#80cbc4', accentHover: '#80cbc4',
+    chartBorder: '#2a2a2a', chartShadow: undefined,
+    navShadow: undefined, tabActive: '#00bcd4',
   },
   light: {
-    // Before → After (reason)
-    bg: '#F8F9FA',              // was #cfd3d8 — off-white page bg, not dark gray
-    navBg: '#FFFFFF',           // was #e2e5e8 — white nav creates real elevation
-    panelBg: '#FFFFFF',         // was #e2e5e8 — white panels lift off the page bg
-    border: '#E4E4E7',          // was rgba(0,0,0,0.09) — crisp, visible border
+    bg: 'hsl(220, 20%, 96.5%)',
+    navBg: '#FFFFFF',
+    panelBg: '#FFFFFF',
+    border: 'hsl(220, 13%, 91%)',
     borderLight: 'rgba(0,0,0,0.05)',
-    text: '#18181B',            // was #111 — softer near-black
-    textMuted: '#52525B',       // was #555 — slate gray hierarchy
-    textDim: '#A1A1AA',         // was #888 — lighter dim text
-    textFaint: '#D4D4D8',       // was #aaa — very faint
-    inputBg: '#F4F4F5',         // was #d7dadd — near-white input bg
-    inputBorder: '#D4D4D8',     // was rgba(0,0,0,0.09) — visible input border
-    inputText: '#18181B',       // was #333
-    dropdownBg: '#FFFFFF',      // was #e2e5e8 — white dropdowns
-    dropdownBorder: '#E4E4E7',  // was rgba(0,0,0,0.09)
-    rowHover: 'rgba(0,188,212,0.06)', // was #cee6f0 — subtle teal tint on hover
-    chartMask: '#F8F9FA',       // was #dadde0 — match page bg
-    chartGrid: 'rgba(0,0,0,0.06)',    // was 0.07 — lighter gridlines on white
-    cardBg: '#FFFFFF',          // was #e2e5e8 — white cards (the critical fix)
-    cardBorder: '#E4E4E7',      // was rgba(0,0,0,0.09)
-    cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)', // new — elevation
-    axTick: '#A1A1AA',          // was #6c6c6c — lighter axis labels
-    tooltipBg: '#FFFFFF',       // was #e2e5e8 — white tooltip
-    tooltipBorder: '#E4E4E7',   // was rgba(0,0,0,0.09)
-    activeItemBg: 'rgba(0,188,212,0.08)', // was #c4dfea — subtle teal tint
-    sep: '#E4E4E7',             // was #aaaaaa — matches border
-    kpiLabel: '#0e7490',        // was (hardcoded) #80cbc4 — readable teal on white
-    accentHover: '#0e7490',     // was (hardcoded) #80cbc4
+    text: '#18181B',
+    textMuted: '#52525B',
+    textDim: '#A1A1AA',
+    textFaint: '#D4D4D8',
+    inputBg: '#F4F4F5',
+    inputBorder: '#D4D4D8',
+    inputText: '#18181B',
+    dropdownBg: '#FFFFFF',
+    dropdownBorder: 'hsl(220, 13%, 91%)',
+    rowHover: 'rgba(0,188,212,0.06)',
+    chartMask: 'hsl(220, 20%, 96.5%)',
+    chartGrid: 'rgba(0,0,0,0.06)',
+    cardBg: '#FFFFFF',
+    cardBorder: 'hsl(220, 13%, 91%)',
+    cardShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)',
+    axTick: '#A1A1AA',
+    tooltipBg: '#FFFFFF',
+    tooltipBorder: 'hsl(220, 13%, 91%)',
+    activeItemBg: 'rgba(0,188,212,0.08)',
+    sep: 'hsl(220, 13%, 91%)',
+    kpiLabel: '#0e7490',
+    accentHover: '#0e7490',
+    chartBorder: 'hsl(220, 13%, 89%)',
+    chartShadow: '0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06)',
+    navShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    tabActive: 'hsl(185, 55%, 38%)',
   },
 }
 
@@ -472,7 +477,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
   ]
 
   return (
-    <div style={{ backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'12px 10px', display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
+    <div style={{ backgroundColor:T.panelBg, border:`1px solid ${T.chartBorder ?? T.border}`, borderRadius:8, padding:'12px 10px', display:'flex', flexDirection:'column', height:'100%', overflow:'hidden', boxShadow: T.chartShadow ?? T.cardShadow }}>
       {/* Header */}
       <div style={{ marginBottom:8, flexShrink:0 }}>
         <span style={{ fontSize:12, fontWeight:700, color: T.text }}>Product Leaderboard</span>
@@ -849,7 +854,7 @@ export default function KpiDetailPage({
   activeUser, onUserSwitch,
 }) {
   const T = THEME[theme]
-  const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.border}`, borderRadius:8, padding:'14px 16px', boxShadow: T.cardShadow }
+  const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.chartBorder ?? T.border}`, borderRadius:8, padding:'14px 16px', boxShadow: T.chartShadow ?? T.cardShadow }
   const ttip   = { backgroundColor:T.tooltipBg, border:`1px solid ${T.tooltipBorder}`, color:T.text, fontSize:11, borderRadius:6 }
   const axTick = { fill:T.axTick, fontSize:11 }
 
@@ -1322,15 +1327,15 @@ export default function KpiDetailPage({
     <div ref={pageRef} style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Nav bar ── */}
-      <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
+      <div style={{ backgroundColor: T.navBg, borderBottom:`1px solid ${T.border}`, boxShadow: T.navShadow, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16, flexShrink:0 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
         <span style={{ color: T.sep }}>|</span>
         {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
           <button key={tab.id} onClick={() => tab.id === 'dashboard' ? onBack() : onBack(tab.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: tab.id === 'detail' ? 700 : 400,
-            color: tab.id === 'detail' ? '#00bcd4' : T.textMuted,
-            borderBottom: tab.id === 'detail' ? '2px solid #00bcd4' : '2px solid transparent',
+            color: tab.id === 'detail' ? T.tabActive : T.textMuted,
+            borderBottom: tab.id === 'detail' ? `2px solid ${T.tabActive}` : '2px solid transparent',
             padding: '0 4px', height:48,
           }}>{tab.label}</button>
         ))}
@@ -1623,13 +1628,15 @@ export default function KpiDetailPage({
                   <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
                   <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
                   {/* Shading band. Drawn before grid so grid renders on top */}
-                  <Area type="monotone" dataKey="upper" fill="rgba(0,188,212,0.15)" stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
+                  {/* fill opacity reduced to 0.12 in light mode — whispers on white bg, was 0.15 */}
+                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(0,188,212,0.12)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>
                   {/* Lines. Always render all three; use hide to toggle so recharts doesn't lose track */}
-                  <Line key={`ly-${lineAnimKey}`} type="monotone" dataKey="lastYear" stroke="#ff9800" strokeWidth={1.5}
-                    dot={{ r:2.5, fill:'#ff9800', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
+                  {/* last year line: desaturated amber in light mode (was #ff9800 — too vivid on white) */}
+                  <Line key={`ly-${lineAnimKey}`} type="monotone" dataKey="lastYear" stroke={theme === 'dark' ? '#ff9800' : 'hsl(38, 75%, 50%)'} strokeWidth={1.5}
+                    dot={{ r:2.5, fill: theme === 'dark' ? '#ff9800' : 'hsl(38, 75%, 50%)', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
                     animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible}/>
                   <Line key={`ty-${lineAnimKey}`} type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}

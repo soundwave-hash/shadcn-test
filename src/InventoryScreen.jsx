@@ -330,8 +330,11 @@ export default function InventoryScreen({
     top:             0,
     left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
     zIndex:          col.sticky ? 4 : 3,
-    backgroundColor: T.navBg,
-    borderBottom:    `1.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.13)'}`,
+    // Light mode: distinct off-white bg with stronger border for visual weight
+    // was: T.navBg for all modes
+    backgroundColor: isDark ? T.navBg : 'hsl(220, 18%, 96%)',
+    // was: 1.5px rgba(0,0,0,0.13) — upgraded to 2px in light for clear section separator
+    borderBottom:    isDark ? '1.5px solid rgba(255,255,255,0.14)' : '2px solid hsl(220, 13%, 88%)',
     borderRight:     `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
     padding:         '0 6px 2px',
     height:          35,
@@ -352,15 +355,15 @@ export default function InventoryScreen({
     <div style={{ backgroundColor: T.bg, height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: T.text, overflow: 'hidden' }}>
 
       {/* ── Nav bar ── */}
-      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 48, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 16, flexShrink: 0 }}>
+      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height: 48, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 16, flexShrink: 0 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: T.text, letterSpacing: '0.02em' }}>WarehouseIQ</span>
         <span style={{ color: T.sep, fontSize: 12 }}>|</span>
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => setView(tab.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize: 12, fontWeight: tab.id === 'inventory' ? 700 : 400,
-            color: tab.id === 'inventory' ? '#00bcd4' : T.textMuted,
-            borderBottom: tab.id === 'inventory' ? '2px solid #00bcd4' : '2px solid transparent',
+            color: tab.id === 'inventory' ? T.tabActive : T.textMuted,
+            borderBottom: tab.id === 'inventory' ? `2px solid ${T.tabActive}` : '2px solid transparent',
             padding: '0 4px', height: 48,
           }}>{tab.label}</button>
         ))}
@@ -562,9 +565,10 @@ export default function InventoryScreen({
                       display: 'inline-block',
                       padding: '0 0 2px 0',
                       fontSize: 11,
-                      fontWeight: active ? 700 : 400,
-                      color: active ? '#00bcd4' : isPressed ? T.textDim : T.textMuted,
-                      borderBottom: active ? '1px solid #00bcd4' : `1px solid ${T.border}`,
+                      // was: active ? 700 : 400 — light mode gets 600 base for readable headers
+                      fontWeight: active ? 700 : isDark ? 400 : 600,
+                      color: active ? T.tabActive : isPressed ? T.textDim : T.textMuted,
+                      borderBottom: active ? `1px solid ${T.tabActive}` : `1px solid ${T.border}`,
                       letterSpacing: '0.02em',
                       whiteSpace: 'nowrap',
                     }}>

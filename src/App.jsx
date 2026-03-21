@@ -34,40 +34,48 @@ const THEME = {
     axTick: '#666', tooltipBg: '#1a1a1a', tooltipBorder: '#3a3a3a',
     activeItemBg: '#1a2a2a', sep: '#555',
     kpiLabel: '#80cbc4', accentHover: '#80cbc4',
+    // New tokens — values match existing dark behavior
+    chartBorder: '#2a2a2a', chartShadow: undefined,
+    navShadow: undefined, tabActive: '#00bcd4',
   },
   light: {
     // Before → After (reason)
-    bg: '#F8F9FA',              // was #cfd3d8 — off-white page bg, not dark gray
-    navBg: '#FFFFFF',           // was #e2e5e8 — white nav creates real elevation
-    panelBg: '#FFFFFF',         // was #e2e5e8 — white panels lift off the page bg
-    border: '#E4E4E7',          // was rgba(0,0,0,0.09) — crisp, visible border
+    bg: 'hsl(220, 20%, 96.5%)',     // was #F8F9FA — cool off-white that makes white cards pop
+    navBg: '#FFFFFF',
+    panelBg: '#FFFFFF',
+    border: 'hsl(220, 13%, 91%)',   // was #E4E4E7 — blue-tinted border matches page tone
     borderLight: 'rgba(0,0,0,0.05)',
-    text: '#18181B',            // was #111 — softer near-black
-    textMuted: '#52525B',       // was #555 — slate gray hierarchy
-    textDim: '#A1A1AA',         // was #888 — lighter dim text
-    textFaint: '#D4D4D8',       // was #aaa — very faint
-    inputBg: '#F4F4F5',         // was #d7dadd — near-white input bg
-    inputBorder: '#D4D4D8',     // was rgba(0,0,0,0.09) — visible input border
-    inputText: '#18181B',       // was #333
-    dropdownBg: '#FFFFFF',      // was #e2e5e8 — white dropdowns
-    dropdownBorder: '#E4E4E7',  // was rgba(0,0,0,0.09)
-    rowHover: 'rgba(0,188,212,0.06)', // was #cee6f0 — subtle teal tint on hover
-    chartMask: '#F8F9FA',       // was #dadde0 — match page bg
-    chartGrid: 'rgba(0,0,0,0.06)',    // was 0.07 — lighter gridlines on white
-    cardBg: '#FFFFFF',          // was #e2e5e8 — white cards (the critical fix)
-    cardBorder: '#E4E4E7',      // was rgba(0,0,0,0.09)
-    cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)', // new — elevation
-    axTick: '#A1A1AA',          // was #6c6c6c — lighter axis labels
-    tooltipBg: '#FFFFFF',       // was #e2e5e8 — white tooltip
-    tooltipBorder: '#E4E4E7',   // was rgba(0,0,0,0.09)
-    activeItemBg: 'rgba(0,188,212,0.08)', // was #c4dfea — subtle teal tint
-    sep: '#E4E4E7',             // was #aaaaaa — matches border
-    kpiLabel: '#0e7490',        // was (hardcoded) #80cbc4 — readable teal on white
-    accentHover: '#0e7490',     // was (hardcoded) #80cbc4
+    text: '#18181B',
+    textMuted: '#52525B',
+    textDim: '#A1A1AA',
+    textFaint: '#D4D4D8',
+    inputBg: '#F4F4F5',
+    inputBorder: '#D4D4D8',
+    inputText: '#18181B',
+    dropdownBg: '#FFFFFF',
+    dropdownBorder: 'hsl(220, 13%, 91%)',
+    rowHover: 'rgba(0,188,212,0.06)',
+    chartMask: 'hsl(220, 20%, 96.5%)',  // was #F8F9FA — matches page bg
+    chartGrid: 'rgba(0,0,0,0.06)',
+    cardBg: '#FFFFFF',
+    cardBorder: 'hsl(220, 13%, 91%)',   // was #E4E4E7
+    cardShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)', // was 0.08 first stop
+    axTick: '#A1A1AA',
+    tooltipBg: '#FFFFFF',
+    tooltipBorder: 'hsl(220, 13%, 91%)',
+    activeItemBg: 'rgba(0,188,212,0.08)',
+    sep: 'hsl(220, 13%, 91%)',
+    kpiLabel: '#0e7490',
+    accentHover: '#0e7490',
+    // New tokens — second pass
+    chartBorder: 'hsl(220, 13%, 89%)',  // new — slightly stronger border for chart panels
+    chartShadow: '0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06)', // new — deeper shadow for chart surfaces
+    navShadow: '0 1px 3px rgba(0,0,0,0.05)',  // new — separates nav from page
+    tabActive: 'hsl(185, 55%, 38%)',           // was #00bcd4 — deeper teal for light bg
   },
 }
 
-// ── Colors ────────────────────────────────────────────────────────────────────
+// ── Colors — dark mode (tuned for dark backgrounds) ──────────────────────────
 const C = {
   express:   '#00bcd4',
   ground:    '#f44336',
@@ -80,6 +88,21 @@ const C = {
   delivered: '#4caf50',
   failed:    '#f44336',
   canceled:  '#757575',
+}
+
+// ── Colors — light mode (desaturated ~15-20% for white backgrounds) ───────────
+const C_LIGHT = {
+  express:   'hsl(185, 60%, 42%)',  // was #00bcd4 hsl(186,100%,42%) — desaturated teal
+  ground:    'hsl(0, 65%, 50%)',    // was #f44336 hsl(4,89%,58%) — deeper, less aggressive red
+  priority:  'hsl(142, 50%, 40%)', // was #4caf50 hsl(123,39%,49%) — deeper green
+  sameDay:   'hsl(38, 75%, 50%)',  // was #ff9800 hsl(36,100%,50%) — amber, less blinding
+  standard:  '#4958a3',            // was #3f51b5 — slightly desaturated indigo
+  freight:   '#cc1f5c',            // was #e91e63 — darker pink
+  returns:   '#6ea835',            // was #8bc34a — deeper olive green
+  unknown:   '#909090',            // was #9e9e9e — slightly darker gray
+  delivered: 'hsl(142, 50%, 40%)', // matches priority
+  failed:    'hsl(0, 65%, 50%)',   // matches ground
+  canceled:  '#6b6b6b',            // was #757575 — slightly darker for contrast
 }
 
 // ── Per-country mock data ─────────────────────────────────────────────────────
@@ -776,6 +799,14 @@ export default function App() {
   const dashboardRange = dateRange === '1D' ? '5D' : dateRange
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
   const T = THEME[theme]
+  // Pick chart color set based on theme — desaturated palette for light mode
+  const CC = theme === 'dark' ? C : C_LIGHT
+  const CC_LEGEND = [
+    ['EXPRESS', CC.express], ['GROUND',   CC.ground],
+    ['PRIORITY',CC.priority],['SAME DAY', CC.sameDay],
+    ['STANDARD',CC.standard],['FREIGHT',  CC.freight],
+    ['RETURNS', CC.returns], ['UNKNOWN',  CC.unknown],
+  ]
   const dashboardRef = useRef(null)
 
   useEffect(() => {
@@ -843,7 +874,8 @@ export default function App() {
     })
     canvas.toBlob(blob => saveAs(blob, `warehouseiq-charts-${country.replace(/\s+/g, '-').toLowerCase()}-${dashboardRange}.png`))
   }
-  const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.border}`, padding:'14px 16px', boxShadow: T.cardShadow }
+  // Chart panels get a slightly stronger border + deeper shadow than KPI cards
+  const panel = { backgroundColor: T.panelBg, border: `1px solid ${T.chartBorder ?? T.border}`, padding:'14px 16px', boxShadow: T.chartShadow ?? T.cardShadow }
   const ttip  = { backgroundColor: T.tooltipBg, border: `1px solid ${T.tooltipBorder}`, color: T.text, fontSize:11 }
   const d = COUNTRY_DATA[country]
 
@@ -973,15 +1005,15 @@ export default function App() {
     return (
       <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
         {/* ── Menu bar ── */}
-        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
+        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
           {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
             <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
-              color: view === tab.id ? '#00bcd4' : T.textMuted,
-              borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
+              color: view === tab.id ? T.tabActive : T.textMuted,
+              borderBottom: view === tab.id ? `2px solid ${T.tabActive}` : '2px solid transparent',
               padding: '0 4px', height:48,
             }}>{tab.label}</button>
           ))}
@@ -1096,7 +1128,7 @@ export default function App() {
     <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Menu bar ── */}
-      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height:48, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
+      <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
         <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>
           WarehouseIQ
         </span>
@@ -1105,8 +1137,8 @@ export default function App() {
           <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: view === tab.id ? 700 : 400,
-            color: view === tab.id ? '#00bcd4' : T.textMuted,
-            borderBottom: view === tab.id ? '2px solid #00bcd4' : '2px solid transparent',
+            color: view === tab.id ? T.tabActive : T.textMuted,
+            borderBottom: view === tab.id ? `2px solid ${T.tabActive}` : '2px solid transparent',
             padding: '0 4px', height:48,
           }}>{tab.label}</button>
         ))}
@@ -1407,7 +1439,7 @@ export default function App() {
                           tick={{ fill: T.axTick, fontSize:11 }} interval={0} />
                         <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} position={carrierTipPos || undefined} animationDuration={800} animationEasing="ease-in-out" />
                         {CARRIER_KEYS.map((k, ki) => (
-                          <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
+                          <Bar key={k} dataKey={k} stackId="a" fill={CC[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             {ki === CARRIER_KEYS.length - 1 && (
                               <LabelList dataKey="_total" position="right"
                                 content={({ x, y, width, height, value }) =>
@@ -1422,7 +1454,7 @@ export default function App() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <SwatchLegend items={LEGEND_ITEMS} col />
+                  <SwatchLegend items={CC_LEGEND} col />
                 </div>
               </div>
             )
@@ -1448,7 +1480,7 @@ export default function App() {
                           label={{ value:'Count of Orders', angle:-90, position:'insideLeft', offset:10, fill: T.textDim, fontSize:11 }} />
                         <Tooltip content={<ShipmentTooltip T={T} />} allowEscapeViewBox={{ x: true, y: false }} animationDuration={800} animationEasing="ease-in-out" position={{ y: 10 }} />
                         {['express','ground','priority','sameDay','standard'].map(k => (
-                          <Bar key={k} dataKey={k} stackId="a" fill={C[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
+                          <Bar key={k} dataKey={k} stackId="a" fill={CC[k]} name={k.replace('sameDay','SAME DAY').toUpperCase()}>
                             <LabelList dataKey={k} position="center"
                               content={({ x, y, width, height, value }) =>
                                 value > 800
@@ -1461,7 +1493,7 @@ export default function App() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <SwatchLegend items={LEGEND_ITEMS.slice(0,5)} col />
+                  <SwatchLegend items={CC_LEGEND.slice(0,5)} col />
                 </div>
               </div>
             )
@@ -1479,21 +1511,21 @@ export default function App() {
                     />
                     <YAxis type="category" dataKey="name" hide />
                     <Tooltip contentStyle={ttip} formatter={v => v.toLocaleString()} animationDuration={800} animationEasing="ease-in-out" />
-                    <Bar dataKey="delivered" stackId="a" fill={C.delivered} name="DELIVERED">
+                    <Bar dataKey="delivered" stackId="a" fill={CC.delivered} name="DELIVERED">
                       <LabelList dataKey="delivered" position="center"
                         content={({ x, y, width, height, value }) =>
                           <text x={x+width/2} y={y+height/2} fill="#fff" fontSize={11} fontWeight={600} textAnchor="middle" dominantBaseline="middle">{value.toLocaleString()}</text>
                         }
                       />
                     </Bar>
-                    <Bar dataKey="failed"   stackId="a" fill={C.failed}   name="FAILED" />
-                    <Bar dataKey="canceled" stackId="a" fill={C.canceled} name="CANCELED" />
+                    <Bar dataKey="failed"   stackId="a" fill={CC.failed}   name="FAILED" />
+                    <Bar dataKey="canceled" stackId="a" fill={CC.canceled} name="CANCELED" />
                   </BarChart>
                 </ResponsiveContainer>
                 <div style={{ display:'flex', justifyContent:'space-between', color: T.textDim, fontSize:11, marginTop:2 }}>
                   <span>0%</span><span>% of Orders</span><span>100%</span>
                 </div>
-                <SwatchLegend items={[['CANCELED',C.canceled],['FAILED',C.failed],['DELIVERED',C.delivered]]} />
+                <SwatchLegend items={[['CANCELED',CC.canceled],['FAILED',CC.failed],['DELIVERED',CC.delivered]]} />
               </div>
             )
 
@@ -1510,13 +1542,13 @@ export default function App() {
                           label={{ value: dashboardRange === '6M' ? 'Month' : 'Ship Date', position:'insideBottom', offset:-14, fill: T.textDim, fontSize:11 }} />
                         <YAxis stroke={T.border} tick={{ fill: T.axTick, fontSize:11 }} tickFormatter={v => `${v}%`} domain={[0,100]} />
                         <Tooltip content={<ShipmentTooltip T={T} formatter={v => `${v}%`} />} allowEscapeViewBox={{ x: true, y: false }} animationDuration={800} animationEasing="ease-in-out" />
-                        <Bar dataKey="canceled"  stackId="a" fill={C.canceled}  name="CANCELED" />
-                        <Bar dataKey="failed"    stackId="a" fill={C.failed}    name="FAILED" />
-                        <Bar dataKey="delivered" stackId="a" fill={C.delivered} name="DELIVERED" />
+                        <Bar dataKey="canceled"  stackId="a" fill={CC.canceled}  name="CANCELED" />
+                        <Bar dataKey="failed"    stackId="a" fill={CC.failed}    name="FAILED" />
+                        <Bar dataKey="delivered" stackId="a" fill={CC.delivered} name="DELIVERED" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <SwatchLegend items={[['CANCELED',C.canceled],['FAILED',C.failed],['DELIVERED',C.delivered]]} col />
+                  <SwatchLegend items={[['CANCELED',CC.canceled],['FAILED',CC.failed],['DELIVERED',CC.delivered]]} col />
                 </div>
               </div>
             )
