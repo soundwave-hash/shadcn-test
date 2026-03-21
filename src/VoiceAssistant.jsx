@@ -205,7 +205,8 @@ function AnthropicSpinner({ active }) {
 
 // ── Word-by-word text (AI messages) ──────────────────────────────────────────
 function WordByWordText({ text, onDone, onWord }) {
-  const words = text.split(' ')
+  const isCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(text)
+  const tokens = isCJK ? [...text] : text.split(' ')
   const [count, setCount] = useState(0)
   useEffect(() => {
     setCount(0)
@@ -214,11 +215,11 @@ function WordByWordText({ text, onDone, onWord }) {
       i++
       setCount(i)
       onWord?.()
-      if (i >= words.length) { clearInterval(id); onDone?.() }
-    }, 90)
+      if (i >= tokens.length) { clearInterval(id); onDone?.() }
+    }, isCJK ? 60 : 90)
     return () => clearInterval(id)
   }, [text])
-  return <span>{words.slice(0, count).join(' ')}</span>
+  return <span>{isCJK ? tokens.slice(0, count).join('') : tokens.slice(0, count).join(' ')}</span>
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
