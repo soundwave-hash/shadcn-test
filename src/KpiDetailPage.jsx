@@ -637,7 +637,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 // ── TL;DR panel (isolated so typing state never re-renders the chart) ─────────
 const TLDR_HEIGHT = 256  // fixed px height. Chart never moves
 
-function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, riskStartPos }) {
+function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }) {
   const [phase, setPhase]             = useState('thinking')
   const [bodyLen, setBodyLen]         = useState(0)
   const [recLen, setRecLen]           = useState(0)
@@ -876,9 +876,7 @@ export default function KpiDetailPage({
   const [maxVarHovered, setMaxVarHovered] = useState(false)
   const maxVarDotPos = useRef({ cx: 0, cy: 0 })
   const prevCheckedSizeRef = useRef(checked.size)
-  const [badgeAnimKey, setBadgeAnimKey] = useState(0)
   const [tldrReady, setTldrReady] = useState(checked.size > 0)
-  const BADGE_FADE_MS = 2200
   const [forecastTipHovered, setForecastTipHovered] = useState(null)
 
   const locationLabel = selectedCities.length === 0
@@ -1265,16 +1263,12 @@ export default function KpiDetailPage({
     if (checked.size === 0) setForecastTipHovered(null)
   }, [checked.size])
 
-  // Badge fade-in sequence: when transitioning from 0 → >0 selections, fade badge in first,
-  // then reveal TldrPanel after badge animation completes
+  // When selections change from 0 → >0, reveal TldrPanel immediately
   useEffect(() => {
     const prev = prevCheckedSizeRef.current
     prevCheckedSizeRef.current = checked.size
     if (prev === 0 && checked.size > 0) {
-      setBadgeAnimKey(k => k + 1)
-      setTldrReady(false)
-      const t = setTimeout(() => setTldrReady(true), BADGE_FADE_MS)
-      return () => clearTimeout(t)
+      setTldrReady(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked.size])
@@ -1506,28 +1500,16 @@ export default function KpiDetailPage({
 
             {/* TL;DR module. Panel always rendered; content gated on selections */}
             <div style={{ ...panel, flex:1, padding:'27px 20px 12px', height:313, overflow:'hidden' }}>
-              <style>{`@keyframes tldr-badge-fadein { from { opacity:0; transform:scale(0.88); } to { opacity:1; transform:scale(1); } }`}</style>
-              {checked.size > 0 && (
-              <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
-                {/* Badge */}
-                <div key={badgeAnimKey} style={{ flexShrink:0, width:80, backgroundColor: healthColor+'22', border:`1px solid ${healthColor}`, borderRadius:8, padding:'8px 10px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', animation:`tldr-badge-fadein ${BADGE_FADE_MS}ms cubic-bezier(0.34,1.56,0.64,1) forwards` }}>
-                  <div style={{ fontSize:26, fontWeight:700, color: healthColor, lineHeight:1.1 }}>{isNaN(healthPct) ? 0 : healthPct}%</div>
-                  <div style={{ fontSize:10, color: healthColor, fontWeight:600, marginTop:3 }}>{healthZone}</div>
-                </div>
-                {/* TL;DR. Only renders after badge fade-in completes */}
-                {tldrReady && (
+{checked.size > 0 && tldrReady && (
                 <TldrPanel
                   body={tldrBody}
                   rec={tldrRec}
                   forecast={_forecast}
                   bullets={tldrBullets}
-                  healthColor={healthColor}
                   T={T}
                   triggerKey={`${country}-${selectedCitiesKey}`}
                   riskStartPos={_signal.length + 2}
                 />
-                )}
-              </div>
               )}
             </div>
 
