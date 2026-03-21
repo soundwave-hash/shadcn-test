@@ -12,7 +12,7 @@ const BASE_REACTIONS = {
 }
 
 const BASE_MESSAGES = [
-  { userId: 1, time: '9:38 AM', text: 'Unit sales in CA are down 8% this week 📉 — flagging for ops review.' },
+  { userId: 1, time: '9:38 AM', text: 'Unit sales in CA are down 8% this week 📉 Flagging for ops review.' },
   { userId: 2, time: '9:41 AM', text: 'Confirmed 😬 SKU-1042 is showing a stockout risk in LA and SF.' },
   { userId: 1, time: '9:43 AM', text: 'Running the forecast model now. Should have updated projections by EOD 🔥' },
   { userId: 2, time: '9:45 AM', text: 'Inventory health score also dropped to 61% in the West region 😤 Worth escalating.' },
