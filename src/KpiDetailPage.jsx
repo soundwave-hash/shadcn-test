@@ -637,7 +637,7 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 // ── TL;DR panel (isolated so typing state never re-renders the chart) ─────────
 const TLDR_HEIGHT = 256  // fixed px height. Chart never moves
 
-function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, riskStartPos }) {
+function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, riskStartPos, period, onAccept, actionAccepted }) {
   const [phase, setPhase]             = useState('thinking')
   const [bodyLen, setBodyLen]         = useState(0)
   const [recLen, setRecLen]           = useState(0)
@@ -797,6 +797,24 @@ function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, r
                 {phase === 'typing-forecast' ? forecast.slice(0, forecastLen) : forecast}
               </>
             )}
+            {(phase === 'typing-forecast' || phase === 'done') && (
+              <div style={{ marginTop:14 }}>
+                {actionAccepted ? (
+                  <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.10em', color:'#4caf50' }}>
+                    ✓ Forecasted Results Active
+                  </span>
+                ) : (
+                  <button onClick={onAccept} style={{
+                    background:'none', border:'1px solid #4caf50', borderRadius:4,
+                    color:'#4caf50', fontSize:10, fontWeight:700,
+                    letterSpacing:'0.10em', padding:'4px 10px',
+                    cursor:'pointer', textTransform:'uppercase',
+                  }}>
+                    Show Forecasted Results
+                  </button>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -873,6 +891,7 @@ export default function KpiDetailPage({
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
   const [linesVisible, setLinesVisible] = useState(false)
   const [lineAnimKey,  setLineAnimKey]  = useState(0)
+  const [actionAccepted, setActionAccepted] = useState(false)
   const [maxVarHovered, setMaxVarHovered] = useState(false)
   const maxVarDotPos = useRef({ cx: 0, cy: 0 })
   const prevCheckedSizeRef = useRef(checked.size)
@@ -928,23 +947,32 @@ export default function KpiDetailPage({
   const seriesDisplay = useMemo(() => {
     if (period === 'YTD') {
       const cutIdx = _TODAY.getMonth()
-      return series.map((pt, i) => ({
-        ...pt,
-        actual:   i <= cutIdx ? pt.thisYear : null,
-        forecast: i >= cutIdx ? pt.thisYear : null,
-      }))
+      const lift   = ACTION_PLAN_LIFT[healthZone] ?? 0.06
+      return series.map((pt, i) => {
+        const actual   = i <= cutIdx ? pt.thisYear : null
+        const forecast = i >= cutIdx ? pt.thisYear : null
+        let actionPlan  = null
+        let forecastGap = null
+        if (actionAccepted && i >= cutIdx && forecast != null) {
+          const totalMonths = 9 - cutIdx
+          const ramp = totalMonths > 0 ? (i - cutIdx) / totalMonths : 0
+          actionPlan  = forecast * (1 + lift * ramp)
+          forecastGap = actionPlan - forecast
+        }
+        return { ...pt, actual, forecast, actionPlan, forecastGap }
+      })
     }
     if (period === '1D') {
       const cutIdx = _TODAY_HOUR_PT
       return series.map((pt, i) => ({
         ...pt,
-        actual:   i <= cutIdx ? pt.thisYear : null,
-        forecast: i >= cutIdx ? pt.thisYear : null,
+        actual:     i <= cutIdx ? pt.thisYear : null,
+        forecast:   i >= cutIdx ? pt.thisYear : null,
+        actionPlan: null, forecastGap: null,
       }))
     }
-    // For other periods, include null actual/forecast so recharts data shape stays consistent
-    return series.map(pt => ({ ...pt, actual: null, forecast: null }))
-  }, [period, series])
+    return series.map(pt => ({ ...pt, actual: null, forecast: null, actionPlan: null, forecastGap: null }))
+  }, [period, series, actionAccepted, healthZone])
 
   // Labels that have forecast data. Used to identify which ticks get tooltips
   const forecastLabels = useMemo(
@@ -1245,6 +1273,8 @@ export default function KpiDetailPage({
       `We believe that escalating to supply chain leadership today will unlock sourcing or demand reduction options before the most exposed items reach zero stock, as measured by stabilizing daily revenue losses below $25K within 48 hours of authorization and preventing additional SKUs from crossing into zero coverage within the 5-day action window, by authorizing options beyond standard replenishment protocols before the window closes.`,
     ],
   }
+  const ACTION_PLAN_LIFT = { Healthy: 0.06, 'At Risk': 0.11, Critical: 0.18 }
+
   const msgIdx = (country.length + period.length) % 4
   const _signal   = (HEALTH_SIGNAL[healthZone]   ?? HEALTH_SIGNAL.Healthy)[msgIdx]
   const _risk     = (COUNTRY_RISK[healthZone]    ?? COUNTRY_RISK.Healthy)[country]
@@ -1291,6 +1321,8 @@ export default function KpiDetailPage({
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period, country, selectedCitiesKey])
+
+  useEffect(() => { setActionAccepted(false) }, [country, selectedCitiesKey])
 
   const fmtAxis = v => {
     if (v>=1e6) return `${(v/1e6).toFixed(1)}M`
@@ -1525,6 +1557,9 @@ export default function KpiDetailPage({
                   T={T}
                   triggerKey={`${period}-${country}-${selectedCitiesKey}`}
                   riskStartPos={_signal.length + 2}
+                  period={period}
+                  onAccept={() => { setPeriod('YTD'); setActionAccepted(true) }}
+                  actionAccepted={actionAccepted}
                 />
                 )}
               </div>
@@ -1553,6 +1588,7 @@ export default function KpiDetailPage({
                     ['This Year','#00bcd4','solid'],
                     ['Last Year','#ff9800','dashed'],
                     ...(['YTD','1D'].includes(period) ? [['Forecast','#00bcd4','dotted']] : []),
+                    ...(actionAccepted && period === 'YTD' ? [['Forecasted Results','#4caf50','dotted']] : []),
                   ].map(([l,c,d])=>(
                     <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:c }}>
                       <svg width={22} height={10}>
@@ -1643,6 +1679,20 @@ export default function KpiDetailPage({
                     dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
                     connectNulls={false} animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible || !['YTD','1D'].includes(period)}/>
+                  {/* Action plan impact: shaded area + green line */}
+                  <Area type="monotone" dataKey="forecast" stackId="actionShade"
+                    stroke="none" fill="transparent" legendType="none" tooltipType="none"
+                    isAnimationActive={false} activeDot={false} dot={false}
+                    hide={!linesVisible || !actionAccepted || period !== 'YTD'}/>
+                  <Area type="monotone" dataKey="forecastGap" stackId="actionShade"
+                    stroke="none" fill="rgba(76,175,80,0.13)" legendType="none" tooltipType="none"
+                    animationDuration={1200} animationEasing="ease-out" activeDot={false} dot={false}
+                    hide={!linesVisible || !actionAccepted || period !== 'YTD'}/>
+                  <Line key={`ap-${lineAnimKey}-${actionAccepted}`} type="monotone" dataKey="actionPlan"
+                    stroke="#4caf50" strokeWidth={1.5} strokeDasharray="4 4" strokeOpacity={0.85}
+                    dot={{ r:2.5, fill:'#4caf50', strokeWidth:0, fillOpacity:0.6 }} activeDot={{ r:4 }}
+                    connectNulls={false} animationDuration={1200} animationEasing="ease-out"
+                    hide={!linesVisible || !actionAccepted || period !== 'YTD'}/>
                 </ComposedChart>
               </ResponsiveContainer>
 
