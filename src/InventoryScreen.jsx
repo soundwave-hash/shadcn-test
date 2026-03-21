@@ -810,7 +810,13 @@ export default function InventoryScreen({
           </TableBody>
         </table>
       </div>
-      <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />
+      {selectedRow && (
+        <div style={{ width: 360, flexShrink: 0, backgroundColor: T.cardBg, borderLeft: `1px solid ${T.border}`, padding: 16, overflow: 'auto' }}>
+          <p style={{ color: T.text, fontSize: 13, fontWeight: 700 }}>{selectedRow.name}</p>
+          <p style={{ color: T.textMuted, fontSize: 11, marginTop: 4 }}>WOS: {selectedRow.wos}</p>
+          <button onClick={() => setSelectedSku(null)} style={{ marginTop: 12, fontSize: 11, color: T.textMuted, background: 'none', border: `1px solid ${T.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>Close</button>
+        </div>
+      )}
       </div>
     </div>
 
