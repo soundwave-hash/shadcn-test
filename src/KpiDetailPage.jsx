@@ -1029,23 +1029,157 @@ export default function KpiDetailPage({
   }
   const HEALTH_ACTION = {
     Healthy: [
-      `Lock in forward freight commitments on the top-performing SKUs now to secure capacity and cost before Q3 peak narrows the window.\n\n• Carrier on-time at 94%+, fill rates above 98%\n• Lead times shortened 0.4 days on average\n• Freight rates stable across all primary lanes`,
-      `Redirect this period's freight savings into safety stock builds for high-velocity perishables before summer demand absorbs the available budget.\n\n• Fuel surcharges dropped 14.2% → 12.5%\n• Perishable coverage at 9.2 weeks (FY high)\n• Port dwell at 2-year low of 2.1 days`,
-      `Pull next week's replenishment orders forward by two days to use open lane capacity and reduce weekend stockout risk on dairy and produce.\n\n• All 20 SKUs above 8 weeks WoS\n• Transport cost per case down 2.1% YoY\n• Inbound receipt accuracy at 99.1%`,
-      `Use available dock capacity to pull forward inbound receipts for Eggs and Whole Milk before they cross into Watch territory within the next ten days.\n\n• Eggs & Whole Milk trending to Watch in 10 days\n• Warehouse throughput at 78%, dock capacity available\n• Year-over-year unit sales up 6.2%`,
+      `Lock in forward freight commitments on the top-performing SKUs now to secure capacity and cost before Q3 peak narrows the window.`,
+      `Redirect this period's freight savings into safety stock builds for high-velocity perishables before summer demand absorbs the available budget.`,
+      `Pull next week's replenishment orders forward by two days to use open lane capacity and reduce weekend stockout risk on dairy and produce.`,
+      `Use available dock capacity to pull forward inbound receipts for Eggs and Whole Milk before they cross into Watch territory within the next ten days.`,
     ],
     'At Risk': [
-      `Expedite replenishment for the four lowest-coverage items through a secondary carrier and alert store operations to a likely shelf gap on Bananas and Baby Spinach.\n\n• 6 SKUs below 6 weeks WoS\n• Store OOS complaints up 18% week over week\n• Spot freight rates up 11% over 3 weeks`,
-      `Consolidate the next three replenishment runs into two loads to offset surcharge exposure and activate secondary sourcing review for the three at-risk SKUs.\n\n• Region shipping cost up $0.43 per unit\n• Margin impact at 4.2%, above 3% review threshold\n• Consolidation estimated to save $2,100 per cycle`,
-      `Move buffer stock for OJ and Butter to the regional DC now, before carrier recovery timelines determine whether a stockout is avoidable.\n\n• OJ and Butter both under 4 weeks WoS, no buffer staged\n• 3 to 5% of shipments currently on weather hold\n• Similar events have added 1.5 to 2 days to transit`,
-      `Secure dock priority for Russet Potatoes, Greek Yogurt, and OJ before additional backlog growth pushes their delayed receipts past the point of recovery.\n\n• On-shelf availability dropped 97.8% → 94.3% in one period\n• Receiving backlog at 14 hours, adding 1.5 hours per shift\n• 5 SKUs moved from Healthy to Watch status`,
+      `Expedite replenishment for the four lowest-coverage items through a secondary carrier and alert store operations to a likely shelf gap on Bananas and Baby Spinach.`,
+      `Consolidate the next three replenishment runs into two loads to offset surcharge exposure and activate secondary sourcing review for the three at-risk SKUs.`,
+      `Move buffer stock for OJ and Butter to the regional DC now, before carrier recovery timelines determine whether a stockout is avoidable.`,
+      `Secure dock priority for Russet Potatoes, Greek Yogurt, and OJ before additional backlog growth pushes their delayed receipts past the point of recovery.`,
     ],
     Critical: [
-      `Activate emergency replenishment for all items below two weeks of coverage and approve air freight for Butter and Baby Spinach without delay.\n\n• 6 SKUs at zero stock, on-shelf availability at 87%\n• Stockout losses running at $28K per day\n• Butter & Baby Spinach carry $340K in 7-day revenue exposure`,
-      `Suspend all promotional activity on low-coverage items this week to slow sell-through while procurement secures a standard-cost supply path.\n\n• Stockout losses $62K last week, $85K at risk this weekend\n• OOS complaints up 41% week over week\n• Spot supply available in 48 hrs at 28% above standard cost`,
-      `Issue a formal sixty-percent allocation cap on Bananas, Butter, and Baby Spinach immediately to distribute remaining stock evenly before individual locations sell out.\n\n• 9 of 20 SKUs under 2 weeks of supply\n• Ground freight recovery estimated at 4 to 7 business days\n• Air freight running at 3.1x the standard ground rate`,
-      `Escalate to supply chain leadership immediately to authorize emergency sourcing or demand reduction before multiple SKUs hit zero stock within the week.\n\n• 8 of 20 SKUs in the critical coverage range\n• Three worst-positioned items at approximately 4 days to zero\n• Warehouse at 97% capacity, pick accuracy down to 96.1%`,
+      `Activate emergency replenishment for all items below two weeks of coverage and approve air freight for Butter and Baby Spinach without delay.`,
+      `Suspend all promotional activity on low-coverage items this week to slow sell-through while procurement secures a standard-cost supply path.`,
+      `Issue a formal sixty-percent allocation cap on Bananas, Butter, and Baby Spinach immediately to distribute remaining stock evenly before individual locations sell out.`,
+      `Escalate to supply chain leadership immediately to authorize emergency sourcing or demand reduction before multiple SKUs hit zero stock within the week.`,
     ],
+  }
+  const COUNTRY_FACTS = {
+    Healthy: {
+      'United States': [
+        `Carrier on-time delivery at 94%, fill rates above 98%`,
+        `Lead times shortened 0.4 days on average this period`,
+        `Freight rates stable across all primary lanes`,
+        `Inbound receipt accuracy at 99.1% network-wide`,
+      ],
+      'China': [
+        `Perishable velocity up 8% versus prior period`,
+        `Port throughput at multi-year high across major origin ports`,
+        `Dairy fill rate holding at 97.3%`,
+        `Inbound lead times averaging 18 days, within target`,
+      ],
+      'Germany': [
+        `Inbound on-time rate at 96% across key freight corridors`,
+        `All tracked SKUs above 9 weeks of supply`,
+        `Freight cost per case down 1.8% versus prior quarter`,
+        `Warehouse throughput at 81%, well within capacity`,
+      ],
+      'Japan': [
+        `Replenishment cycle adherence at 98% this period`,
+        `On-shelf availability holding at 99.2% across all channels`,
+        `Cold chain compliance at 100% for perishables`,
+        `Order cadence variance within 0.3 days of plan`,
+      ],
+      'Canada': [
+        `Cross-border transit times averaging 1.9 days, within target`,
+        `Fill rate at 97.6%, highest in four periods`,
+        `Forward coverage at 10.1 weeks, above safety threshold`,
+        `Freight cost per unit flat versus prior period`,
+      ],
+      'Korea': [
+        `Retail partner service level at 99.1%, above SLA threshold`,
+        `On-shelf availability at 98.8% across all retail partners`,
+        `Forward coverage at 8.6 weeks, above minimum threshold`,
+        `Replenishment lead time averaging 4.2 days, on target`,
+      ],
+      'Mexico': [
+        `Cross-border freight cost per case down 3.1% this period`,
+        `Transit time from US DCs averaging 2.4 days, within target`,
+        `Fill rate at 96.8%, within target range`,
+        `Inbound volumes running 6.2% above prior period`,
+      ],
+    },
+    'At Risk': {
+      'United States': [
+        `Spot freight rates up 11% over the past 3 weeks`,
+        `Store OOS complaints up 18% week over week`,
+        `On-shelf availability declined 2.1 points this period`,
+        `6 SKUs below 6-week coverage threshold`,
+      ],
+      'China': [
+        `Import lead times extended 3.2 days beyond plan`,
+        `Port congestion adding 1.8 days to inbound transit`,
+        `Fill rate dropped to 92.4%, below 95% threshold`,
+        `Perishable coverage down to 5.8 weeks, below minimum`,
+      ],
+      'Germany': [
+        `Primary freight corridor delays averaging 1.4 days`,
+        `Inbound on-time rate declined to 87%, below 93% target`,
+        `Freight cost per case up 9% versus prior month`,
+        `4 high-velocity SKUs below 6-week coverage threshold`,
+      ],
+      'Japan': [
+        `On-shelf availability declined 1.9 points to 96.3%`,
+        `Replenishment buffer at lowest point in 3 periods`,
+        `Channel inventory below safety stock on 3 categories`,
+        `5 SKUs within 1 week of minimum coverage threshold`,
+      ],
+      'Canada': [
+        `Cross-border freight delays averaging 0.8 days above plan`,
+        `On-shelf availability down 2.4 points this period`,
+        `US freight disruption adding 1.1 days to inbound lead times`,
+        `4 SKUs below minimum coverage threshold`,
+      ],
+      'Korea': [
+        `Retail partner OOS complaints up 22% week over week`,
+        `On-shelf availability declined to 95.1%, below 97% SLA`,
+        `Promotional commitments at risk on 2 active campaigns`,
+        `3 SKUs at risk of missing next replenishment window`,
+      ],
+      'Mexico': [
+        `Cross-border transit delays averaging 1.6 days above plan`,
+        `Fill rate declined to 89.3%, below 93% threshold`,
+        `Border freight capacity down 18% versus prior period`,
+        `5 SKUs without confirmed inbound receipts this week`,
+      ],
+    },
+    Critical: {
+      'United States': [
+        `On-shelf availability at 87%, down from 97.8%`,
+        `Stockout losses running at $28K per day`,
+        `6 SKUs at zero stock across the network`,
+        `Butter and Baby Spinach carry $340K in 7-day revenue exposure`,
+      ],
+      'China': [
+        `Recovery lead time estimated at 21 to 28 days from sourcing`,
+        `Revenue losses compounding at $18K per day`,
+        `On-shelf availability at 81%, lowest in 6 periods`,
+        `4 import-dependent SKUs without confirmed recovery path`,
+      ],
+      'Germany': [
+        `SLA breach exposure across 3 retail partner contracts`,
+        `On-shelf availability at 83%, triggering contractual review threshold`,
+        `Revenue impact projected at $220K if unresolved this week`,
+        `Highest-value categories account for 74% of forward exposure`,
+      ],
+      'Japan': [
+        `On-shelf availability at 79%, lowest level in network history`,
+        `Revenue exposure concentrated in 3 highest-velocity categories`,
+        `Recovery timeline estimated at 14 to 21 days minimum`,
+        `No informal buffer mechanism available in channel structure`,
+      ],
+      'Canada': [
+        `Stockout losses running at $14K per day`,
+        `On-shelf availability at 84%, down 13 points this period`,
+        `Cross-border recovery delayed by 3.1 days on average`,
+        `Forward exposure concentrated in 4 highest-revenue categories`,
+      ],
+      'Korea': [
+        `Revenue losses at $21K per day and accelerating`,
+        `On-shelf availability at 82%, below contractual minimum`,
+        `Shelf position at risk on 4 active retail partner programs`,
+        `Retail partners activating contingency sourcing this cycle`,
+      ],
+      'Mexico': [
+        `Revenue losses at $11K per day with no confirmed resolution path`,
+        `On-shelf availability at 78%, lowest in network`,
+        `No redundant freight path available for expedited recovery`,
+        `Cross-border freight options exhausted at current carrier tier`,
+      ],
+    },
   }
   const msgIdx = (country.length + period.length) % 4
   const _signal  = (HEALTH_SIGNAL[healthZone]  ?? HEALTH_SIGNAL.Healthy)[msgIdx]
@@ -1057,12 +1191,9 @@ export default function KpiDetailPage({
   // Compute body / rec / bullets split
   const _apIdx = healthTldr.indexOf('Action Plan:')
   const tldrBody = (_apIdx >= 0 ? healthTldr.slice(0, _apIdx) : healthTldr).trim()
-  const _recFull = _apIdx >= 0 ? healthTldr.slice(_apIdx + 'Action Plan:'.length).trim() : null
-  const _bulletSplit = _recFull ? _recFull.split(/\n\n(?=•)/) : []
-  const tldrRec     = _bulletSplit[0]?.trim() ?? null
-  const tldrBullets = _bulletSplit[1]
-    ? _bulletSplit[1].split('\n').filter(l => l.startsWith('• ')).map(l => l.slice(2))
-    : []
+  const tldrRec  = _apIdx >= 0 ? healthTldr.slice(_apIdx + 'Action Plan:'.length).trim() : null
+  const tldrBullets = (COUNTRY_FACTS[healthZone] ?? COUNTRY_FACTS.Healthy)[country]
+                ?? (COUNTRY_FACTS[healthZone] ?? COUNTRY_FACTS.Healthy)['United States']
 
   // Clear forecast tooltip when all items are deselected
   useEffect(() => {
