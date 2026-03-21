@@ -637,17 +637,20 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 // ── TL;DR panel (isolated so typing state never re-renders the chart) ─────────
 const TLDR_HEIGHT = 256  // fixed px height. Chart never moves
 
-function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange, riskStartPos }) {
-  const [phase, setPhase]       = useState('thinking')
-  const [bodyLen, setBodyLen]   = useState(0)
-  const [recLen, setRecLen]     = useState(0)
-  const [dots, setDots]         = useState(0)
+function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseChange, riskStartPos }) {
+  const [phase, setPhase]           = useState('thinking')
+  const [bodyLen, setBodyLen]       = useState(0)
+  const [recLen, setRecLen]         = useState(0)
+  const [forecastLen, setForecastLen] = useState(0)
+  const [dots, setDots]             = useState(0)
   const bodyRef        = useRef(body)
   const recRef         = useRef(rec)
+  const forecastRef    = useRef(forecast)
   const scrollRef      = useRef(null)
   const riskFiredRef   = useRef(false)
-  bodyRef.current  = body
-  recRef.current   = rec
+  bodyRef.current     = body
+  recRef.current      = rec
+  forecastRef.current = forecast
 
   const changePhase = (p) => { setPhase(p); onPhaseChange?.(p) }
 
@@ -656,6 +659,7 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange, riskS
     changePhase('thinking')
     setBodyLen(0)
     setRecLen(0)
+    setForecastLen(0)
     setDots(0)
     riskFiredRef.current = false
   }, [triggerKey])
@@ -689,15 +693,24 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange, riskS
   useEffect(() => {
     if (phase !== 'typing-rec') return
     const r = recRef.current ?? ''
-    if (recLen >= r.length) { changePhase('done'); return }
+    if (recLen >= r.length) { changePhase(forecastRef.current ? 'typing-forecast' : 'done'); return }
     const t = setTimeout(() => setRecLen(l => l + 1), 22)
     return () => clearTimeout(t)
   }, [phase, recLen])
 
+  // Type forecast
+  useEffect(() => {
+    if (phase !== 'typing-forecast') return
+    const f = forecastRef.current ?? ''
+    if (forecastLen >= f.length) { changePhase('done'); return }
+    const t = setTimeout(() => setForecastLen(l => l + 1), 22)
+    return () => clearTimeout(t)
+  }, [phase, forecastLen])
+
   // Auto-scroll to bottom as text types
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [bodyLen, recLen])
+  }, [bodyLen, recLen, forecastLen])
 
   return (
     <div style={{
@@ -769,13 +782,22 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange, riskS
               }
               return renderBodyText(phase === 'typing-body' ? body.slice(0, bodyLen) : body)
             })()}
-            {(phase === 'typing-rec' || phase === 'done') && rec && (
+            {(phase === 'typing-rec' || phase === 'typing-forecast' || phase === 'done') && rec && (
               <>
                 <div style={{ height:'1.1em' }} />
                 <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
                   ACTION PLAN
                 </div>
                 {phase === 'typing-rec' ? rec.slice(0, recLen) : rec}
+              </>
+            )}
+            {(phase === 'typing-forecast' || phase === 'done') && forecast && (
+              <>
+                <div style={{ height:'1.1em' }} />
+                <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-forecast' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
+                  FORECASTED RESULTS
+                </div>
+                {phase === 'typing-forecast' ? forecast.slice(0, forecastLen) : forecast}
               </>
             )}
           </>
@@ -1191,11 +1213,32 @@ export default function KpiDetailPage({
       ],
     },
   }
+  const HEALTH_FORECAST = {
+    Healthy: [
+      `We believe that securing forward freight capacity now will prevent a cost spike at Q3 peak, as measured by freight cost per case holding within 2% of current rates and fill rates remaining above 97%, by committing to carrier contracts before peak season narrows available capacity.`,
+      `We feel confident that deploying this period's freight savings into safety stock will protect perishable availability through the summer demand peak, as measured by perishable coverage sustaining above 8 weeks and weekend out-of-stock events declining by an estimated 30%, by redirecting savings before seasonal demand absorbs the available budget.`,
+      `In our view, pulling orders forward by two days will eliminate the primary weekend stockout risk on dairy and produce, as measured by on-shelf availability holding above 98% through the weekend cycle, by making use of open lane capacity before it is absorbed by other shippers.`,
+      `We believe that acting on available dock capacity this week will prevent Eggs and Whole Milk from entering Watch status, as measured by both items maintaining coverage above 8 weeks through the next replenishment cycle, by pulling receipts forward before lead time pressure closes the window.`,
+    ],
+    'At Risk': [
+      `We feel confident that expediting replenishment through a secondary carrier will prevent a visible shelf gap on the most exposed items, as measured by on-shelf availability recovering to above 95% within the next two cycles and store out-of-stock complaints returning to baseline, by acting before the current freight delay compounds further.`,
+      `In our opinion, consolidating the next three replenishment runs will bring region shipping costs back within budget threshold, as measured by freight cost per unit declining by an estimated $0.30 and margin impact returning below the 3% review threshold within two cycles, by reducing per-load overhead through load consolidation.`,
+      `We believe that pre-positioning buffer stock now will keep the most exposed items off the critical list regardless of how carrier recovery timelines play out, as measured by both items sustaining coverage above 5 weeks through the disruption window, by moving stock before weather holds determine the outcome.`,
+      `We feel strongly that securing dock priority this shift will prevent the three most exposed items from missing their inbound receipt window, as measured by receiving backlog stabilizing within 12 hours and on-shelf availability recovering above 96% within one period, by acting before additional backlog growth pushes receipts past the point of recovery.`,
+    ],
+    Critical: [
+      `We believe that authorizing air freight on the highest-exposure items today will halt the revenue bleed in the most critical categories, as measured by on-shelf availability recovering above 90% within 48 hours and daily stockout losses declining by an estimated $18K, by bypassing the ground freight constraint before another cycle is lost.`,
+      `In our opinion, suspending promotions on low-coverage items this week will prevent sell-through from outpacing supply recovery, as measured by projected weekend stockout losses declining from $85K to below $30K, by slowing demand on the most constrained items while procurement secures a standard-cost supply path.`,
+      `We feel confident that issuing a formal allocation cap will extend remaining supply across all locations long enough for ground freight to recover, as measured by preventing any single location from selling out before the estimated recovery window closes, by distributing remaining stock evenly before individual locations deplete.`,
+      `We believe that escalating to supply chain leadership today will unlock sourcing or demand reduction options before the most exposed items reach zero stock, as measured by halting daily revenue loss acceleration and preventing further SKUs from crossing into zero coverage within the week, by authorizing actions beyond standard replenishment protocols before the window closes.`,
+    ],
+  }
   const msgIdx = (country.length + period.length) % 4
-  const _signal  = (HEALTH_SIGNAL[healthZone]  ?? HEALTH_SIGNAL.Healthy)[msgIdx]
-  const _risk    = (COUNTRY_RISK[healthZone]   ?? COUNTRY_RISK.Healthy)[country]
-                ?? (COUNTRY_RISK[healthZone]   ?? COUNTRY_RISK.Healthy)['United States']
-  const _action  = (HEALTH_ACTION[healthZone]  ?? HEALTH_ACTION.Healthy)[msgIdx]
+  const _signal   = (HEALTH_SIGNAL[healthZone]   ?? HEALTH_SIGNAL.Healthy)[msgIdx]
+  const _risk     = (COUNTRY_RISK[healthZone]    ?? COUNTRY_RISK.Healthy)[country]
+                 ?? (COUNTRY_RISK[healthZone]    ?? COUNTRY_RISK.Healthy)['United States']
+  const _action   = (HEALTH_ACTION[healthZone]   ?? HEALTH_ACTION.Healthy)[msgIdx]
+  const _forecast = (HEALTH_FORECAST[healthZone] ?? HEALTH_FORECAST.Healthy)[msgIdx]
   const healthTldr = `${_signal}\n\n${_risk}\n\nAction Plan: ${_action}`
 
   // Compute body / rec / bullets split
@@ -1464,6 +1507,7 @@ export default function KpiDetailPage({
                 <TldrPanel
                   body={tldrBody}
                   rec={tldrRec}
+                  forecast={_forecast}
                   healthColor={healthColor}
                   T={T}
                   triggerKey={`${period}-${country}-${selectedCitiesKey}`}
