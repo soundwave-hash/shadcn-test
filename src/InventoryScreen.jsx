@@ -16,7 +16,7 @@ import {
   TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Sun, Download } from 'lucide-react'
+import { Sun, Download, X, Zap } from 'lucide-react'
 import { saveAs } from 'file-saver'
 
 // ── Column definitions ─────────────────────────────────────────────────────────
@@ -155,6 +155,176 @@ function fmt(v, key, cur, showUSD) {
 
 const PERIOD_SCALE = { '5D':1.02, '1M':0.98, '6M':0.92, 'YTD':0.88 }
 
+// ── AI Insight Drawer ─────────────────────────────────────────────────────────
+
+function AiInsightDrawer({ row, country, T, isDark, onClose }) {
+  if (!row) return null
+
+  const velocityPct    = row.fourWkAvg > 0 ? Math.round((row.weeklySales - row.fourWkAvg) / row.fourWkAvg * 100) : 0
+  const daysToStockout = Math.round(row.wos * 7)
+  const canReorderInTime = daysToStockout > row.leadTime
+  const reorderQty     = Math.max(0, Math.round((row.leadTime / 7 * row.weeklySales * 1.5) - row.onHand - row.onOrder - row.inTransit))
+
+  const velocityColor = velocityPct > 5 ? '#4caf50' : velocityPct < -5 ? '#f44336' : '#ff9800'
+  const velocityArrow = velocityPct > 5 ? '↑' : velocityPct < -5 ? '↓' : '→'
+  const velocityLabel = velocityPct > 5 ? 'Trending Up' : velocityPct < -5 ? 'Trending Down' : 'Stable'
+
+  const wosStatus = row.wos >= 8 ? { label: 'Healthy', color: '#4caf50' }
+    : row.wos >= 4              ? { label: 'Monitor', color: '#ff9800' }
+    :                             { label: 'Critical', color: '#f44336' }
+
+  const stockoutRisk      = !canReorderInTime ? 'HIGH' : row.wos < 4 ? 'MEDIUM' : 'LOW'
+  const stockoutRiskColor = stockoutRisk === 'HIGH' ? '#f44336' : stockoutRisk === 'MEDIUM' ? '#ff9800' : '#4caf50'
+
+  const actions = []
+  if (!canReorderInTime || row.wos < 2) {
+    actions.push(`Place an emergency order for ${reorderQty.toLocaleString()} units immediately — stockout projected in ${daysToStockout} days, lead time is ${row.leadTime} days.`)
+  } else if (row.wos < row.leadTime / 7 + 1.5) {
+    actions.push(`Reorder window is closing — place a PO for ${reorderQty.toLocaleString()} units within the next 48 hours to avoid a stockout.`)
+  } else if (row.wos < 4) {
+    actions.push(`Initiate replenishment now. Recommend ordering ${reorderQty.toLocaleString()} units to restore a 6-week supply buffer.`)
+  }
+  if (velocityPct > 10) {
+    actions.push(`Demand is running ${velocityPct}% above the 4-week average — review standing PO quantities to avoid underbuying into this trend.`)
+  } else if (velocityPct < -10) {
+    actions.push(`Demand has softened ${Math.abs(velocityPct)}% vs the 4-week average — consider reducing the next PO to avoid building excess inventory.`)
+  }
+  if (row.fillRate < 95) {
+    actions.push(`Fill rate at ${row.fillRate.toFixed(1)}% is below the 95% threshold. Review inventory allocation and SKU availability.`)
+  }
+  if (row.onOrder > 0) {
+    actions.push(`${row.onOrder.toLocaleString()} units already on order with a ${row.leadTime}-day lead time. Confirm PO status with your supplier to ensure on-time receipt.`)
+  }
+  if (row.gmPct < 0.25) {
+    actions.push(`Gross margin at ${(row.gmPct * 100).toFixed(1)}% is below the 25% floor — review cost structure or retail price for this SKU.`)
+  }
+  const topActions = actions.slice(0, 3)
+  if (topActions.length === 0) {
+    topActions.push(`${row.name} is performing within normal parameters. Monitor weekly velocity and WOS. No immediate action required.`)
+  }
+
+  const tile = (children, extra = {}) => ({
+    background: T.bg,
+    border: `1px solid ${T.border}`,
+    borderRadius: 7,
+    padding: '10px 12px',
+    ...extra,
+  })
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, right: 0, bottom: 0, width: 380, zIndex: 500,
+      backgroundColor: T.cardBg,
+      borderLeft: `1px solid ${T.border}`,
+      boxShadow: isDark ? '-8px 0 40px rgba(0,0,0,0.55)' : '-8px 0 40px rgba(0,0,0,0.13)',
+      display: 'flex', flexDirection: 'column',
+      animation: 'wiq-slide-in-right 0.22s ease',
+    }}>
+
+      {/* Header */}
+      <div style={{ padding: '16px 18px 14px', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+              <Zap size={10} color={T.tabActive} />
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>AI ANALYSIS</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.3, marginBottom: 6 }}>
+              {row.name}
+            </div>
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 10, color: T.textDim, background: T.activeItemBg, border: `1px solid ${T.border}`, borderRadius: 3, padding: '1px 6px' }}>{row.category}</span>
+              <span style={{ fontSize: 10, color: T.textDim, background: T.activeItemBg, border: `1px solid ${T.border}`, borderRadius: 3, padding: '1px 6px' }}>{row.subcategory}</span>
+              <span style={{ fontSize: 10, color: T.textDim }}>{row.sku}</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textMuted, padding: '2px 4px', borderRadius: 4, lineHeight: 1, flexShrink: 0 }}>
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 18px' }}>
+
+        {/* Demand Signal */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.textDim, marginBottom: 10 }}>DEMAND SIGNAL</div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1, ...tile() }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>vs 4-Wk Avg</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: velocityColor }}>{velocityArrow} {velocityPct > 0 ? '+' : ''}{velocityPct}%</div>
+              <div style={{ fontSize: 10, color: velocityColor, marginTop: 2 }}>{velocityLabel}</div>
+            </div>
+            <div style={{ flex: 1, ...tile() }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>Weekly Sales</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: T.text }}>{row.weeklySales.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: T.textDim, marginTop: 2 }}>units / week</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Supply Health */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.textDim, marginBottom: 10 }}>SUPPLY HEALTH</div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div style={{ flex: 1, ...tile({ borderLeft: `3px solid ${wosStatus.color}` }) }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>Weeks of Supply</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: wosStatus.color }}>{row.wos.toFixed(1)}</div>
+              <div style={{ fontSize: 10, color: wosStatus.color, marginTop: 2 }}>{wosStatus.label}</div>
+            </div>
+            <div style={{ flex: 1, ...tile({ borderLeft: `3px solid ${stockoutRiskColor}` }) }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>Stockout Risk</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: stockoutRiskColor }}>{stockoutRisk}</div>
+              <div style={{ fontSize: 10, color: T.textDim, marginTop: 2 }}>{daysToStockout}d remaining</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1, ...tile() }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>On Order</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{row.onOrder.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: T.textDim, marginTop: 2 }}>Lead time: {row.leadTime}d</div>
+            </div>
+            <div style={{ flex: 1, ...tile() }}>
+              <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>In Transit</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{row.inTransit.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: T.textDim, marginTop: 2 }}>Fill rate: {row.fillRate.toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: T.border, marginBottom: 18 }} />
+
+        {/* Recommended Actions */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
+            <Zap size={10} color={T.tabActive} />
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>RECOMMENDED ACTIONS</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topActions.map((action, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', ...tile({ borderLeft: `3px solid ${T.tabActive}` }) }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.tabActive, flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontSize: 11, color: T.text, lineHeight: 1.55 }}>{action}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '10px 18px', borderTop: `1px solid ${T.border}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 9, color: T.textDim }}>WarehouseIQ AI · {country}</span>
+        <button onClick={onClose} style={{ fontSize: 10, color: T.textMuted, background: 'none', border: `1px solid ${T.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>
+          Close
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'detail',    label: 'Unit Sales' },
@@ -186,6 +356,8 @@ export default function InventoryScreen({
   const dragColRef                        = useRef(null)
   const scrollRef                         = useRef(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [selectedSku, setSelectedSku]     = useState(null)
+  const selectedRow = selectedSku ? (rows.find(r => r.sku === selectedSku) ?? null) : null
 
   function handleScroll(e) {
     const el = e.currentTarget
@@ -584,7 +756,10 @@ export default function InventoryScreen({
           </TableHeader>
           <TableBody className="[&_tr:last-child]:border-0">
             {rows.map((row, rowIdx) => (
-              <TableRow key={row.sku} className="inv-row border-0 hover:bg-transparent">
+              <TableRow key={row.sku} className="inv-row border-0 hover:bg-transparent"
+                onClick={() => setSelectedSku(s => s === row.sku ? null : row.sku)}
+                style={{ cursor: 'pointer' }}
+              >
                 {displayCols.map(col => {
                   const v = row[col.key]
                   let cellColor = null
@@ -597,17 +772,19 @@ export default function InventoryScreen({
                   } else if (col.key === 'fillRate') {
                     cellColor = fillColor(v)
                   }
-                  const hLine   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
-                  const vLine   = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
-                  const stripe  = !cellBg && rowIdx % 2 === 1
+                  const hLine     = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
+                  const vLine     = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+                  const isSelected = selectedSku === row.sku
+                  const stripe    = !cellBg && !isSelected && rowIdx % 2 === 1
                     ? (isDark ? 'rgba(255,255,255,0.022)' : 'rgba(0,0,0,0.018)')
                     : null
+                  const selectedBg = isSelected ? (isDark ? 'rgba(0,188,212,0.12)' : 'rgba(0,188,212,0.09)') : null
                   return (
                     <TableCell key={col.key} style={{
                       position:        col.sticky ? 'sticky' : undefined,
                       left:            col.sticky ? STICKY_LEFT_MAP[col.key] + 'px' : undefined,
                       zIndex:          col.sticky ? 2 : 0,
-                      backgroundColor: cellBg ?? stripe ?? T.panelBg,
+                      backgroundColor: selectedBg ?? cellBg ?? stripe ?? T.panelBg,
                       borderBottom:    `1px solid ${hLine}`,
                       borderRight:     `1px solid ${vLine}`,
                       padding:         '0 6px',
@@ -653,6 +830,8 @@ export default function InventoryScreen({
         </svg>
       </button>
     )}
+
+    <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />
 
     {tooltip && (
       <div style={{
