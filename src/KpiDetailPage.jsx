@@ -159,7 +159,7 @@ const PERIOD_CFG = {
       return (i === 0 || prev.getMonth() !== d.getMonth()) ? _MONTHS[d.getMonth()] : ''
     },
   },
-  'YTD': { count:10, lbl: i => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'][i] },
+  'YTD': { count:12, lbl: i => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i] },
 }
 
 // ── Forecast tick tooltip content ──────────────────────────────────────────────
@@ -1701,7 +1701,7 @@ export default function KpiDetailPage({
                 const leftOffset = 8 + 46   // margin.left + yAxisWidth
                 const rightMargin = 16
                 const plotW = containerW - leftOffset - rightMargin
-                const count = period === 'YTD' ? 10 : 24
+                const count = period === 'YTD' ? 12 : 24
                 const bottomH = period === '1D' ? 80 : 60
                 return seriesDisplay.map((pt, idx) => {
                   if (!forecastLabels.has(pt.label)) return null
