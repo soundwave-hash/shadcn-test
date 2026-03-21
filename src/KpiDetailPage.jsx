@@ -801,11 +801,11 @@ function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, r
         )}
       </div>
 
-      {/* Right: persistent FACTS column — never scrolls, always visible */}
-      {riskFired && bullets?.length > 0 && (
+      {/* Right: persistent FACTS column — border always present, content fades in when risk starts */}
+      {bullets?.length > 0 && (
         <>
           <div style={{ width:1, backgroundColor: T.border, flexShrink:0, margin:'0 8px', alignSelf:'stretch' }} />
-          <div style={{ flexShrink:0, width:140, animation:'tldr-facts-fadein 1400ms ease forwards' }}>
+          <div style={{ flexShrink:0, minWidth:150, opacity: riskFired ? 1 : 0, animation: riskFired ? 'tldr-facts-fadein 1400ms ease forwards' : 'none' }}>
             <div style={labelStyle}>FACTS</div>
             {bullets.map((b, idx) => (
               <div key={idx} style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
