@@ -712,7 +712,7 @@ function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, r
   const labelStyle = { fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2 }
 
   return (
-    <div style={{ flex:1, display:'flex', height: TLDR_HEIGHT, overflow:'hidden', marginTop:'-0.35em' }}>
+    <div style={{ display:'flex', height: TLDR_HEIGHT, overflow:'hidden', marginTop:'-0.35em' }}>
       <style>{`
         @keyframes tldr-dot-pulse {
           0%, 100% { opacity: 0.2; transform: translateY(0); }
@@ -730,7 +730,7 @@ function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, r
       <div
         ref={scrollRef}
         className="tldr-scroll"
-        style={{ flex:1, overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
+        style={{ maxWidth:'calc(30vw + 30px)', overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
       >
         {phase === 'thinking' ? (
           <span style={{ color:'#ffffff', fontWeight:400, fontSize:12, display:'inline-flex', alignItems:'baseline', gap:1, animation:'tldr-fade-in 2s ease forwards' }}>
