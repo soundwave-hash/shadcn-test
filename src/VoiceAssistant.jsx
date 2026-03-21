@@ -164,6 +164,7 @@ function VoiceWave() {
 // ── Typewriter text (user messages) ──────────────────────────────────────────
 function TypewriterText({ text, color, onDone, onChar }) {
   const [displayed, setDisplayed] = useState('')
+  const isCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(text)
   useEffect(() => {
     setDisplayed('')
     let i = 0
@@ -172,7 +173,7 @@ function TypewriterText({ text, color, onDone, onChar }) {
       setDisplayed(text.slice(0, i))
       onChar?.()
       if (i >= text.length) { clearInterval(id); onDone?.() }
-    }, 65)
+    }, isCJK ? 100 : 65)
     return () => clearInterval(id)
   }, [text])
   return (
