@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import NewsTicker from './NewsTicker'
 import AccountSwitcher from './AccountSwitcher'
 import {
@@ -214,11 +213,12 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, right: 0, bottom: 0, width: 380, zIndex: 500,
+      width: 360, flexShrink: 0,
       backgroundColor: T.cardBg,
       borderLeft: `1px solid ${T.border}`,
-      boxShadow: isDark ? '-8px 0 40px rgba(0,0,0,0.55)' : '-8px 0 40px rgba(0,0,0,0.13)',
+      boxShadow: isDark ? '-4px 0 20px rgba(0,0,0,0.4)' : '-4px 0 20px rgba(0,0,0,0.08)',
       display: 'flex', flexDirection: 'column',
+      overflow: 'hidden',
       animation: 'wiq-slide-in-right 0.22s ease',
     }}>
 
@@ -695,7 +695,7 @@ export default function InventoryScreen({
         )}
       </div>
 
-      {/* ── Table ── */}
+      {/* ── Table + Drawer ── */}
       <style>{`
         .inv-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .inv-scroll::-webkit-scrollbar-track { background: ${T.panelBg}; }
@@ -704,6 +704,7 @@ export default function InventoryScreen({
         .inv-scroll::-webkit-scrollbar-corner { background: ${T.panelBg}; }
         .inv-row:hover td { background-color: ${T.rowHover} !important; }
       `}</style>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       <div ref={scrollRef} className="inv-scroll" onScroll={handleScroll} style={{ flex: 1, overflow: 'auto', scrollbarWidth: 'thin', scrollbarColor: `${T.border} ${T.panelBg}` }}>
         <table style={{ borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed', width: '100%' }}>
           <TableHeader className="[&_tr]:border-0">
@@ -809,6 +810,8 @@ export default function InventoryScreen({
           </TableBody>
         </table>
       </div>
+      <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />
+      </div>
     </div>
 
     {showScrollTop && (
@@ -832,10 +835,6 @@ export default function InventoryScreen({
       </button>
     )}
 
-    {createPortal(
-      <AiInsightDrawer row={selectedRow} country={country} T={T} isDark={isDark} onClose={() => setSelectedSku(null)} />,
-      document.body
-    )}
 
     {tooltip && (
       <div style={{
