@@ -1215,12 +1215,12 @@ export default function App() {
             title="WarehouseIQ Assistant"
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
-              border: voiceOpen ? '1px solid #f59e0b' : `1px solid ${T.inputBorder}`,
-              background: voiceOpen ? 'rgba(245,158,11,0.1)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
+              border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${T.inputBorder}`,
+              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : '#f5f5f5'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Mic size={15} color={voiceOpen ? '#f59e0b' : (theme === 'dark' ? '#fff' : '#333')} />
+            <Mic size={15} color={voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#333')} />
           </button>
           <button
             onClick={() => setSlackOpen(o => !o)}
