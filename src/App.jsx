@@ -1270,24 +1270,24 @@ export default function App() {
             title="WarehouseIQ Assistant"
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
-              border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${T.inputBorder}`,
-              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
+              border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`,
+              background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Mic size={15} color={voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#333')} />
+            <Mic size={15} color={voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46')} />
           </button>
           <button
             onClick={() => setSlackOpen(o => !o)}
             title="Slack — #warehouse-ops"
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
-              border: slackOpen ? '1px solid #00bcd4' : `1px solid ${T.inputBorder}`,
-              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : T.inputBg),
+              border: slackOpen ? '1px solid #00bcd4' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`,
+              background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <svg width="15" height="15" viewBox="73 73 125 125" xmlns="http://www.w3.org/2000/svg" style={{ opacity: slackOpen ? 1 : (theme === 'dark' ? 0.85 : 0.7) }}>
+            <svg width="15" height="15" viewBox="73 73 125 125" xmlns="http://www.w3.org/2000/svg" style={{ opacity: slackOpen ? 1 : (theme === 'dark' ? 0.85 : 1.0) }}>
               <path d="M99.4 151.2c0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A"/>
               <path d="M105.9 151.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9v-32.3z" fill="#E01E5A"/>
               <path d="M118.8 99.4c-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9v12.9h-12.9z" fill="#36C5F0"/>
