@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sun, Download, Mic } from 'lucide-react'
+import NewsTicker from './NewsTicker'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
@@ -1027,7 +1028,10 @@ export default function App() {
               }}>{r}</button>
             ))}
           </div>
-          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+          <span style={{ color: T.sep, fontSize:12 }}>|</span>
+          <NewsTicker country={country} T={T} />
+          <span style={{ color: T.sep, fontSize:12 }}>|</span>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
               width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
               backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
@@ -1152,8 +1156,10 @@ export default function App() {
             }}>{r}</button>
           ))}
         </div>
-
-        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <NewsTicker country={country} T={T} />
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

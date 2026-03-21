@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
+import NewsTicker from './NewsTicker'
 import AccountSwitcher from './AccountSwitcher'
 import SlackPanel from './SlackPanel'
 import VoiceAssistant from './VoiceAssistant'
@@ -1351,7 +1352,10 @@ export default function KpiDetailPage({
             }}>{r}</button>
           ))}
         </div>
-        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <NewsTicker country={country} T={T} />
+        <span style={{ color: T.sep, fontSize:12 }}>|</span>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
