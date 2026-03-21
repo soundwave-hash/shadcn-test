@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sun, Download, Mic } from 'lucide-react'
 import NewsTicker from './NewsTicker'
+import WatchlistRow from './WatchlistRow'
 import KpiDetailPage from './KpiDetailPage'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
@@ -1337,7 +1338,7 @@ export default function App() {
           }
         </div>
 
-        {/* Show more / less toggle */}
+        {/* Watchlist toggle */}
         <div style={{ display:'flex', alignItems:'center', gap:8, margin:'6px 0 2px' }}>
           <button
             onClick={() => setKpiExpanded(e => !e)}
@@ -1348,14 +1349,14 @@ export default function App() {
             }}
           >
             <span style={{ fontSize:9 }}>{kpiExpanded ? '▲' : '▼'}</span>
-            {kpiExpanded ? 'Show less' : 'Show more metrics'}
+            {kpiExpanded ? 'Hide Watchlist' : 'Watchlist'}
           </button>
           {!kpiExpanded && (
-            <span style={{ fontSize:11, color: T.textFaint }}>6 additional metrics hidden</span>
+            <span style={{ fontSize:11, color: T.textFaint }}>Alerts and anomalies hidden</span>
           )}
         </div>
 
-        {/* KPI cards — row 2 (animated collapsible) */}
+        {/* Watchlist row (animated collapsible) */}
         <div style={{
           overflow: 'hidden',
           maxHeight: kpiExpanded ? 500 : 0,
@@ -1363,37 +1364,14 @@ export default function App() {
           transition: 'max-height 0.55s ease-in-out, opacity 0.55s ease-in-out',
           marginBottom: kpiExpanded ? 4 : 0,
         }}>
-          <div className="kpi-grid">
-            {kpiLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
+          {kpiLoading
+            ? <div className="kpi-grid">
+                {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} style={{ height: 110, borderRadius: 4, backgroundColor: T.cardBg, opacity: 0.6 }} />
-                ))
-              : displayKpiCards.slice(6).map((kpi, i) => {
-                  const idx = i + 6
-                  return (
-                    <KpiCard
-                      key={kpi.label + kpi.primary}
-                      {...kpi}
-                      country={country}
-                      dateRange={dashboardRange}
-                      isDragging={dragIdx === idx}
-                      isOver={(overIdx === idx && dragIdx !== idx) || pressedIdx === idx}
-                      T={T}
-                      dragHandlers={{
-                        draggable: true,
-                        onMouseDown: () => setPressedIdx(idx),
-                        onMouseUp:   () => setPressedIdx(null),
-                        onDragStart: e => handleDragStart(e, idx),
-                        onDragOver:  e => handleDragOver(e, idx),
-                        onDrop:      e => handleDrop(e, idx),
-                        onDragEnd:   handleDragEnd,
-                        onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
-                      }}
-                    />
-                  )
-                })
-            }
-          </div>
+                ))}
+              </div>
+            : <WatchlistRow country={country} T={T} />
+          }
         </div>
 
         {/* Section header */}
