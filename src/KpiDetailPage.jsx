@@ -1695,7 +1695,7 @@ export default function KpiDetailPage({
               })()}
 
               {/* Forecast tick hit areas. HTML divs avoid recharts SVG pointer-events:none */}
-              {linesVisible && checked.size > 0 && ['YTD','1D'].includes(period) && (() => {
+              {linesVisible && checked.size > 0 && period === 'YTD' && (() => {
                 const containerW = chartContainerRef.current?.clientWidth ?? 0
                 if (!containerW) return null
                 const leftOffset = 8 + 46   // margin.left + yAxisWidth
