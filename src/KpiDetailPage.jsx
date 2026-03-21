@@ -761,9 +761,9 @@ function TldrPanel({ body, rec, healthColor, T, triggerKey, onPhaseChange }) {
             {(phase === 'typing-rec' || phase === 'done') && rec && (
               <>
                 <div style={{ height:'1.1em' }} />
-                <span style={{ fontWeight:700, color: healthColor, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
-                  Action Plan
-                </span>
+                <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
+                  ACTION PLAN
+                </div>
                 <br />
                 {phase === 'typing-rec' ? rec.slice(0, recLen) : rec}
               </>
@@ -1335,6 +1335,7 @@ export default function KpiDetailPage({
                 )}
                 {tldrBullets.length > 0 && (tldrPhase === 'typing-rec' || tldrPhase === 'done') && (
                   <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 400ms ease forwards' }}>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:6 }}>FACTS</div>
                     {tldrBullets.map((b, idx) => (
                       <div key={idx} style={{ fontSize:12, color: T.textMuted, lineHeight:1.6, marginBottom:6 }}>{b}</div>
                     ))}
