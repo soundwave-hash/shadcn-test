@@ -637,39 +637,36 @@ function Leaderboard({ period, country, selectedCities, checked, onCheckedChange
 // ── TL;DR panel (isolated so typing state never re-renders the chart) ─────────
 const TLDR_HEIGHT = 256  // fixed px height. Chart never moves
 
-function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseChange, riskStartPos }) {
-  const [phase, setPhase]           = useState('thinking')
-  const [bodyLen, setBodyLen]       = useState(0)
-  const [recLen, setRecLen]         = useState(0)
+function TldrPanel({ body, rec, forecast, bullets, healthColor, T, triggerKey, riskStartPos }) {
+  const [phase, setPhase]             = useState('thinking')
+  const [bodyLen, setBodyLen]         = useState(0)
+  const [recLen, setRecLen]           = useState(0)
   const [forecastLen, setForecastLen] = useState(0)
-  const [dots, setDots]             = useState(0)
+  const [riskFired, setRiskFired]     = useState(false)
+  const [dots, setDots]               = useState(0)
   const bodyRef        = useRef(body)
   const recRef         = useRef(rec)
   const forecastRef    = useRef(forecast)
   const scrollRef      = useRef(null)
-  const riskFiredRef   = useRef(false)
   bodyRef.current     = body
   recRef.current      = rec
   forecastRef.current = forecast
 
-  const changePhase = (p) => { setPhase(p); onPhaseChange?.(p) }
-
   // Reset on each new trigger
   useEffect(() => {
-    changePhase('thinking')
+    setPhase('thinking')
     setBodyLen(0)
     setRecLen(0)
     setForecastLen(0)
+    setRiskFired(false)
     setDots(0)
-    riskFiredRef.current = false
   }, [triggerKey])
 
-  // Notify parent when body cursor enters the risk paragraph
+  // Show FACTS column when body cursor enters the risk paragraph
   useEffect(() => {
     if (phase !== 'typing-body') return
-    if (!riskFiredRef.current && riskStartPos != null && bodyLen >= riskStartPos) {
-      riskFiredRef.current = true
-      onPhaseChange?.('typing-risk')
+    if (!riskFired && riskStartPos != null && bodyLen >= riskStartPos) {
+      setRiskFired(true)
     }
   }, [phase, bodyLen])
 
@@ -677,14 +674,14 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
   useEffect(() => {
     if (phase !== 'thinking') return
     const dotInt = setInterval(() => setDots(d => (d + 1) % 4), 400)
-    const timer  = setTimeout(() => { clearInterval(dotInt); changePhase('typing-body'); setBodyLen(0) }, 5000)
+    const timer  = setTimeout(() => { clearInterval(dotInt); setPhase('typing-body'); setBodyLen(0) }, 5000)
     return () => { clearInterval(dotInt); clearTimeout(timer) }
   }, [phase])
 
   // Type body
   useEffect(() => {
     if (phase !== 'typing-body') return
-    if (bodyLen >= bodyRef.current.length) { changePhase(recRef.current ? 'typing-rec' : 'done'); return }
+    if (bodyLen >= bodyRef.current.length) { setPhase(recRef.current ? 'typing-rec' : 'done'); return }
     const t = setTimeout(() => setBodyLen(l => l + 1), 22)
     return () => clearTimeout(t)
   }, [phase, bodyLen])
@@ -693,7 +690,7 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
   useEffect(() => {
     if (phase !== 'typing-rec') return
     const r = recRef.current ?? ''
-    if (recLen >= r.length) { changePhase(forecastRef.current ? 'typing-forecast' : 'done'); return }
+    if (recLen >= r.length) { setPhase(forecastRef.current ? 'typing-forecast' : 'done'); return }
     const t = setTimeout(() => setRecLen(l => l + 1), 22)
     return () => clearTimeout(t)
   }, [phase, recLen])
@@ -702,7 +699,7 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
   useEffect(() => {
     if (phase !== 'typing-forecast') return
     const f = forecastRef.current ?? ''
-    if (forecastLen >= f.length) { changePhase('done'); return }
+    if (forecastLen >= f.length) { setPhase('done'); return }
     const t = setTimeout(() => setForecastLen(l => l + 1), 22)
     return () => clearTimeout(t)
   }, [phase, forecastLen])
@@ -712,28 +709,28 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [bodyLen, recLen, forecastLen])
 
+  const labelStyle = { fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2 }
+
   return (
-    <div style={{
-      maxWidth: 'calc(30vw + 30px)',
-      height: TLDR_HEIGHT,
-      overflow: 'hidden',
-      marginTop: '-0.35em',
-    }}>
+    <div style={{ flex:1, display:'flex', height: TLDR_HEIGHT, overflow:'hidden', marginTop:'-0.35em' }}>
       <style>{`
         @keyframes tldr-dot-pulse {
           0%, 100% { opacity: 0.2; transform: translateY(0); }
           50%       { opacity: 1;   transform: translateY(-2px); }
         }
         @keyframes tldr-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes tldr-facts-fadein { from { opacity: 0; } to { opacity: 1; } }
         .tldr-scroll::-webkit-scrollbar { width: 4px; }
         .tldr-scroll::-webkit-scrollbar-track { background: transparent; }
         .tldr-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
         .tldr-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
       `}</style>
+
+      {/* Left: scrollable text column */}
       <div
         ref={scrollRef}
         className="tldr-scroll"
-        style={{ height:'100%', overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
+        style={{ flex:1, overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
       >
         {phase === 'thinking' ? (
           <span style={{ color:'#ffffff', fontWeight:400, fontSize:12, display:'inline-flex', alignItems:'baseline', gap:1, animation:'tldr-fade-in 2s ease forwards' }}>
@@ -767,7 +764,7 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
                       paraSection++
                       if (paraSection < LABELS.length) {
                         out.push(
-                          <div key={`lbl${paraSection}`} style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2 }}>
+                          <div key={`lbl${paraSection}`} style={labelStyle}>
                             {LABELS[paraSection]}
                           </div>
                         )
@@ -785,7 +782,7 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
             {(phase === 'typing-rec' || phase === 'typing-forecast' || phase === 'done') && rec && (
               <>
                 <div style={{ height:'1.1em' }} />
-                <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
+                <div style={{ ...labelStyle, animation: phase === 'typing-rec' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
                   ACTION PLAN
                 </div>
                 {phase === 'typing-rec' ? rec.slice(0, recLen) : rec}
@@ -794,7 +791,7 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
             {(phase === 'typing-forecast' || phase === 'done') && forecast && (
               <>
                 <div style={{ height:'1.1em' }} />
-                <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2, animation: phase === 'typing-forecast' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
+                <div style={{ ...labelStyle, animation: phase === 'typing-forecast' ? 'tldr-fade-in 0.5s ease forwards' : 'none' }}>
                   FORECASTED RESULTS
                 </div>
                 {phase === 'typing-forecast' ? forecast.slice(0, forecastLen) : forecast}
@@ -803,6 +800,22 @@ function TldrPanel({ body, rec, forecast, healthColor, T, triggerKey, onPhaseCha
           </>
         )}
       </div>
+
+      {/* Right: persistent FACTS column — never scrolls, always visible */}
+      {riskFired && bullets?.length > 0 && (
+        <>
+          <div style={{ width:1, backgroundColor: T.border, flexShrink:0, margin:'0 8px', alignSelf:'stretch' }} />
+          <div style={{ flexShrink:0, width:140, animation:'tldr-facts-fadein 1400ms ease forwards' }}>
+            <div style={labelStyle}>FACTS</div>
+            {bullets.map((b, idx) => (
+              <div key={idx} style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
+                <span style={{ fontSize:12, fontWeight:700, color: T.textDim, letterSpacing:'0.04em', flexShrink:0 }}>{String(idx + 1).padStart(2, '0')}</span>
+                <span style={{ fontSize:12, color: T.textMuted, lineHeight:1.6 }}>{b}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -865,7 +878,6 @@ export default function KpiDetailPage({
   const prevCheckedSizeRef = useRef(checked.size)
   const [badgeAnimKey, setBadgeAnimKey] = useState(0)
   const [tldrReady, setTldrReady] = useState(checked.size > 0)
-  const [tldrPhase, setTldrPhase] = useState('thinking')
   const BADGE_FADE_MS = 2200
   const [forecastTipHovered, setForecastTipHovered] = useState(null)
 
@@ -1508,27 +1520,12 @@ export default function KpiDetailPage({
                   body={tldrBody}
                   rec={tldrRec}
                   forecast={_forecast}
+                  bullets={tldrBullets}
                   healthColor={healthColor}
                   T={T}
                   triggerKey={`${period}-${country}-${selectedCitiesKey}`}
-                  onPhaseChange={setTldrPhase}
                   riskStartPos={_signal.length + 2}
                 />
-                )}
-                {/* Bullets column */}
-                {tldrBullets.length > 0 && (
-                  <div style={{ width:1, alignSelf:'stretch', backgroundColor: T.border, flexShrink:0, margin:'0 8px' }} />
-                )}
-                {tldrBullets.length > 0 && (tldrPhase === 'typing-risk' || tldrPhase === 'typing-rec' || tldrPhase === 'done') && (
-                  <div style={{ flexShrink:0, marginTop:'-0.1em', animation:'tldr-badge-fadein 1400ms ease forwards' }}>
-                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:6 }}>FACTS</div>
-                    {tldrBullets.map((b, idx) => (
-                      <div key={idx} style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
-                        <span style={{ fontSize:12, fontWeight:700, color: T.textDim, letterSpacing:'0.04em', flexShrink:0 }}>{String(idx + 1).padStart(2, '0')}</span>
-                        <span style={{ fontSize:12, color: T.textMuted, lineHeight:1.6 }}>{b}</span>
-                      </div>
-                    ))}
-                  </div>
                 )}
               </div>
               )}
