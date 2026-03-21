@@ -299,7 +299,7 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
             <Zap size={10} color={T.tabActive} />
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>RECOMMENDED ACTIONS</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>AI RECOMMENDED ACTIONS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {topActions.map((action, i) => (
