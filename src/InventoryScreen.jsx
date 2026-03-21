@@ -357,7 +357,6 @@ export default function InventoryScreen({
   const scrollRef                         = useRef(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [selectedSku, setSelectedSku]     = useState(null)
-  const selectedRow = selectedSku ? (rows.find(r => r.sku === selectedSku) ?? null) : null
 
   function handleScroll(e) {
     const el = e.currentTarget
@@ -408,6 +407,8 @@ export default function InventoryScreen({
       return sortAsc ? av - bv : bv - av
     })
   }, [filtered, country, selectedCities, dateRange, sortCol, sortAsc])
+
+  const selectedRow = selectedSku ? (rows.find(r => r.sku === selectedSku) ?? null) : null
 
   function handleSort(key) {
     if (sortCol === key) setSortAsc(a => !a)
