@@ -1523,7 +1523,7 @@ export default function KpiDetailPage({
                   bullets={tldrBullets}
                   healthColor={healthColor}
                   T={T}
-                  triggerKey={`${period}-${country}-${selectedCitiesKey}`}
+                  triggerKey={`${country}-${selectedCitiesKey}`}
                   riskStartPos={_signal.length + 2}
                 />
                 )}
