@@ -183,7 +183,7 @@ function stockoutWeek(pts) {
 
 function MiniForecastChart({ basePoints, withPoints, leadWeeks, T }) {
   const W = 264, H = 110
-  const padL = 8, padR = 8, padT = 14, padB = 22
+  const padL = 36, padR = 8, padT = 14, padB = 22
   const chartW = W - padL - padR
   const chartH = H - padT - padB
   const maxV = Math.max(...basePoints, ...withPoints, 1)
@@ -200,8 +200,26 @@ function MiniForecastChart({ basePoints, withPoints, leadWeeks, T }) {
   const xLabels = [0, 3, 6, 9, 12]
   const baseline = padT + chartH
 
+  const fmtY = v => v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `${Math.round(v)}`
+  const yLabels = [0, maxV / 2, maxV]
+
   return (
     <svg width={W} height={H} style={{ display: 'block', overflow: 'visible' }}>
+      {/* Y axis */}
+      <line x1={padL} y1={padT} x2={padL} y2={baseline} stroke={T.border} strokeWidth={1} />
+
+      {/* Y axis labels + gridlines */}
+      {yLabels.map((v, i) => (
+        <g key={i}>
+          <line x1={padL} y1={yOf(v)} x2={W - padR} y2={yOf(v)}
+            stroke={T.border} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.5} />
+          <text x={padL - 4} y={yOf(v) + 3} textAnchor="end"
+            fontSize={7.5} fill={T.textMuted ?? T.textDim}>
+            {fmtY(v)}
+          </text>
+        </g>
+      ))}
+
       {/* X axis */}
       <line x1={padL} y1={baseline} x2={W - padR} y2={baseline} stroke={T.border} strokeWidth={1} />
 
