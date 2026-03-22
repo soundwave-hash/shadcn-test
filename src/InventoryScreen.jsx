@@ -181,9 +181,9 @@ function stockoutWeek(pts) {
   return idx === -1 ? null : idx
 }
 
-function MiniForecastChart({ basePoints, withPoints, leadWeeks, T }) {
-  const W = 264, H = 110
-  const padL = 36, padR = 8, padT = 14, padB = 22
+function MiniForecastChart({ basePoints, withPoints, leadWeeks, simQty, T }) {
+  const W = 264, H = 120
+  const padL = 36, padR = 8, padT = 28, padB = 22
   const chartW = W - padL - padR
   const chartH = H - padT - padB
   const maxV = Math.max(...basePoints, ...withPoints, 1)
@@ -236,9 +236,13 @@ function MiniForecastChart({ basePoints, withPoints, leadWeeks, T }) {
         <>
           <line x1={arrX} y1={padT} x2={arrX} y2={baseline} stroke={T.tabActive}
             strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
-          <text x={arrX} y={padT - 3} textAnchor="middle" fontSize={7.5}
-            fill={T.tabActive} opacity={0.85}>
+          <text x={arrX} y={padT - 16} textAnchor="middle" fontSize={7.5}
+            fill={T.tabActive} opacity={0.9}>
             Order arrives
+          </text>
+          <text x={arrX} y={padT - 6} textAnchor="middle" fontSize={7.5}
+            fill={T.tabActive} opacity={0.9}>
+            ({simQty.toLocaleString()} units)
           </text>
         </>
       )}
@@ -482,7 +486,7 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
                     {/* Forecast Chart */}
                     <div style={{ marginBottom: 8 }}>
-                      <MiniForecastChart basePoints={basePoints} withPoints={withPoints} leadWeeks={Math.max(1, Math.round(row.leadTime / 7))} T={T} />
+                      <MiniForecastChart basePoints={basePoints} withPoints={withPoints} leadWeeks={Math.max(1, Math.round(row.leadTime / 7))} simQty={simQty} T={T} />
                     </div>
 
                     {/* Legend */}
