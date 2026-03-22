@@ -236,13 +236,9 @@ function MiniForecastChart({ basePoints, withPoints, leadWeeks, simQty, T }) {
         <>
           <line x1={arrX} y1={padT} x2={arrX} y2={baseline} stroke={T.tabActive}
             strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
-          <text x={arrX} y={padT - 16} textAnchor="middle" fontSize={7.5}
+          <text x={arrX} y={padT - 8} textAnchor="middle" fontSize={7.5}
             fill={T.tabActive} opacity={0.9}>
-            Order arrives
-          </text>
-          <text x={arrX} y={padT - 6} textAnchor="middle" fontSize={7.5}
-            fill={T.tabActive} opacity={0.9}>
-            ({simQty.toLocaleString()} units)
+            Order arrives ({simQty.toLocaleString()} units)
           </text>
         </>
       )}
