@@ -958,10 +958,10 @@ export default function InventoryScreen({
                     }}>
                       {col.key === 'wos' && hasSimulate(row)
                         ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            {fmt(v, col.key, currency, showUSD)}
                             <svg width={9} height={9} viewBox="0 0 9 9" style={{ flexShrink: 0, opacity: 0.85 }}>
                               <polygon points="1,1 8,4.5 1,8" fill={T.tabActive} />
                             </svg>
+                            {fmt(v, col.key, currency, showUSD)}
                           </span>
                         : fmt(v, col.key, currency, showUSD)
                       }
