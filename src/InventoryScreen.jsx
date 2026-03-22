@@ -182,7 +182,7 @@ function stockoutWeek(pts) {
 }
 
 function MiniForecastChart({ basePoints, withPoints, leadWeeks, simQty, T }) {
-  const W = 264, H = 120
+  const W = 264, H = 125
   const padL = 36, padR = 8, padT = 28, padB = 22
   const chartW = W - padL - padR
   const chartH = H - padT - padB
