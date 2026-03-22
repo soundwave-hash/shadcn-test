@@ -155,6 +155,12 @@ function fmt(v, key, cur, showUSD) {
 
 const PERIOD_SCALE = { '5D':1.02, '1M':0.98, '6M':0.92, 'YTD':0.88 }
 
+function hasSimulate(row) {
+  const daysToStockout   = Math.round(row.wos * 7)
+  const canReorderInTime = daysToStockout > row.leadTime
+  return !canReorderInTime || row.wos < 2 || row.wos < row.leadTime / 7 + 1.5 || row.wos < 4
+}
+
 // ── AI Insight Drawer ─────────────────────────────────────────────────────────
 
 function projectInventory(row, extraQty) {
@@ -950,7 +956,15 @@ export default function InventoryScreen({
                       boxSizing:       'border-box',
                       verticalAlign:   'middle',
                     }}>
-                      {fmt(v, col.key, currency, showUSD)}
+                      {col.key === 'wos' && hasSimulate(row)
+                        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            {fmt(v, col.key, currency, showUSD)}
+                            <svg width={9} height={9} viewBox="0 0 9 9" style={{ flexShrink: 0, opacity: 0.85 }}>
+                              <polygon points="1,1 8,4.5 1,8" fill={T.tabActive} />
+                            </svg>
+                          </span>
+                        : fmt(v, col.key, currency, showUSD)
+                      }
                     </TableCell>
                   )
                 })}
