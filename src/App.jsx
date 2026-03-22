@@ -10,7 +10,7 @@ import {
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Sun, Download, Mic } from 'lucide-react'
+import { Sun, Download } from 'lucide-react'
 import NewsTicker from './NewsTicker'
 import WatchlistRow from './WatchlistRow'
 import KpiDetailPage from './KpiDetailPage'
@@ -1033,6 +1033,28 @@ export default function App() {
           <NewsTicker country={country} T={T} />
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <button onClick={() => setVoiceOpen(o => !o)} title="WarehouseIQ Agent" style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46'), display:'block' }}>
+                <line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                <circle cx="12" cy="1.5" r="1" fill="currentColor" stroke="none"/>
+                <path d="M4 5 L20 5 Q22 5 22 7 L22 17 Q22 19 20 19 L14 19 L12 22 L10 19 L4 19 Q2 19 2 17 L2 7 Q2 5 4 5 Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" fill="none"/>
+                <rect x="7" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+                <rect x="14" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+                <path d="M8.5 14 Q12 16.5 15.5 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+              </svg>
+            </button>
+            <button onClick={() => setSlackOpen(o => !o)} title="Slack — #warehouse-ops" style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: slackOpen ? '1px solid #00bcd4' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: slackOpen ? 'rgba(0,188,212,0.1)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="15" height="15" viewBox="73 73 125 125" xmlns="http://www.w3.org/2000/svg" style={{ opacity: slackOpen ? 1 : (theme === 'dark' ? 0.85 : 1.0) }}>
+                <path d="M99.4 151.2c0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A"/>
+                <path d="M105.9 151.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9v-32.3z" fill="#E01E5A"/>
+                <path d="M118.8 99.4c-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9v12.9h-12.9z" fill="#36C5F0"/>
+                <path d="M118.8 105.9c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H86.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3z" fill="#36C5F0"/>
+                <path d="M170.6 118.8c0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9h-12.9v-12.9z" fill="#2EB67D"/>
+                <path d="M164.1 118.8c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V86.5c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3z" fill="#2EB67D"/>
+                <path d="M151.2 170.6c7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9v-12.9h12.9z" fill="#ECB22E"/>
+                <path d="M151.2 164.1c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9h-32.3z" fill="#ECB22E"/>
+              </svg>
+            </button>
             <button onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} style={{
               width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
               backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
@@ -1077,6 +1099,8 @@ export default function App() {
         >
           <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
+        <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+        <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
       </div>
     )
   }
@@ -1233,44 +1257,9 @@ export default function App() {
               })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg, marginLeft:4 }}
-          >
-            <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                title="Export data"
-                style={{
-                  width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
-                  backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                }}
-              >
-                <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
-              <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
-                <Download size={12} /> Export CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportPDF} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
-                <Download size={12} /> Export PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportChartPNG} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
-                <Download size={12} /> Save Charts as PNG
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <button
             onClick={() => setVoiceOpen(o => !o)}
-            title="WarehouseIQ Assistant"
+            title="WarehouseIQ Agent"
             style={{
               width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
               border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`,
@@ -1278,7 +1267,14 @@ export default function App() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Mic size={15} color={voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46')} />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46'), display: 'block' }}>
+              <line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <circle cx="12" cy="1.5" r="1" fill="currentColor" stroke="none"/>
+              <path d="M4 5 L20 5 Q22 5 22 7 L22 17 Q22 19 20 19 L14 19 L12 22 L10 19 L4 19 Q2 19 2 17 L2 7 Q2 5 4 5 Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" fill="none"/>
+              <rect x="7" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <rect x="14" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <path d="M8.5 14 Q12 16.5 15.5 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+            </svg>
           </button>
           <button
             onClick={() => setSlackOpen(o => !o)}
@@ -1301,6 +1297,41 @@ export default function App() {
               <path d="M151.2 164.1c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9h-32.3z" fill="#ECB22E"/>
             </svg>
           </button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg, marginLeft:4 }}
+          >
+            <Sun size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                title="Export data"
+                style={{
+                  width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
+                  backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
+                  display:'flex', alignItems:'center', justifyContent:'center', marginLeft:4,
+                }}
+              >
+                <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
+              <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportChartPNG} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
+                <Download size={12} /> Save Charts as PNG
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={8} />
         </div>
       </div>

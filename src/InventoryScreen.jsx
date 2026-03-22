@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Sun, Download, X, Zap } from 'lucide-react'
+import VoiceAssistant from './VoiceAssistant'
+import SlackPanel from './SlackPanel'
 import { saveAs } from 'file-saver'
 
 // ── Column definitions ─────────────────────────────────────────────────────────
@@ -338,6 +340,8 @@ export default function InventoryScreen({
   setView, onThemeToggle,
   activeUser, onUserSwitch,
 }) {
+  const [voiceOpen, setVoiceOpen]         = useState(false)
+  const [slackOpen, setSlackOpen]         = useState(false)
   const [selDepts, setSelDepts]           = useState(new Set())  // empty = All
   const [selSubs,  setSelSubs]            = useState(new Set())  // empty = All
   const [sortCol, setSortCol]             = useState('weeklySales')
@@ -597,7 +601,37 @@ export default function InventoryScreen({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="icon" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: isDark ? '#1c1c1c' : T.inputBg }}>
+          <button
+            onClick={() => setVoiceOpen(o => !o)}
+            title="WarehouseIQ Agent"
+            style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${isDark ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: voiceOpen ? 'rgba(201,106,74,0.12)' : (isDark ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center', marginLeft:4 }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: voiceOpen ? '#c96a4a' : (isDark ? '#fff' : '#3F3F46'), display:'block' }}>
+              <line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <circle cx="12" cy="1.5" r="1" fill="currentColor" stroke="none"/>
+              <path d="M4 5 L20 5 Q22 5 22 7 L22 17 Q22 19 20 19 L14 19 L12 22 L10 19 L4 19 Q2 19 2 17 L2 7 Q2 5 4 5 Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" fill="none"/>
+              <rect x="7" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <rect x="14" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <path d="M8.5 14 Q12 16.5 15.5 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => setSlackOpen(o => !o)}
+            title="Slack — #warehouse-ops"
+            style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: slackOpen ? '1px solid #00bcd4' : `1px solid ${isDark ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: slackOpen ? 'rgba(0,188,212,0.1)' : (isDark ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center', marginLeft:4 }}
+          >
+            <svg width="15" height="15" viewBox="73 73 125 125" xmlns="http://www.w3.org/2000/svg" style={{ opacity: slackOpen ? 1 : (isDark ? 0.85 : 1.0) }}>
+              <path d="M99.4 151.2c0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A"/>
+              <path d="M105.9 151.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9v-32.3z" fill="#E01E5A"/>
+              <path d="M118.8 99.4c-7.1 0-12.9-5.8-12.9-12.9 0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9v12.9h-12.9z" fill="#36C5F0"/>
+              <path d="M118.8 105.9c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H86.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3z" fill="#36C5F0"/>
+              <path d="M170.6 118.8c0-7.1 5.8-12.9 12.9-12.9 7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9h-12.9v-12.9z" fill="#2EB67D"/>
+              <path d="M164.1 118.8c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V86.5c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3z" fill="#2EB67D"/>
+              <path d="M151.2 170.6c7.1 0 12.9 5.8 12.9 12.9 0 7.1-5.8 12.9-12.9 12.9-7.1 0-12.9-5.8-12.9-12.9v-12.9h12.9z" fill="#ECB22E"/>
+              <path d="M151.2 164.1c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9h-32.3z" fill="#ECB22E"/>
+            </svg>
+          </button>
+          <Button variant="outline" size="icon" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'} style={{ width:28, height:28, borderRadius:7, border:`1px solid ${T.inputBorder}`, backgroundColor: isDark ? '#1c1c1c' : T.inputBg, marginLeft:4 }}>
             <Sun size={15} color={isDark ? '#fff' : '#333'} />
           </Button>
           <DropdownMenu>
@@ -861,6 +895,8 @@ export default function InventoryScreen({
         ))}
       </div>
     )}
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
     </>
   )
 }

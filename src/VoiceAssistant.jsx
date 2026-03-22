@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Mic, X, Clipboard, Check, Languages } from 'lucide-react'
+import { CATEGORIES } from './data/groceryProducts'
 
 // ── Country metadata ────────────────────────────────────────────────────────
 const COUNTRY_META = {
@@ -24,7 +26,7 @@ const CONVERSATIONS = {
   ],
   'Canada': [
     { role: 'user', text: 'Why is shipment time spiking across Ontario?' },
-    { role: 'ai', text: 'A winter storm hit the Toronto–Montreal corridor Tuesday. Carriers are running 2–3 day delays and our Mississauga DC lost 4 loading bays to ice damage.' },
+    { role: 'ai', text: 'A winter storm hit the Toronto to Montreal corridor Tuesday. Carriers are running 2 to 3 day delays and our Mississauga DC lost 4 loading bays to ice damage.' },
     { role: 'user', text: 'Are we at risk of SLA breaches?' },
     { role: 'ai', text: '14 enterprise accounts are at risk, 8 in Ontario and 6 in Quebec. The first breach window opens in 36 hours.' },
     { role: 'user', text: 'Can air freight bridge the gap?' },
@@ -110,9 +112,107 @@ const CONVERSATIONS_EN = {
     { role: 'user', text: 'Why is export fulfillment below target in Shanghai?' },
     { role: 'ai', text: 'Pudong is processing 18% above normal volume from Golden Week restocks. The carton sealing line is the bottleneck, capped at 4,200 units/hour vs. 5,800 target.' },
     { role: 'user', text: "What's the downstream impact on US delivery timelines?" },
-    { role: 'ai', text: '6 container shipments are delayed an average of 3.2 days. US retail partners will see pre Christmas stock arrive Dec 11–12 instead of Dec 8.' },
-    { role: 'user', text: 'Can we air freight the high-priority SKUs?' },
+    { role: 'ai', text: '6 container shipments are delayed an average of 3.2 days. US retail partners will see pre Christmas stock arrive Dec 11 to 12 instead of Dec 8.' },
+    { role: 'user', text: 'Can we air freight the high priority SKUs?' },
     { role: 'ai', text: 'Air from PVG covers the top 4 margin SKUs: C14, C19, C22, C31. Cost is $180K but protects $2.1M in holiday margin. Recommend approving air freight for those SKUs immediately.' },
+  ],
+}
+
+// ── Department-scoped conversations (English, all depts) ────────────────────
+const DEPT_CONVERSATIONS = {
+  'All Departments': [
+    { role: 'user', text: "What's our overall inventory health across all departments right now?" },
+    { role: 'ai',   text: "Pantry and Beverages are in good shape. Spring Water, Cola, and Pasta are all above 5 weeks on hand. Produce is the tightest spot: Bananas, Roma Tomatoes, and Baby Spinach are all under 3.5 weeks. Dairy is mixed, with Greek Yogurt and several butter SKUs running low across the board." },
+    { role: 'user', text: 'Which departments have the most SKUs at risk of stockout?' },
+    { role: 'ai',   text: "Produce leads with 6 of 14 SKUs in the Low tier. Dairy & Eggs has 8 low stock SKUs, mostly in Yogurt and Butter. Bakery's Pastries subcategory is tight: Croissants, Blueberry Muffins, and Glazed Donuts are all under 3.6 weeks. Meat & Seafood's entire seafood aisle is in the Low tier." },
+    { role: 'user', text: 'What should we prioritize in the next replenishment cycle?' },
+    { role: 'ai',   text: "Top three actions: (1) Rush replenishment on Bananas and Roma Tomatoes, both high velocity and under 3 weeks. (2) Reorder Greek Yogurt and Butter (1lb) before the 4 day lead time expires. (3) Flag Croissants and Blueberry Muffins, only a 2 day lead time but current stock won't carry through the weekend." },
+    { role: 'user', text: 'Give me your top recommendations right now.' },
+    { role: 'ai',   text: "• Produce: Order 2,000 units Bananas and 1,500 units Roma Tomatoes today\n• Dairy: Reorder 800 units Greek Yogurt and 600 units Butter (1lb) before lead time closes\n• Bakery: Submit 700 units Brioche Buns and 500 units Croissants immediately\n• Seafood: Order 1,200 units Shrimp and 900 units Salmon Fillet to prevent weekend stockout\n• Pricing: Mark down Blueberries 20% and Peaches 25% to cut spoilage losses this week" },
+  ],
+  'Produce': [
+    { role: 'user', text: 'What does our spoilage picture look like across produce right now?' },
+    { role: 'ai',   text: "Berries are our biggest spoilage risk. Blueberries are at 3.2 WOS and Strawberries at 6.9 WOS but both have shelf lives of only 5 to 7 days after receipt, and we are seeing an estimated 8 to 12% spoilage rate on those SKUs this week. Peaches are the worst case at 2.3 WOS with slow enough velocity that we expect roughly 15% loss before sell through." },
+    { role: 'user', text: 'How do inventory turn rates compare across the department?' },
+    { role: 'ai',   text: "Fresh Vegetables are turning faster than fruits. Carrots lead at approximately 35 annual turns driven by 2,680 daily units. Broccoli Crown and Roma Tomatoes are in the 20 to 25 turns range. On the fruit side, Bananas turn roughly 26 times per year at 1,820 daily units but Peaches and Blueberries are well below 10 annual turns and sitting in spoilage risk territory." },
+    { role: 'user', text: 'What actions can we take this week to reduce spoilage losses?' },
+    { role: 'ai',   text: "Three levers: first, run a markdown promotion on Peaches and Blueberries today at 20% off to drive velocity before shelf life expires. Second, reduce the inbound order on Blueberries by 30% for the next cycle given the low turns. Third, shift Strawberry receiving from twice weekly to three times weekly in smaller batches to keep product fresher on shelf." },
+    { role: 'user', text: 'What should we do right now?' },
+    { role: 'ai',   text: "• Order 2,000 units Bananas and 1,500 units Roma Tomatoes today (3 day lead time)\n• Order 600 units Baby Spinach and 400 units Cucumber before end of day\n• Mark down Peaches 25% and Blueberries 20% immediately to cut spoilage\n• Reduce next Blueberry inbound order by 30% to match current turn rate\n• Raise Strawberry reorder point by 20% ahead of spring demand increase" },
+    { role: 'user', text: 'Approved, push changes to the ordering and pricing teams.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified with updated quantities for Bananas (2,000 units), Roma Tomatoes (1,500 units), Baby Spinach (600 units), and Cucumber (400 units). Pricing team flagged to apply 25% markdown on Peaches and 20% markdown on Blueberries effective today. Strawberry reorder point updated to +20% in the system." },
+  ],
+  'Dairy & Eggs': [
+    { role: 'user', text: 'Which dairy SKUs have the highest spoilage exposure right now?' },
+    { role: 'ai',   text: "Yogurt is our most vulnerable category. Greek Yogurt, Vanilla Yogurt, and Strawberry Yogurt all have shelf lives under 30 days and current stock below 4 WOS. Strawberry Yogurt is turning at roughly 13 times per year which is low for a perishable at that price point. Whipped Butter and Vegan Butter are also concern items with under 3 WOS and slow velocity." },
+    { role: 'user', text: 'How are turn rates looking for milk and eggs?' },
+    { role: 'ai',   text: "2% Milk is our best performer in the category. At 9.3 WOS and 2,180 daily units its annual turn rate is around 24, which is healthy for a perishable staple. Eggs (12pk) at 9.0 WOS and 1,560 daily units is similarly strong. Oat Milk is the outlier at only 3.0 WOS on 920 daily units, meaning turns are high but we are constantly at risk of running out before the next replenishment arrives." },
+    { role: 'user', text: 'What should we do about the slow turning perishables?' },
+    { role: 'ai',   text: "Skyr Yogurt and Coconut Yogurt both have under 10 annual turns and are approaching sell by risk. I would recommend reducing standard order quantities by 25% on both and placing a markdown label on current shelf stock. Vegan Butter and European Butter are similar cases, low velocity with a 4 day lead time creating reorder complexity. Consider consolidating to one specialty butter SKU until velocity improves." },
+    { role: 'user', text: 'Give me the action items.' },
+    { role: 'ai',   text: "• Order 1,100 units Oat Milk today (4 day lead time, at risk by Thursday)\n• Reorder 800 units Greek Yogurt, 600 units Vanilla Yogurt, 500 units Strawberry Yogurt\n• Reorder 500 units Butter (1lb) and 300 units Whipped Butter before weekend\n• Mark down Skyr Yogurt and Coconut Yogurt 20% to clear slow turning perishable stock\n• Cut Skyr and Coconut Yogurt order quantities by 25% on next cycle" },
+    { role: 'user', text: 'Please push recommendations to the ordering team and message the pricing team regarding the markdowns.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified with quantities for Oat Milk (1,100 units), Greek Yogurt (800 units), Vanilla Yogurt (600 units), Strawberry Yogurt (500 units), Butter 1lb (500 units), and Whipped Butter (300 units). Skyr and Coconut Yogurt order quantities reduced 25% in the next cycle. Pricing team messaged to apply 20% markdown on Skyr Yogurt and Coconut Yogurt effective immediately." },
+  ],
+  'Meat & Seafood': [
+    { role: 'user', text: 'Which items are at stockout risk this week?' },
+    { role: 'ai',   text: "All four seafood SKUs are in the Low tier and approaching critical levels. Shrimp is the highest volume concern at 520 units per day and only 3.6 WOS. Salmon Fillet is at 3.6 WOS on 340 daily units. With a 4 day lead time, any demand spike could push Shrimp to a full stockout by the weekend. Tilapia and Cod are in the same range and need orders placed today." },
+    { role: 'user', text: 'What are the current WOS numbers across beef and poultry?' },
+    { role: 'ai',   text: "Beef is healthy overall. Ground Beef leads at 8.9 WOS and serves as our anchor SKU for the department. Ribeye Steak and NY Strip are both at 4.3 WOS in the Watch tier. In poultry, Chicken Breast is solid at 8.0 WOS and Chicken Wings are at 5.0 WOS on 2,840 daily units. Turkey Breast is the weak link at 3.6 WOS and 115 daily units, close enough to Low that a reorder is due." },
+    { role: 'user', text: 'Has there been any recent stockout history in this department?' },
+    { role: 'ai',   text: "We had a near stockout on Salmon Fillet two weeks ago when weekend demand pushed velocity to 480 units per day versus the 340 baseline. The system flagged it too late and we hit zero stock for about 6 hours on Saturday. The recommended fix is to raise the Salmon reorder point from 3.5 WOS to 5.0 WOS to build a buffer against weekend demand spikes. Pork Tenderloin also briefly ran out last week when an inbound truck arrived 2 days late from the distribution center." },
+    { role: 'user', text: 'What are the next steps?' },
+    { role: 'ai',   text: "• Order today: 1,200 units Shrimp, 900 units Salmon Fillet, 500 units Tilapia, 400 units Cod\n• Raise Salmon reorder point from 3.5 WOS to 5.0 WOS to buffer weekend spikes\n• Reorder 350 units Turkey Breast to move from Low to Watch tier\n• Increase Chicken Wings standing order by 15% ahead of summer grilling season\n• Flag premium beef cuts for weekend monitoring; alert DC if velocity exceeds 20% above baseline" },
+    { role: 'user', text: 'Agree, forward recommendations to the ordering team and send a message to the DC.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified with quantities: Shrimp (1,200 units), Salmon Fillet (900 units), Tilapia (500 units), Cod (400 units), Turkey Breast (350 units). DC message sent: Salmon reorder point raised to 5.0 WOS, Chicken Wings standing order increased 15% effective next cycle, and weekend monitoring flag set for premium beef cuts." },
+  ],
+  'Bakery': [
+    { role: 'user', text: 'Which bakery items are closest to a stockout right now?' },
+    { role: 'ai',   text: "Pastries are the most at risk. Croissants, Blueberry Muffins, and Cheese Danish are all under 3.0 WOS. At current velocity, Croissants at 480 daily units will run out in just over 2 weeks with no reorder placed. The 2 day lead time is the only buffer and it is razor thin. Glazed Donuts at 640 daily units and 3.6 WOS are next in line and also need attention." },
+    { role: 'user', text: 'How are WOS levels across bread and rolls?' },
+    { role: 'ai',   text: "Whole Wheat Bread leads the subcategory at 6.5 WOS on 1,840 daily units. Sourdough Bread is Watch at 4.5 WOS. The critical item is White Sandwich Bread at only 3.6 WOS and 2,480 daily units, our highest volume bakery SKU. A stockout there would have immediate customer impact. Brioche Buns are at 2.9 WOS and need a replenishment order placed today." },
+    { role: 'user', text: 'Are there any stockout patterns we should know about in this department?' },
+    { role: 'ai',   text: "Brioche Buns consistently hit Low inventory during holiday weekends when burger and sandwich builds spike. We had two partial stockouts in the last 60 days, both on Saturdays. Dinner Rolls also ran low around holiday periods. I recommend increasing the standing order quantity on Brioche Buns by 40% and adding a weekend demand multiplier to the Rolls reorder model to get ahead of the next holiday cycle." },
+    { role: 'user', text: 'What do you recommend we do today?' },
+    { role: 'ai',   text: "• Order 800 units Brioche Buns, 600 units Croissants, 450 units Blueberry Muffins immediately\n• Increase Brioche Buns standing order quantity by 40% starting next cycle\n• Order 3,000 units White Sandwich Bread to move from Low to Watch tier\n• Apply 1.3x weekend demand multiplier to Brioche Buns and Dinner Rolls reorder model\n• No price changes needed; bakery margins are healthy across all subcategories" },
+    { role: 'user', text: 'Approved, push changes to the ordering team and apply multiplier calculation to the model.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified: Brioche Buns (800 units), Croissants (600 units), Blueberry Muffins (450 units), White Sandwich Bread (3,000 units). Brioche Buns standing order increased 40% starting next cycle. Weekend demand multiplier of 1.3x applied to Brioche Buns and Dinner Rolls in the reorder model." },
+  ],
+  'Frozen Foods': [
+    { role: 'user', text: 'What are our top selling frozen food items right now?' },
+    { role: 'ai',   text: "Mac and Cheese Bowl leads Frozen Meals at 3,400 daily units and maps to the Stouffer's format, making it our single highest volume frozen SKU. Frozen Burrito is second at 2,160 daily units. In desserts, Vanilla Ice Cream runs 2,640 units per day and Chocolate Ice Cream 1,980. Frozen Broccoli leads vegetables at 1,840 daily units, tracking similarly to Birds Eye and Green Giant branded volumes in comparable markets." },
+    { role: 'user', text: 'Which frozen pizza brands and SKUs are moving fastest?' },
+    { role: 'ai',   text: "Our core Frozen Pizza SKU, which covers DiGiorno and Tombstone varieties, leads the segment at 460 units per day. Stouffer's French Bread Pizza format is second at 380 daily units. BBQ Chicken Pizza moves 280 daily units. The Cauliflower Crust and Gluten Free options are slower at under 100 units per day but represent a growing segment worth maintaining for assortment breadth." },
+    { role: 'user', text: 'Are there brand gaps in our frozen assortment we should address?' },
+    { role: 'ai',   text: "We are light on Birds Eye and Green Giant branded frozen vegetables, which are the two most requested brands in this category. We also have no Haagen Dazs or Ben and Jerry's representation in ice cream, which is a premium segment gap that competitors are filling. Adding one SKU from each of those brands could lift ice cream category revenue by an estimated 8 to 12% based on comparable store data." },
+    { role: 'user', text: 'What are your recommendations?' },
+    { role: 'ai',   text: "• Order 2,000 units Popsicles and 1,200 units Strawberry Ice Cream this week\n• Reorder 800 units Chicken Pot Pie and 350 units Frozen Stir Fry Kit given 7 day lead time\n• Increase Mac and Cheese Bowl standing order by 10%; it consistently approaches reorder threshold\n• Add 1 Haagen Dazs and 1 Ben and Jerry's SKU to ice cream set; projected +8 to 12% category lift\n• Run a 2 for $10 promo on Frozen Pizza varieties to lift velocity on slower SKUs" },
+    { role: 'user', text: 'Make recommendations to the ordering team and message the pricing team about the promotion.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified: Popsicles (2,000 units), Strawberry Ice Cream (1,200 units), Chicken Pot Pie (800 units), Frozen Stir Fry Kit (350 units). Mac and Cheese Bowl standing order increased 10% in the system. Pricing team messaged to activate the 2 for $10 Frozen Pizza promotion and review Haagen Dazs and Ben and Jerry's assortment additions." },
+  ],
+  'Beverages': [
+    { role: 'user', text: 'What are our top selling beverage brands right now?' },
+    { role: 'ai',   text: "Coca Cola leads the entire store at 5,600 daily units across our Cola 12 pack SKU, which is roughly 70% Coke and 30% Pepsi volume. Diet Coke and Coke Zero drive the Diet Cola segment at 2,800 daily units. Poland Spring and Dasani account for most of our Spring Water volume at 4,200 daily units, making water our second highest volume beverage category. Sprite and 7UP share the Lemon Lime segment at 2,100 daily units." },
+    { role: 'user', text: 'How is the beer segment performing and what brands are leading?' },
+    { role: 'ai',   text: "Bud Light is our top beer SKU running at strong velocity consistent with a top 3 national brand. Miller Lite and Coors Light are close behind in the light beer segment. Corona is our top import performer. We have a seasonal demand curve building for summer and will need a 20 to 30% inventory increase across all beer SKUs beginning next month to stay ahead of stockouts during peak grilling weekends." },
+    { role: 'user', text: 'Are there coffee or juice brand gaps we should close?' },
+    { role: 'ai',   text: "In coffee, we carry Ground Coffee and K Cups under Folgers and Maxwell House but have no Starbucks or Dunkin branded pods, which are among the top searched coffee products nationally. In juice, we carry Orange Juice and Apple Juice volume but lack explicit Tropicana and Minute Maid SKUs, which are the two brands consumers most frequently request. Closing those four brand gaps in coffee and juice could add 200 to 300 incremental daily units to the category." },
+    { role: 'user', text: 'Walk me through the next steps.' },
+    { role: 'ai',   text: "• Order today (10 day lead time): 1,800 units OJ, 3,500 units Apple Juice, 1,200 units Cranberry Juice, 2,200 units Lemonade\n• Order 1,500 units Sparkling Water and 600 units Alkaline Water immediately\n• Add Starbucks K Cups and Tropicana OJ to assortment; projected +200 to 300 daily units\n• Increase Bud Light, Miller Lite, and Corona inventory by 25% ahead of summer\n• Run 15% promotional price on Cranberry Juice to lift velocity before stock drops further" },
+    { role: 'user', text: 'Approve changes, push to ordering team and inform the pricing team for promotional changes.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified: OJ (1,800 units), Apple Juice (3,500 units), Cranberry Juice (1,200 units), Lemonade (2,200 units), Sparkling Water (1,500 units), Alkaline Water (600 units). Beer inventory increase of 25% queued for Bud Light, Miller Lite, and Corona. Pricing team notified to activate 15% promotional price on Cranberry Juice effective this week." },
+  ],
+  'Pantry': [
+    { role: 'user', text: 'What are our top selling pantry brands and SKUs?' },
+    { role: 'ai',   text: "Lay's Potato Chips lead all of Pantry at 4,800 daily units. Doritos drives the Tortilla Chips segment at 2,960 daily units. Quaker Oats accounts for the majority of our Oatmeal volume at 2,200 daily units, making it one of the strongest branded staples in the store. Heinz Ketchup at 1,640 daily units and Barilla Pasta at 440 daily units round out the top performing pantry brands." },
+    { role: 'user', text: 'Which cereal and grain brands are performing best?' },
+    { role: 'ai',   text: "Quaker is the anchor brand in grains. Kellogg's drives Corn Flakes at 580 daily units and Post Honey Bunches of Oats moves 740 daily units, making it our top named cereal SKU. Granola at 480 daily units is in the Watch tier and most of that volume ties to a single premium brand with limited substitution options, which is a risk if that brand has any supply issues. Ben's Original and Mahatma account for most of our rice volume across White Rice and Jasmine Rice." },
+    { role: 'user', text: 'Are there brand gaps in snacks or condiments we should address?' },
+    { role: 'ai',   text: "In condiments, we carry Heinz and Kraft but have no Hellmann's Mayonnaise on shelf, which is the most requested condiment brand in customer feedback surveys. In snacks, we are missing Pringles and Cheez It, two consistently high demand SKUs that would likely drive incremental volume rather than cannibalize existing Lay's and Doritos sales. Adding those three SKUs could add 300 to 400 incremental daily units to the snack and condiment subcategories." },
+    { role: 'user', text: 'What do we need to act on today?' },
+    { role: 'ai',   text: "• Order today (14 day lead time): 2,000 units Granola, 2,500 units Black Beans, 1,400 units Trail Mix\n• Reduce Pasta and Penne standing order by 20% to address 10+ WOS overstock\n• Add Hellmann's Mayonnaise, Pringles, and Cheez It to assortment; projected +300 to 400 daily units\n• Run 15% promotional price on Trail Mix to lift velocity out of the Low tier\n• Reallocate 1 Pasta shelf facing to a new snack SKU to optimize floor space" },
+    { role: 'user', text: 'Approve changes, push to ordering team, send a message to the store planning team and inform the pricing team regarding the promotion suggestions.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified: Granola (2,000 units), Black Beans (2,500 units), Trail Mix (1,400 units). Pasta and Penne standing orders reduced 20% in the system. Store planning team messaged to evaluate shelf reallocation, reducing Pasta facings by 1 and opening space for a new snack SKU. Pricing team notified to apply 15% promotional price on Trail Mix and review assortment additions for Hellmann's Mayonnaise, Pringles, and Cheez It." },
   ],
 }
 
@@ -207,7 +307,8 @@ function AnthropicSpinner({ active }) {
 // ── Word-by-word text (AI messages) ──────────────────────────────────────────
 function WordByWordText({ text, onDone, onWord }) {
   const isCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(text)
-  const tokens = isCJK ? [...text] : text.split(' ')
+  // Split on whitespace (spaces and newlines) preserving newline tokens for line-break rendering
+  const tokens = isCJK ? [...text] : text.split(/(\n)/).flatMap(seg => seg === '\n' ? ['\n'] : seg.split(' ').filter(Boolean))
   const [count, setCount] = useState(0)
   useEffect(() => {
     setCount(0)
@@ -220,7 +321,14 @@ function WordByWordText({ text, onDone, onWord }) {
     }, isCJK ? 60 : 90)
     return () => clearInterval(id)
   }, [text])
-  return <span>{isCJK ? tokens.slice(0, count).join('') : tokens.slice(0, count).join(' ')}</span>
+  if (isCJK) return <span>{tokens.slice(0, count).join('')}</span>
+  return (
+    <span>
+      {tokens.slice(0, count).map((tok, i) =>
+        tok === '\n' ? <br key={i} /> : (i > 0 && tokens[i - 1] !== '\n' ? ' ' : '') + tok
+      )}
+    </span>
+  )
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
@@ -235,10 +343,15 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
     y: 60,
   })
 
+  const [selectedDept, setSelectedDept] = useState('"AMA"')
+  const [deptOpen, setDeptOpen] = useState(false)
+  const [deptMenuPos, setDeptMenuPos] = useState({ top: 0, left: 0 })
+  const deptBtnRef = useRef(null)
   const [messages, setMessages] = useState([])
   const [typingRole, setTypingRole] = useState(null) // 'user' | 'ai' | null
   const [userWriting, setUserWriting] = useState(false)
   const [aiIsAnimating, setAiIsAnimating] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [micPulsing, setMicPulsing] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -258,12 +371,32 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
     ? UI_TEXT['United States']
     : nativeUiText
 
+  const deptPrompt = selectedDept === '"AMA"'
+    ? 'Click the mic or type a prompt\nto ask me anything'
+    : selectedDept === 'All Departments'
+      ? 'Click the mic or type a prompt\nto ask me about all departments'
+      : `Click the mic or type a prompt\nto ask me anything about ${selectedDept}`
+
   // Reset translated state when country changes
   useEffect(() => { setTranslated(false) }, [country])
 
-  const activeConversation = !ENGLISH_ONLY.has(country) && translated
-    ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
-    : (CONVERSATIONS[country] || CONVERSATIONS['United States'])
+  // Clear conversation when user switches department selection
+  useEffect(() => {
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+    setMessages([])
+    setTypingRole(null)
+    setStarted(false)
+    setUserWriting(false)
+    setAiIsAnimating(false)
+    setIsProcessing(false)
+  }, [selectedDept])
+
+  const activeConversation = selectedDept !== '"AMA"'
+    ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+    : (!ENGLISH_ONLY.has(country) && translated
+        ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
+        : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -271,6 +404,13 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
 
   // scroll to bottom on new messages
   useEffect(() => { scrollToBottom() }, [messages, typingRole])
+
+  useEffect(() => {
+    if (!deptOpen) return
+    function handleOutside() { setDeptOpen(false) }
+    window.addEventListener('mousedown', handleOutside)
+    return () => window.removeEventListener('mousedown', handleOutside)
+  }, [deptOpen])
 
   // animate in/out; reset on open
   useEffect(() => {
@@ -281,6 +421,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
       setTypingRole(null)
       setStarted(false)
       setUserWriting(false)
+      setSelectedDept('"AMA"')
       timersRef.current.forEach(clearTimeout)
       timersRef.current = []
     } else {
@@ -355,6 +496,22 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
           }
         }, 1200)
         timersRef.current.push(t1)
+      } else if (msg.pause) {
+        // show processing animation for msg.pause ms, then reveal AI message
+        setIsProcessing(true)
+        scrollToBottom()
+        const tp = setTimeout(() => {
+          setIsProcessing(false)
+          setMessages(prev => [...prev, msg])
+          setAiIsAnimating(true)
+          scrollToBottom()
+          aiWritingDoneRef.current = () => {
+            setAiIsAnimating(false)
+            const t1 = setTimeout(playNext, 800)
+            timersRef.current.push(t1)
+          }
+        }, msg.pause)
+        timersRef.current.push(tp)
       } else {
         // reveal AI message immediately, word-by-word handles the pacing
         setMessages(prev => [...prev, msg])
@@ -405,6 +562,10 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
           0%, 100% { opacity: 1; }
           50%       { opacity: 0; }
         }
+        @keyframes va-processing-dot {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+          40% { transform: scale(1); opacity: 1; }
+        }
       `}</style>
 
       {/* Panel */}
@@ -414,8 +575,8 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
           top: pos.y, left: pos.x,
           zIndex: 300,
           width: PANEL_W,
-          height: '49vh',
-          maxHeight: '49vh',
+          height: '68vh',
+          maxHeight: '68vh',
           borderRadius: 14,
           background: T.bg,
           border: `1px solid ${T.border}`,
@@ -435,12 +596,69 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
             borderBottom: `1px solid ${T.border}`,
             flexShrink: 0,
             cursor: dragging ? 'grabbing' : 'grab',
+            position: 'relative',
           }}
         >
 
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1 }}>WarehouseIQ Assistant</div>
-            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Powered by Anthropic</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: T.text, display: 'block', flexShrink: 0 }}>
+              <line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <circle cx="12" cy="1.5" r="1" fill="currentColor" stroke="none"/>
+              <path d="M4 5 L20 5 Q22 5 22 7 L22 17 Q22 19 20 19 L14 19 L12 22 L10 19 L4 19 Q2 19 2 17 L2 7 Q2 5 4 5 Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" fill="none"/>
+              <rect x="7" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <rect x="14" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+              <path d="M8.5 14 Q12 16.5 15.5 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+            </svg>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1 }}>WarehouseIQ Agent</div>
+          </div>
+
+          {/* Department dropdown — absolutely centered in header */}
+          <div onMouseDown={e => e.stopPropagation()} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+              <button
+                ref={deptBtnRef}
+                onMouseDown={e => e.stopPropagation()}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (!deptOpen && deptBtnRef.current) {
+                    const r = deptBtnRef.current.getBoundingClientRect()
+                    setDeptMenuPos({ top: r.bottom + 4, left: r.left })
+                  }
+                  setDeptOpen(o => !o)
+                }}
+                style={{
+                  backgroundColor: T.inputBg, border: `1px solid ${selectedDept !== '"AMA"' ? '#c96a4a' : T.inputBorder}`,
+                  color: selectedDept !== '"AMA"' ? '#c96a4a' : T.textMuted,
+                  fontSize: 12, padding: '3px 9px', borderRadius: 4, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6, height: 28, whiteSpace: 'nowrap',
+                }}>
+                {selectedDept}<span style={{ color: T.textMuted, fontSize: 10 }}>▼</span>
+              </button>
+              {deptOpen && createPortal(
+                <div
+                  onMouseDown={e => e.stopPropagation()}
+                  style={{
+                    position: 'fixed', top: deptMenuPos.top, left: deptMenuPos.left,
+                    zIndex: 9999, backgroundColor: T.bg, border: `1px solid ${T.border}`,
+                    borderRadius: 6, minWidth: 160, boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {['"AMA"', 'All Departments', ...CATEGORIES].map(item => (
+                    <div
+                      key={item}
+                      onMouseDown={e => { e.stopPropagation(); setSelectedDept(item); setDeptOpen(false) }}
+                      style={{
+                        fontSize: 12, cursor: 'pointer', padding: '6px 12px',
+                        color: selectedDept === item ? '#c96a4a' : T.textMuted,
+                        backgroundColor: selectedDept === item ? 'rgba(201,106,74,0.1)' : 'transparent',
+                      }}
+                    >
+                      {selectedDept === item ? '✓ ' : ''}{item}
+                    </div>
+                  ))}
+                </div>,
+                document.body
+              )}
           </div>
           {!ENGLISH_ONLY.has(country) && (
             <div style={{ position: 'relative', flexShrink: 0 }} className="va-clip-wrap">
@@ -449,9 +667,11 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                   const newTranslated = !translated
                   setTranslated(newTranslated)
                   if (started && messages.length > 0) {
-                    const newConv = !ENGLISH_ONLY.has(country) && newTranslated
-                      ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
-                      : (CONVERSATIONS[country] || CONVERSATIONS['United States'])
+                    const newConv = selectedDept !== '"AMA"'
+                      ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+                      : (!ENGLISH_ONLY.has(country) && newTranslated
+                          ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
+                          : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
                     setMessages(newConv.slice(0, messages.length))
                   } else {
                     setMessages([])
@@ -542,7 +762,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '14px 16px',
+            padding: '14px 16px 20px',
             display: 'flex', flexDirection: 'column', gap: 20,
             scrollbarWidth: 'thin',
           }}
@@ -550,7 +770,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
           {messages.length === 0 && !typingRole && !started && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', color: T.textMuted, fontSize: 12 }}>
-                {uiText.prompt.split('\n')[0]}<br />{uiText.prompt.split('\n')[1]}
+                {deptPrompt.split('\n')[0]}<br />{deptPrompt.split('\n')[1]}
               </div>
             </div>
           )}
@@ -570,14 +790,14 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                     border: '1px solid rgba(0,188,212,0.3)',
                     fontSize: 13, lineHeight: 1.55, color: '#00bcd4',
                   }}>
-                    <TypewriterText text={msg.text} color="#00bcd4" onChar={scrollToBottom} onDone={() => { setUserWriting(false); userWritingDoneRef.current?.(); userWritingDoneRef.current = null }} />
+                    <TypewriterText text={msg.text} color="#00bcd4" onChar={scrollToBottom} onDone={() => { setUserWriting(false); userWritingDoneRef.current?.(); userWritingDoneRef.current = null; scrollToBottom() }} />
                   </div>
                 ) : (
                   <div style={{
                     maxWidth: '72%', fontSize: 13, lineHeight: 1.6,
-                    color: T.text, alignSelf: 'flex-start',
+                    color: T.text, alignSelf: 'flex-start', whiteSpace: 'pre-line',
                   }}>
-                    <WordByWordText text={msg.text} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null }} />
+                    <WordByWordText text={msg.text} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null; scrollToBottom() }} />
                   </div>
                 )}
                 {isUser && activeUser && (
@@ -591,6 +811,22 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
               </div>
             )
           })}
+
+          {isProcessing && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 8, alignItems: 'center' }}>
+              <AnthropicSpinner active={false} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    width: 7, height: 7, borderRadius: '50%',
+                    background: '#c96a4a',
+                    animation: `va-processing-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
+                  }} />
+                ))}
+                <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Processing</span>
+              </div>
+            </div>
+          )}
 
           {typingRole === 'user' && activeUser && (
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
