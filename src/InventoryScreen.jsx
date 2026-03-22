@@ -155,121 +155,15 @@ function fmt(v, key, cur, showUSD) {
 
 const PERIOD_SCALE = { '5D':1.02, '1M':0.98, '6M':0.92, 'YTD':0.88 }
 
-function hasSimulate(row) {
-  const daysToStockout   = Math.round(row.wos * 7)
-  const canReorderInTime = daysToStockout > row.leadTime
-  return !canReorderInTime || row.wos < 2 || row.wos < row.leadTime / 7 + 1.5 || row.wos < 4
-}
-
 // ── AI Insight Drawer ─────────────────────────────────────────────────────────
 
-function projectInventory(row, extraQty) {
-  const leadWeeks = Math.max(1, Math.round(row.leadTime / 7))
-  const pts = []
-  let inv = row.onHand
-  for (let w = 0; w <= 12; w++) {
-    if (w === 1) inv += row.inTransit
-    if (w === leadWeeks) inv += row.onOrder + extraQty
-    pts.push(Math.max(0, inv))
-    inv = Math.max(0, inv - row.weeklySales)
-  }
-  return pts
-}
-
-function stockoutWeek(pts) {
-  const idx = pts.findIndex(v => v <= 0)
-  return idx === -1 ? null : idx
-}
-
-function MiniForecastChart({ basePoints, withPoints, leadWeeks, simQty, T }) {
-  const W = 264, H = 125
-  const padL = 36, padR = 8, padT = 28, padB = 22
-  const chartW = W - padL - padR
-  const chartH = H - padT - padB
-  const maxV = Math.max(...basePoints, ...withPoints, 1)
-
-  const xOf = w => padL + (w / 12) * chartW
-  const yOf = v => padT + chartH - (v / maxV) * chartH
-
-  const toCoords = arr => arr.map((v, i) => `${xOf(i)},${yOf(v)}`).join(' ')
-
-  const baseStk = stockoutWeek(basePoints)
-  const stkX = baseStk != null ? xOf(baseStk) : null
-  const arrX  = leadWeeks <= 12 ? xOf(leadWeeks) : null
-
-  const xLabels = [0, 3, 6, 9, 12]
-  const baseline = padT + chartH
-
-  const fmtY = v => v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `${Math.round(v)}`
-  const yLabels = [0, maxV / 2, maxV]
-
-  return (
-    <svg width={W} height={H} style={{ display: 'block', overflow: 'visible' }}>
-      {/* Y axis */}
-      <line x1={padL} y1={padT} x2={padL} y2={baseline} stroke={T.border} strokeWidth={1} />
-
-      {/* Y axis labels + gridlines */}
-      {yLabels.map((v, i) => (
-        <g key={i}>
-          <line x1={padL} y1={yOf(v)} x2={W - padR} y2={yOf(v)}
-            stroke={T.border} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.5} />
-          <text x={padL - 4} y={yOf(v) + 3} textAnchor="end"
-            fontSize={7.5} fill={T.textMuted ?? T.textDim}>
-            {fmtY(v)}
-          </text>
-        </g>
-      ))}
-
-      {/* X axis */}
-      <line x1={padL} y1={baseline} x2={W - padR} y2={baseline} stroke={T.border} strokeWidth={1} />
-
-      {/* X axis labels */}
-      {xLabels.map(w => (
-        <text key={w} x={xOf(w)} y={baseline + 10} textAnchor="middle"
-          fontSize={8} fill={T.textMuted ?? T.textDim}>
-          Wk {w}
-        </text>
-      ))}
-
-      {/* Order arrives marker */}
-      {arrX != null && (
-        <>
-          <line x1={arrX} y1={padT - 20} x2={arrX} y2={baseline} stroke={T.tabActive}
-            strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
-          <text x={arrX} y={padT - 23} textAnchor="middle" fontSize={7.5}
-            fill={T.tabActive} opacity={0.9}>
-            New order arrives ({simQty.toLocaleString()} units)
-          </text>
-        </>
-      )}
-
-      {/* Lines */}
-      <polyline points={toCoords(basePoints)} fill="none" stroke="#f44336" strokeWidth={1.5} strokeDasharray="4 2" />
-      <polyline points={toCoords(withPoints)} fill="none" stroke="#4caf50" strokeWidth={2} />
-
-      {/* Stockout dot + label */}
-      {stkX != null && (
-        <>
-          <circle cx={stkX} cy={baseline} r={4} fill="#f44336" />
-          <text x={stkX} y={baseline - 8} textAnchor="middle" fontSize={7.5} fill="#f44336" fontWeight="700">
-            Stockout
-          </text>
-        </>
-      )}
-    </svg>
-  )
-}
-
 function AiInsightDrawer({ row, country, T, isDark, onClose }) {
-  const [simIdx, setSimIdx] = useState(null)
-  const [simQty, setSimQty] = useState(0)
-
   if (!row) return null
 
-  const velocityPct      = row.fourWkAvg > 0 ? Math.round((row.weeklySales - row.fourWkAvg) / row.fourWkAvg * 100) : 0
-  const daysToStockout   = Math.round(row.wos * 7)
+  const velocityPct    = row.fourWkAvg > 0 ? Math.round((row.weeklySales - row.fourWkAvg) / row.fourWkAvg * 100) : 0
+  const daysToStockout = Math.round(row.wos * 7)
   const canReorderInTime = daysToStockout > row.leadTime
-  const reorderQty       = Math.max(0, Math.round((row.leadTime / 7 * row.weeklySales * 1.5) - row.onHand - row.onOrder - row.inTransit))
+  const reorderQty     = Math.max(0, Math.round((row.leadTime / 7 * row.weeklySales * 1.5) - row.onHand - row.onOrder - row.inTransit))
 
   const velocityColor = velocityPct > 5 ? '#4caf50' : velocityPct < -5 ? '#f44336' : '#ff9800'
   const velocityArrow = velocityPct > 5 ? '↑' : velocityPct < -5 ? '↓' : '→'
@@ -282,44 +176,31 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
   const stockoutRisk      = !canReorderInTime ? 'HIGH' : row.wos < 4 ? 'MEDIUM' : 'LOW'
   const stockoutRiskColor = stockoutRisk === 'HIGH' ? '#f44336' : stockoutRisk === 'MEDIUM' ? '#ff9800' : '#4caf50'
 
-  const actionObjs = []
+  const actions = []
   if (!canReorderInTime || row.wos < 2) {
-    actionObjs.push({ text: `Place an emergency order for ${reorderQty.toLocaleString()} units immediately — stockout projected in ${daysToStockout} days, lead time is ${row.leadTime} days.`, type: 'reorder', qty: reorderQty })
+    actions.push(`Place an emergency order for ${reorderQty.toLocaleString()} units immediately — stockout projected in ${daysToStockout} days, lead time is ${row.leadTime} days.`)
   } else if (row.wos < row.leadTime / 7 + 1.5) {
-    actionObjs.push({ text: `Reorder window is closing — place a PO for ${reorderQty.toLocaleString()} units within the next 48 hours to avoid a stockout.`, type: 'reorder', qty: reorderQty })
+    actions.push(`Reorder window is closing — place a PO for ${reorderQty.toLocaleString()} units within the next 48 hours to avoid a stockout.`)
   } else if (row.wos < 4) {
-    actionObjs.push({ text: `Initiate replenishment now. Recommend ordering ${reorderQty.toLocaleString()} units to restore a 6-week supply buffer.`, type: 'reorder', qty: reorderQty })
+    actions.push(`Initiate replenishment now. Recommend ordering ${reorderQty.toLocaleString()} units to restore a 6-week supply buffer.`)
   }
   if (velocityPct > 10) {
-    actionObjs.push({ text: `Demand is running ${velocityPct}% above the 4-week average — review standing PO quantities to avoid underbuying into this trend.`, type: 'velocity', qty: null })
+    actions.push(`Demand is running ${velocityPct}% above the 4-week average — review standing PO quantities to avoid underbuying into this trend.`)
   } else if (velocityPct < -10) {
-    actionObjs.push({ text: `Demand has softened ${Math.abs(velocityPct)}% vs the 4-week average — consider reducing the next PO to avoid building excess inventory.`, type: 'velocity', qty: null })
+    actions.push(`Demand has softened ${Math.abs(velocityPct)}% vs the 4-week average — consider reducing the next PO to avoid building excess inventory.`)
   }
   if (row.fillRate < 95) {
-    actionObjs.push({ text: `Fill rate at ${row.fillRate.toFixed(1)}% is below the 95% threshold. Review inventory allocation and SKU availability.`, type: 'fillrate', qty: null })
+    actions.push(`Fill rate at ${row.fillRate.toFixed(1)}% is below the 95% threshold. Review inventory allocation and SKU availability.`)
   }
   if (row.onOrder > 0) {
-    actionObjs.push({ text: `${row.onOrder.toLocaleString()} units already on order with a ${row.leadTime}-day lead time. Confirm PO status with your supplier to ensure on-time receipt.`, type: 'onorder', qty: null })
+    actions.push(`${row.onOrder.toLocaleString()} units already on order with a ${row.leadTime}-day lead time. Confirm PO status with your supplier to ensure on-time receipt.`)
   }
   if (row.gmPct < 0.25) {
-    actionObjs.push({ text: `Gross margin at ${(row.gmPct * 100).toFixed(1)}% is below the 25% floor — review cost structure or retail price for this SKU.`, type: 'margin', qty: null })
+    actions.push(`Gross margin at ${(row.gmPct * 100).toFixed(1)}% is below the 25% floor — review cost structure or retail price for this SKU.`)
   }
-  const topActions = actionObjs.slice(0, 3)
+  const topActions = actions.slice(0, 3)
   if (topActions.length === 0) {
-    topActions.push({ text: `${row.name} is performing within normal parameters. Monitor weekly velocity and WOS. No immediate action required.`, type: 'normal', qty: null })
-  }
-
-  const activeAction = simIdx !== null ? topActions[simIdx] : null
-  const sliderMax    = activeAction ? Math.max((activeAction.qty ?? reorderQty) * 3, row.weeklySales * 8, 500) : 0
-  const basePoints   = activeAction ? projectInventory(row, 0) : null
-  const withPoints   = activeAction ? projectInventory(row, simQty) : null
-  const baseStockout = basePoints ? stockoutWeek(basePoints) : null
-  const withStockout = withPoints ? stockoutWeek(withPoints) : null
-
-  const handleSimulate = (i) => {
-    if (simIdx === i) { setSimIdx(null); return }
-    setSimIdx(i)
-    setSimQty(topActions[i].qty ?? reorderQty)
+    topActions.push(`${row.name} is performing within normal parameters. Monitor weekly velocity and WOS. No immediate action required.`)
   }
 
   const tile = (extra = {}) => ({
@@ -414,122 +295,17 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
         <div style={{ height: 1, background: T.border, marginBottom: 18 }} />
 
-        {/* AI Recommended Actions */}
+        {/* Recommended Actions */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
             <Zap size={10} color={T.tabActive} />
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>AI RECOMMENDED ACTIONS</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive }}>RECOMMENDED ACTIONS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {topActions.map((action, i) => (
-              <div key={i}>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', ...tile({ borderLeft: `3px solid ${T.tabActive}` }) }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: T.tabActive, flexShrink: 0 }}>{i + 1}</span>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 11, color: T.text, lineHeight: 1.55 }}>{action.text}</span>
-                    {action.type === 'reorder' && (
-                      <div style={{ marginTop: 8 }}>
-                        <button
-                          onClick={() => handleSimulate(i)}
-                          style={{
-                            fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
-                            color: simIdx === i ? T.cardBg : T.tabActive,
-                            background: simIdx === i ? T.tabActive : 'transparent',
-                            border: `1px solid ${T.tabActive}`,
-                            borderRadius: 4, padding: '3px 10px', cursor: 'pointer',
-                          }}
-                        >
-                          {simIdx === i ? '▲ HIDE SIMULATION' : '▶ SIMULATE'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* What-If Simulation Panel */}
-                {simIdx === i && action.type === 'reorder' && (
-                  <div ref={el => {
-                    if (!el) return
-                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-                    let parent = el.parentElement
-                    while (parent && parent.scrollHeight <= parent.clientHeight) parent = parent.parentElement
-                    if (parent) setTimeout(() => { parent.scrollTop += parent.clientHeight * 0.2 }, 150)
-                  }} style={{
-                    marginTop: 6,
-                    background: isDark ? 'rgba(0,188,212,0.06)' : 'rgba(0,188,212,0.04)',
-                    border: `1px solid ${T.tabActive}`,
-                    borderRadius: 7, padding: '12px 14px',
-                  }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: T.tabActive, marginBottom: 12 }}>
-                      WHAT-IF SIMULATION — 12 WEEK FORECAST
-                    </div>
-
-                    {/* Slider */}
-                    <div style={{ marginBottom: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-                        <span style={{ fontSize: 10, color: T.textDim }}>Order Quantity</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{simQty.toLocaleString()} units</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={sliderMax}
-                        step={Math.max(1, Math.round(sliderMax / 200))}
-                        value={simQty}
-                        onChange={e => setSimQty(Number(e.target.value))}
-                        style={{ width: '100%', accentColor: T.tabActive, cursor: 'pointer' }}
-                      />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                        <span style={{ fontSize: 9, color: T.textMuted }}>0</span>
-                        <span style={{ fontSize: 9, color: T.tabActive }}>AI rec: {(action.qty ?? reorderQty).toLocaleString()}</span>
-                        <span style={{ fontSize: 9, color: T.textMuted }}>{sliderMax.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    {/* Forecast Chart */}
-                    <div style={{ marginBottom: 8 }}>
-                      <MiniForecastChart basePoints={basePoints} withPoints={withPoints} leadWeeks={Math.max(1, Math.round(row.leadTime / 7))} simQty={simQty} T={T} />
-                    </div>
-
-                    {/* Legend */}
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <svg width={20} height={4}><line x1={0} y1={2} x2={20} y2={2} stroke="#f44336" strokeWidth={1.5} strokeDasharray="4 2" /></svg>
-                        <span style={{ fontSize: 9, color: T.textDim }}>Without order</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <svg width={20} height={4}><line x1={0} y1={2} x2={20} y2={2} stroke="#4caf50" strokeWidth={2} /></svg>
-                        <span style={{ fontSize: 9, color: T.textDim }}>With order</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <svg width={8} height={8}><circle cx={4} cy={4} r={4} fill="#f44336" /></svg>
-                        <span style={{ fontSize: 9, color: T.textDim }}>Stockout point</span>
-                      </div>
-                    </div>
-
-                    {/* Outcome metrics */}
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <div style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 9, color: T.textDim, marginBottom: 3 }}>Stockout (no order)</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: baseStockout != null ? '#f44336' : '#4caf50' }}>
-                          {baseStockout != null ? `Wk ${baseStockout}` : 'None'}
-                        </div>
-                      </div>
-                      <div style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 9, color: T.textDim, marginBottom: 3 }}>Stockout (w/ order)</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: withStockout != null ? '#ff9800' : '#4caf50' }}>
-                          {withStockout != null ? `Wk ${withStockout}` : 'None'}
-                        </div>
-                      </div>
-                      <div style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 9, color: T.textDim, marginBottom: 3 }}>Est. PO Cost</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>
-                          ${(simQty * row.cost).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', ...tile({ borderLeft: `3px solid ${T.tabActive}` }) }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.tabActive, flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontSize: 11, color: T.text, lineHeight: 1.55 }}>{action}</span>
               </div>
             ))}
           </div>
@@ -537,6 +313,13 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
       </div>
 
+      {/* Footer */}
+      <div style={{ padding: '10px 18px', borderTop: `1px solid ${T.border}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 9, color: T.textDim }}>WarehouseIQ AI · {country}</span>
+        <button onClick={onClose} style={{ fontSize: 10, color: T.textMuted, background: 'none', border: `1px solid ${T.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>
+          Close
+        </button>
+      </div>
 
     </div>
   )
@@ -1017,15 +800,7 @@ export default function InventoryScreen({
                       boxSizing:       'border-box',
                       verticalAlign:   'middle',
                     }}>
-                      {col.key === 'wos' && hasSimulate(row)
-                        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <svg width={9} height={9} viewBox="0 0 9 9" style={{ flexShrink: 0, opacity: 0.85 }}>
-                              <polygon points="1,1 8,4.5 1,8" fill={T.tabActive} />
-                            </svg>
-                            {fmt(v, col.key, currency, showUSD)}
-                          </span>
-                        : fmt(v, col.key, currency, showUSD)
-                      }
+                      {fmt(v, col.key, currency, showUSD)}
                     </TableCell>
                   )
                 })}
