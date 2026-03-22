@@ -469,13 +469,6 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
       </div>
 
-      {/* Footer */}
-      <div style={{ padding: '10px 18px', borderTop: `1px solid ${T.border}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 9, color: T.textDim }}>WarehouseIQ AI · {country}</span>
-        <button onClick={onClose} style={{ fontSize: 10, color: T.textMuted, background: 'none', border: `1px solid ${T.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>
-          Close
-        </button>
-      </div>
 
     </div>
   )
