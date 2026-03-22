@@ -418,7 +418,7 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
                     </div>
 
                     {/* Legend */}
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <svg width={20} height={4}><line x1={0} y1={2} x2={20} y2={2} stroke="#f44336" strokeWidth={1.5} strokeDasharray="4 2" /></svg>
                         <span style={{ fontSize: 9, color: T.textDim }}>Without order</span>
@@ -426,6 +426,10 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <svg width={20} height={4}><line x1={0} y1={2} x2={20} y2={2} stroke="#4caf50" strokeWidth={2} /></svg>
                         <span style={{ fontSize: 9, color: T.textDim }}>With order</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <svg width={8} height={8}><circle cx={4} cy={4} r={4} fill="#f44336" /></svg>
+                        <span style={{ fontSize: 9, color: T.textDim }}>Stockout point</span>
                       </div>
                     </div>
 
