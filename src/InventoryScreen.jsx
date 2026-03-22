@@ -181,19 +181,63 @@ function stockoutWeek(pts) {
   return idx === -1 ? null : idx
 }
 
-function MiniForecastChart({ basePoints, withPoints, T }) {
-  const W = 264, H = 90
+function MiniForecastChart({ basePoints, withPoints, leadWeeks, T }) {
+  const W = 264, H = 110
+  const padL = 8, padR = 8, padT = 14, padB = 22
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
   const maxV = Math.max(...basePoints, ...withPoints, 1)
-  const toCoords = arr =>
-    arr.map((v, i) => `${(i / 12) * (W - 24) + 12},${H - 10 - (v / maxV) * (H - 20)}`).join(' ')
+
+  const xOf = w => padL + (w / 12) * chartW
+  const yOf = v => padT + chartH - (v / maxV) * chartH
+
+  const toCoords = arr => arr.map((v, i) => `${xOf(i)},${yOf(v)}`).join(' ')
+
   const baseStk = stockoutWeek(basePoints)
-  const stkX = baseStk != null ? (baseStk / 12) * (W - 24) + 12 : null
+  const stkX = baseStk != null ? xOf(baseStk) : null
+  const arrX  = leadWeeks <= 12 ? xOf(leadWeeks) : null
+
+  const xLabels = [0, 3, 6, 9, 12]
+  const baseline = padT + chartH
+
   return (
     <svg width={W} height={H} style={{ display: 'block', overflow: 'visible' }}>
-      <line x1={12} y1={H - 10} x2={W - 12} y2={H - 10} stroke={T.border} strokeWidth={1} />
+      {/* X axis */}
+      <line x1={padL} y1={baseline} x2={W - padR} y2={baseline} stroke={T.border} strokeWidth={1} />
+
+      {/* X axis labels */}
+      {xLabels.map(w => (
+        <text key={w} x={xOf(w)} y={baseline + 10} textAnchor="middle"
+          fontSize={8} fill={T.textMuted ?? T.textDim}>
+          Wk {w}
+        </text>
+      ))}
+
+      {/* Order arrives marker */}
+      {arrX != null && (
+        <>
+          <line x1={arrX} y1={padT} x2={arrX} y2={baseline} stroke={T.tabActive}
+            strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
+          <text x={arrX} y={padT - 3} textAnchor="middle" fontSize={7.5}
+            fill={T.tabActive} opacity={0.85}>
+            Order arrives
+          </text>
+        </>
+      )}
+
+      {/* Lines */}
       <polyline points={toCoords(basePoints)} fill="none" stroke="#f44336" strokeWidth={1.5} strokeDasharray="4 2" />
       <polyline points={toCoords(withPoints)} fill="none" stroke="#4caf50" strokeWidth={2} />
-      {stkX != null && <circle cx={stkX} cy={H - 10} r={4} fill="#f44336" />}
+
+      {/* Stockout dot + label */}
+      {stkX != null && (
+        <>
+          <circle cx={stkX} cy={baseline} r={4} fill="#f44336" />
+          <text x={stkX} y={baseline - 8} textAnchor="middle" fontSize={7.5} fill="#f44336" fontWeight="700">
+            Stockout
+          </text>
+        </>
+      )}
     </svg>
   )
 }
@@ -420,7 +464,7 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
                     {/* Forecast Chart */}
                     <div style={{ marginBottom: 8 }}>
-                      <MiniForecastChart basePoints={basePoints} withPoints={withPoints} T={T} />
+                      <MiniForecastChart basePoints={basePoints} withPoints={withPoints} leadWeeks={Math.max(1, Math.round(row.leadTime / 7))} T={T} />
                     </div>
 
                     {/* Legend */}
