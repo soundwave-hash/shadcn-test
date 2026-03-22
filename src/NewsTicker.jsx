@@ -272,9 +272,6 @@ export default function NewsTicker({ country, T }) {
 
           {/* Footer */}
           <div style={{ marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize: 9, color: T.textDim }}>
-              Powered by Claude AI · Contextual analysis for {country} operations
-            </span>
             <button
               onClick={openInsight}
               style={{
