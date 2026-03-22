@@ -448,7 +448,13 @@ function AiInsightDrawer({ row, country, T, isDark, onClose }) {
 
                 {/* What-If Simulation Panel */}
                 {simIdx === i && action.type === 'reorder' && (
-                  <div ref={el => el && el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })} style={{
+                  <div ref={el => {
+                    if (!el) return
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                    let parent = el.parentElement
+                    while (parent && parent.scrollHeight <= parent.clientHeight) parent = parent.parentElement
+                    if (parent) setTimeout(() => { parent.scrollTop += parent.clientHeight * 0.2 }, 150)
+                  }} style={{
                     marginTop: 6,
                     background: isDark ? 'rgba(0,188,212,0.06)' : 'rgba(0,188,212,0.04)',
                     border: `1px solid ${T.tabActive}`,
