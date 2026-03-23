@@ -8,6 +8,8 @@ export const DEPT_CONVERSATIONS_DE = {
     { role: 'ai',   text: "Die drei wichtigsten Maßnahmen: (1) Sofortnachbestellung bei Bananen und Roma-Tomaten – beide haben hohe Umschlagsgeschwindigkeit und unter 3 Wochen Vorrat. (2) Greek Yogurt und Butter (1lb) vor Ablauf der 4-tägigen Lieferzeit nachbestellen. (3) Croissants und Blueberry Muffins markieren – nur 2 Tage Lieferzeit, aber der aktuelle Bestand reicht nicht bis zum Wochenende." },
     { role: 'user', text: 'Gib mir jetzt deine wichtigsten Empfehlungen.' },
     { role: 'ai',   text: "• Obst & Gemüse: Heute 2.000 Einheiten Bananen und 1.500 Einheiten Roma-Tomaten bestellen\n• Molkerei: 800 Einheiten Greek Yogurt und 600 Einheiten Butter (1lb) vor Ablauf der Lieferzeit nachbestellen\n• Backwaren: Sofort 700 Einheiten Brioche Buns und 500 Einheiten Croissants einreichen\n• Meeresfrüchte: 1.200 Einheiten Shrimp und 900 Einheiten Salmon Fillet bestellen, um Wochenend-Ausverkauf zu verhindern\n• Preisgestaltung: Blueberries um 20% und Peaches um 25% reduzieren, um Verderb diese Woche zu begrenzen" },
+    { role: 'user', text: 'Genehmigt. Bitte alle Empfehlungen an die zuständigen Teams weiterleiten.' },
+    { role: 'ai',   pause: 2000, text: "Erledigt. Bestellteam benachrichtigt: Bananen (2.000 Einheiten), Roma-Tomaten (1.500 Einheiten), Baby-Spinat (600 Einheiten), Greek Yogurt (800 Einheiten), Butter 1lb (600 Einheiten), Brioche Buns (700 Einheiten), Croissants (500 Einheiten), Shrimp (1.200 Einheiten) und Salmon Fillet (900 Einheiten). Preisgestaltungsteam angewiesen, Blueberries um 20% und Peaches um 25% ab heute zu reduzieren." },
   ],
   'Produce': [
     { role: 'user', text: 'Wie sieht es aktuell mit unserem Verderb im Obst- und Gemüsebereich aus?' },

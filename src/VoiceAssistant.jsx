@@ -134,6 +134,8 @@ const DEPT_CONVERSATIONS = {
     { role: 'ai',   text: "Top three actions: (1) Rush replenishment on Bananas and Roma Tomatoes, both high velocity and under 3 weeks. (2) Reorder Greek Yogurt and Butter (1lb) before the 4 day lead time expires. (3) Flag Croissants and Blueberry Muffins, only a 2 day lead time but current stock won't carry through the weekend." },
     { role: 'user', text: 'Give me your top recommendations right now.' },
     { role: 'ai',   text: "• Produce: Order 2,000 units Bananas and 1,500 units Roma Tomatoes today\n• Dairy: Reorder 800 units Greek Yogurt and 600 units Butter (1lb) before lead time closes\n• Bakery: Submit 700 units Brioche Buns and 500 units Croissants immediately\n• Seafood: Order 1,200 units Shrimp and 900 units Salmon Fillet to prevent weekend stockout\n• Pricing: Mark down Blueberries 20% and Peaches 25% to cut spoilage losses this week" },
+    { role: 'user', text: 'Approved. Please push all recommendations to the relevant teams.' },
+    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified: Bananas (2,000 units), Roma Tomatoes (1,500 units), Baby Spinach (600 units), Greek Yogurt (800 units), Butter 1lb (600 units), Brioche Buns (700 units), Croissants (500 units), Shrimp (1,200 units), and Salmon Fillet (900 units). Pricing team flagged to mark down Blueberries 20% and Peaches 25% effective today." },
   ],
   'Produce': [
     { role: 'user', text: 'What does our spoilage picture look like across produce right now?' },

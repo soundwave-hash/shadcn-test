@@ -8,6 +8,8 @@ export const DEPT_CONVERSATIONS_ES = {
     { role: 'ai',   text: "Las tres acciones principales: (1) Reabastecimiento urgente de Plátanos y Tomates Roma, ambos de alta rotación y por debajo de 3 semanas. (2) Reordenar Greek Yogurt y Mantequilla (1lb) antes de que expire el plazo de entrega de 4 días. (3) Marcar Croissants y Muffins de Arándano — solo 2 días de plazo de entrega pero el stock actual no llegará al fin de semana." },
     { role: 'user', text: 'Dame tus principales recomendaciones ahora mismo.' },
     { role: 'ai',   text: "• Producción: Pedir 2,000 unidades de Plátanos y 1,500 unidades de Tomates Roma hoy\n• Lácteos: Reordenar 800 unidades de Greek Yogurt y 600 unidades de Mantequilla (1lb) antes de que cierre el plazo de entrega\n• Panadería: Enviar 700 unidades de Brioche Buns y 500 unidades de Croissants de inmediato\n• Mariscos: Pedir 1,200 unidades de Camarones y 900 unidades de Filete de Salmón para prevenir desabasto del fin de semana\n• Precios: Aplicar descuento del 20% en Arándanos y 25% en Duraznos para reducir pérdidas por deterioro esta semana" },
+    { role: 'user', text: 'Aprobado. Por favor, envía todas las recomendaciones a los equipos correspondientes.' },
+    { role: 'ai',   pause: 2000, text: "Listo. Equipo de pedidos notificado: Plátanos (2,000 unidades), Tomates Roma (1,500 unidades), Baby Spinach (600 unidades), Greek Yogurt (800 unidades), Mantequilla 1lb (600 unidades), Brioche Buns (700 unidades), Croissants (500 unidades), Camarones (1,200 unidades) y Filete de Salmón (900 unidades). Equipo de precios notificado para aplicar descuento del 20% en Arándanos y 25% en Duraznos a partir de hoy." },
   ],
   'Produce': [
     { role: 'user', text: '¿Cómo está el panorama de deterioro en producción ahora mismo?' },
