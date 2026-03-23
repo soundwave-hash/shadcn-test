@@ -18,12 +18,12 @@ export default async function handler(req) {
 
   try {
     const gnewsRes = await fetch(
-      `https://gnews.io/api/v4/search?q=${q}&lang=en&max=10&apikey=${process.env.GNEWS_API_KEY}`
+      `https://gnews.io/api/v4/search?q=${q}&lang=en&max=10&apikey=${process.env.GNEWS_KEY}`
     )
     const gnewsData = await gnewsRes.json()
 
     if (!gnewsData.articles?.length) {
-      return new Response(JSON.stringify({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY, anthropicKeyPresent: !!process.env.ANTHROPIC_API_KEY }), {
+      return new Response(JSON.stringify({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_KEY, anthropicKeyPresent: !!process.env.ANTHROPIC_API_KEY }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     }
