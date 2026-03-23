@@ -1,8 +1,18 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  if (req.method === 'OPTIONS') return res.status(200).end()
+export const config = { runtime: 'edge' }
 
-  const country = req.query.country || 'United States'
+export default async function handler(req) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    })
+  }
+
+  const { searchParams } = new URL(req.url)
+  const country = searchParams.get('country') || 'United States'
 
   const q = encodeURIComponent('tariffs OR trade OR inflation OR oil OR shipping OR freight OR weather OR labor OR economy OR sanctions')
 
@@ -13,7 +23,9 @@ export default async function handler(req, res) {
     const gnewsData = await gnewsRes.json()
 
     if (!gnewsData.articles?.length) {
-      return res.status(200).json({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY, keyLength: process.env.GNEWS_API_KEY?.length })
+      return new Response(JSON.stringify({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      })
     }
 
     const headlines = gnewsData.articles.map(a => a.title)
@@ -41,12 +53,19 @@ export default async function handler(req, res) {
 
     try {
       const filtered = JSON.parse(text)
-      return res.status(200).json({ headlines: Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 6) })
+      const result = Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 6)
+      return new Response(JSON.stringify({ headlines: result }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      })
     } catch {
-      return res.status(200).json({ headlines: headlines.slice(0, 6) })
+      return new Response(JSON.stringify({ headlines: headlines.slice(0, 6) }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      })
     }
   } catch (err) {
-    console.error('news.js error:', err)
-    return res.status(500).json({ error: err.message, headlines: [] })
+    return new Response(JSON.stringify({ error: err.message, headlines: [] }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    })
   }
 }
