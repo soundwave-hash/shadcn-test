@@ -204,7 +204,7 @@ export default function NewsTicker({ country, T }) {
       {/* ── AI Insight panel   fixed below nav, centered ── */}
       {showPanel && (
         <div style={{
-          position: 'fixed', top: 49, left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
           width: 680, maxWidth: '90vw', zIndex: 200,
           backgroundColor: T.cardBg,
           border: `1px solid ${T.border}`,

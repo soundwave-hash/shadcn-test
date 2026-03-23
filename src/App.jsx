@@ -1030,9 +1030,6 @@ export default function App() {
               }}>{r}</button>
             ))}
           </div>
-          <span style={{ color: T.sep, fontSize:12 }}>|</span>
-          <NewsTicker country={country} T={T} />
-          <span style={{ color: T.sep, fontSize:12 }}>|</span>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={() => setVoiceOpen(o => !o)} title="WarehouseIQ Agent" style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46'), display:'block' }}>
@@ -1088,6 +1085,12 @@ export default function App() {
             <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={4} />
           </div>
         </div>
+
+        {/* ── News ticker strip ── */}
+        <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
+          <NewsTicker country={country} T={T} />
+        </div>
+
         <style>{`
           .geo-scroll::-webkit-scrollbar { width: 8px; }
           .geo-scroll::-webkit-scrollbar-track { background: ${T.panelBg}; }
@@ -1196,9 +1199,6 @@ export default function App() {
             }}>{r}</button>
           ))}
         </div>
-        <span style={{ color: T.sep, fontSize:12 }}>|</span>
-        <NewsTicker country={country} T={T} />
-        <span style={{ color: T.sep, fontSize:12 }}>|</span>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
@@ -1349,6 +1349,11 @@ export default function App() {
           </DropdownMenu>
           <AccountSwitcher activeUser={activeUser} onSwitch={setActiveUser} T={T} marginLeft={8} />
         </div>
+      </div>
+
+      {/* ── News ticker strip ── */}
+      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
+        <NewsTicker country={country} T={T} />
       </div>
 
       {/* ── Dashboard body ── */}
