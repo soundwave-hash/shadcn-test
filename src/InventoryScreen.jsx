@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Sun, Download, X, Zap } from 'lucide-react'
-import VoiceAssistant from './VoiceAssistant'
-import SlackPanel from './SlackPanel'
+
 import { saveAs } from 'file-saver'
 
 // ── Column definitions ─────────────────────────────────────────────────────────
@@ -901,8 +900,6 @@ export default function InventoryScreen({
         ))}
       </div>
     )}
-      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
-      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
     </>
   )
 }

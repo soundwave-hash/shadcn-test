@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import NewsTicker from './NewsTicker'
 import AccountSwitcher from './AccountSwitcher'
-import SlackPanel from './SlackPanel'
-import VoiceAssistant from './VoiceAssistant'
+
 import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
 import {
   ComposedChart, Area, Line, ReferenceLine,
@@ -1795,8 +1794,6 @@ export default function KpiDetailPage({
         </div>
       </div>
 
-      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
-      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
     </div>
   )
 }

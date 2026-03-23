@@ -1003,6 +1003,7 @@ export default function App() {
 
   if (view === 'geo') {
     return (
+      <>
       <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
         {/* ── Menu bar ── */}
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
@@ -1099,14 +1100,16 @@ export default function App() {
         >
           <GeoScreen countryData={COUNTRY_DATA} theme={theme} T={T} dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
-        <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
-        <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
       </div>
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
+    </>
     )
   }
 
   if (view === 'inventory') {
     return (
+      <>
       <InventoryScreen
         theme={theme}
         T={T}
@@ -1125,6 +1128,9 @@ export default function App() {
         voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
         slackOpen={slackOpen} setSlackOpen={setSlackOpen}
       />
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
+      </>
     )
   }
 
@@ -1133,6 +1139,7 @@ export default function App() {
     const currentKpi = [...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2]
       .find(k => k.label === kpiLabel) || kpiCards[0]
     return (
+      <>
       <KpiDetailPage
         kpi={currentKpi}
         country={country}
@@ -1152,10 +1159,14 @@ export default function App() {
         voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
         slackOpen={slackOpen} setSlackOpen={setSlackOpen}
       />
+      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
+      </>
     )
   }
 
   return (
+    <>
     <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
 
       {/* ── Menu bar ── */}
@@ -1575,8 +1586,9 @@ export default function App() {
         </div>
       </div>
 
-      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
-      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
     </div>
+    <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
+    <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
+    </>
   )
 }
