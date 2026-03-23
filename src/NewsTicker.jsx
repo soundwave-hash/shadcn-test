@@ -102,11 +102,11 @@ export default function NewsTicker({ country, T }) {
           }
         })
         .catch(loadCache)
-        .finally(() => { setLoadingNews(false); setLastUpdated(prev => prev ?? Date.now()) })
+        .finally(() => { setLoadingNews(false); setLastUpdated(Date.now()) })
     }
 
     fetchHeadlines()
-    const interval = setInterval(fetchHeadlines, 5 * 60 * 1000)
+    const interval = setInterval(fetchHeadlines, 15 * 60 * 1000)
     return () => clearInterval(interval)
   }, [country])
 
