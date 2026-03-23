@@ -42,7 +42,7 @@ export default function NewsTicker({ country, T }) {
   const [headlines, setHeadlines]         = useState(DEFAULT_HEADLINES)
   const [loadingNews, setLoadingNews]     = useState(true)
   const [showPanel, setShowPanel]         = useState(false)
-  const [panelMode, setPanelMode]         = useState('badge') // 'badge' | 'headline'
+  const panelModeRef                      = useRef('badge')   // 'badge' | 'headline'
   const [headlineIdx, setHeadlineIdx]     = useState(0)
   const [streamText, setStreamText]       = useState('')
   const [isStreaming, setIsStreaming]     = useState(false)
@@ -162,7 +162,7 @@ export default function NewsTicker({ country, T }) {
     }
   }
 
-  function openInsight() { setPanelMode('badge'); fetchInsight(headlineIdx) }
+  function openInsight() { panelModeRef.current = 'badge'; fetchInsight(headlineIdx) }
 
   function nextInsight() {
     const next = (headlineIdx + 1) % headlines.length
@@ -385,7 +385,7 @@ export default function NewsTicker({ country, T }) {
                     key={i}
                     onClick={() => {
                       if (dragRef.current.hasDragged) return
-                      setPanelMode('headline')
+                      panelModeRef.current = 'headline'
                       setHeadlineIdx(realIdx)
                       fetchInsight(realIdx)
                     }}
@@ -499,7 +499,7 @@ export default function NewsTicker({ country, T }) {
           ) : null}
 
           {/* Footer — only shown when opened via AI badge */}
-          {panelMode === 'badge' && (
+          {panelModeRef.current === 'badge' && (
             <div style={{ marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <button
                 onClick={nextInsight}
