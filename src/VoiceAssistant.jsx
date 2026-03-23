@@ -906,7 +906,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
               transition: 'background 150ms, border 150ms',
             }}
           >
-            <Mic size={15} color={started ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
+            <Mic size={15} color={(typingRole === 'user' || userWriting) ? '#22c55e' : started ? '#00bcd4' : (theme === 'dark' ? '#fff' : '#333')} />
           </button>
         </div>
       </div>
