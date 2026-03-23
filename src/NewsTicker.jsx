@@ -227,6 +227,9 @@ export default function NewsTicker({ country, T }) {
 
       {/* ── AI Insight panel   fixed below nav, centered ── */}
       {showPanel && (
+        <>
+        {/* Backdrop — click outside to close */}
+        <div onClick={closePanel} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
         <div style={{
           position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
           width: 680, maxWidth: '90vw', zIndex: 200,
@@ -311,6 +314,7 @@ export default function NewsTicker({ country, T }) {
             </span>
           </div>
         </div>
+        </>
       )}
     </>
   )
