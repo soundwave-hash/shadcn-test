@@ -146,7 +146,7 @@ const DEPT_CONVERSATIONS = {
     { role: 'ai',   text: "Three levers: first, run a markdown promotion on Peaches and Blueberries today at 20% off to drive velocity before shelf life expires. Second, reduce the inbound order on Blueberries by 30% for the next cycle given the low turns. Third, shift Strawberry receiving from twice weekly to three times weekly in smaller batches to keep product fresher on shelf." },
     { role: 'user', text: 'What should we do right now?' },
     { role: 'ai',   text: "• Order 2,000 units Bananas and 1,500 units Roma Tomatoes today (3 day lead time)\n• Order 600 units Baby Spinach and 400 units Cucumber before end of day\n• Mark down Peaches 25% and Blueberries 20% immediately to cut spoilage\n• Reduce next Blueberry inbound order by 30% to match current turn rate\n• Raise Strawberry reorder point by 20% ahead of spring demand increase" },
-    { role: 'user', text: 'Approved, push changes to the ordering and pricing teams, but reject the suggestion regarding reordering Strawberries' },
+    { role: 'user', text: 'Approved, push changes to the ordering and pricing teams, but reject the suggestion regarding reordering Strawberries.' },
     { role: 'ai',   pause: 2000, segments: [
       { text: "Done. Ordering team notified with updated quantities for Bananas (2,000 units), Roma Tomatoes (1,500 units), Baby Spinach (600 units), and Cucumber (400 units). Pricing team flagged to apply 25% markdown on Peaches and 20% markdown on Blueberries effective today." },
       { text: "\nStrawberry reorder suggestion rejected per your instruction.", color: '#ff6b6b' },
