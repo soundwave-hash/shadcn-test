@@ -173,7 +173,7 @@ export default function NewsTicker({ country, T }) {
   useEffect(() => {
     if (tickerRef.current) {
       const halfWidth = tickerRef.current.scrollWidth / 2
-      setTickerDuration(Math.round(halfWidth / 120)) // 120px per second
+      setTickerDuration(Math.round(halfWidth / 80)) // 80px per second
     }
   }, [headlines])
 
