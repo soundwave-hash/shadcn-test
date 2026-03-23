@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const gnewsData = await gnewsRes.json()
 
     if (!gnewsData.articles?.length) {
-      return res.status(200).json({ headlines: [], debug: gnewsData })
+      return res.status(200).json({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY, keyLength: process.env.GNEWS_API_KEY?.length })
     }
 
     const headlines = gnewsData.articles.map(a => a.title)
