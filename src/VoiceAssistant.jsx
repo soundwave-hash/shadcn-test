@@ -280,10 +280,11 @@ function VoiceWave() {
 }
 
 // ── Typewriter text (user messages) ──────────────────────────────────────────
-function TypewriterText({ text, color, onDone, onChar }) {
+function TypewriterText({ text, color, onDone, onChar, instant }) {
   const [displayed, setDisplayed] = useState('')
   const isCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(text)
   useEffect(() => {
+    if (instant) { setDisplayed(text); return }
     setDisplayed('')
     let i = 0
     const id = setInterval(() => {
@@ -324,7 +325,7 @@ function AnthropicSpinner({ active }) {
 
 // ── Word-by-word text (AI messages) ──────────────────────────────────────────
 // Accepts either `text` (string) or `segments` ([{text, color?}]) for colored inline runs
-function WordByWordText({ text, segments, onDone, onWord }) {
+function WordByWordText({ text, segments, onDone, onWord, instant }) {
   const src = segments || [{ text }]
   const isCJK = src.some(({ text: t }) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(t))
   // Build flat token list with optional per-token color
@@ -340,6 +341,7 @@ function WordByWordText({ text, segments, onDone, onWord }) {
   const [count, setCount] = useState(0)
   const effectKey = segments ? segments.map(s => s.text).join('\x00') : text
   useEffect(() => {
+    if (instant) { setCount(tokens.length); return }
     setCount(0)
     let i = 0
     const id = setInterval(() => {
@@ -702,6 +704,15 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                   const newTranslated = !translated
                   setIsTranslating(true)
                   setTimeout(() => {
+                    // Cancel any in-progress playback before swapping content
+                    timersRef.current.forEach(clearTimeout)
+                    timersRef.current = []
+                    userWritingDoneRef.current = null
+                    aiWritingDoneRef.current = null
+                    setUserWriting(false)
+                    setAiIsAnimating(false)
+                    setIsProcessing(false)
+
                     setTranslated(newTranslated)
                     if (started && messages.length > 0) {
                       const newConv = selectedDept !== '"AMA"'
@@ -833,14 +844,14 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                     border: '1px solid rgba(0,188,212,0.3)',
                     fontSize: 13, lineHeight: 1.55, color: '#00bcd4',
                   }}>
-                    <TypewriterText text={msg.text} color="#00bcd4" onChar={scrollToBottom} onDone={() => { setUserWriting(false); userWritingDoneRef.current?.(); userWritingDoneRef.current = null; scrollToBottom() }} />
+                    <TypewriterText text={msg.text} color="#00bcd4" instant={isTranslating} onChar={scrollToBottom} onDone={() => { setUserWriting(false); userWritingDoneRef.current?.(); userWritingDoneRef.current = null; scrollToBottom() }} />
                   </div>
                 ) : (
                   <div style={{
                     maxWidth: '72%', fontSize: 13, lineHeight: 1.6,
                     color: T.text, alignSelf: 'flex-start', whiteSpace: 'pre-line',
                   }}>
-                    <WordByWordText text={msg.text} segments={msg.segments} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null; scrollToBottom() }} />
+                    <WordByWordText text={msg.text} segments={msg.segments} instant={isTranslating} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null; scrollToBottom() }} />
                   </div>
                 )}
                 {isUser && activeUser && (
