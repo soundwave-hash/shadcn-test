@@ -17,6 +17,14 @@ const IMPACT = {
   Low:      { color: '#00897b', bg: 'rgba(0,137,123,0.10)',  border: 'rgba(0,137,123,0.30)'  },
 }
 
+// ── Keyword-based risk classifier for ticker dots ──────────────────────────
+function classifyImpact(headline) {
+  const h = headline.toLowerCase()
+  if (/war|conflict|blockade|attack|missile|invasion|crisis|sanction|tariff|ban|embargo|collapse|strike|hurricane|typhoon|earthquake|shortage|halt|freeze/.test(h)) return 'High'
+  if (/inflation|delay|disruption|freight|logistics|supply chain|port|fuel|drought|flood|labor|recall|price rise|congestion/.test(h)) return 'Moderate'
+  return 'Low'
+}
+
 function parseInsightText(text) {
   const lines = text.trim().split('\n').filter(l => l.trim())
   let impact = 'Moderate'
@@ -173,14 +181,22 @@ export default function NewsTicker({ country, T }) {
               width: 'max-content',
               whiteSpace: 'nowrap',
               fontSize: 11,
-              animation: showPanel ? 'none' : 'wiq-ticker 70s linear infinite',
+              animation: showPanel ? 'none' : 'wiq-ticker 110s linear infinite',
             }}>
-              {doubled.map((h, i) => (
-                <span key={i}>
-                  <span style={{ color: T.textMuted }}>{h}</span>
-                  <span style={{ color: T.text, margin: '0 10px' }}>|</span>
-                </span>
-              ))}
+              {doubled.map((h, i) => {
+                const imp = IMPACT[classifyImpact(h)]
+                return (
+                  <span key={i}>
+                    <span style={{
+                      display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                      backgroundColor: imp.color, marginRight: 6, verticalAlign: 'middle',
+                      flexShrink: 0,
+                    }} />
+                    <span style={{ color: T.textMuted }}>{h}</span>
+                    <span style={{ color: T.text, margin: '0 14px' }}>|</span>
+                  </span>
+                )
+              })}
             </div>
           )}
         </div>
