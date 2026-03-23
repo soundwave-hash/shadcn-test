@@ -62,9 +62,10 @@ export default function NewsTicker({ country, T }) {
       .then(r => r.json())
       .then(data => {
         if (data.headlines?.length) {
-          setHeadlines(data.headlines)
+          const unique = [...new Set(data.headlines)]
+          setHeadlines(unique)
           setHeadlineIdx(0)
-          localStorage.setItem(cacheKey, JSON.stringify({ headlines: data.headlines, ts: Date.now() }))
+          localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
         } else {
           // API returned empty — try cache
           const cached = localStorage.getItem(cacheKey)

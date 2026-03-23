@@ -28,7 +28,7 @@ export default async function handler(req) {
       })
     }
 
-    const headlines = gnewsData.articles.map(a => a.title)
+    const headlines = [...new Set(gnewsData.articles.map(a => a.title))]
 
     // Claude Haiku — filter and reframe for shipping, logistics & grocery operations
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -53,7 +53,7 @@ export default async function handler(req) {
 
     try {
       const filtered = JSON.parse(text)
-      const result = Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 10)
+      const result = [...new Set(Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 10))]
       return new Response(JSON.stringify({ headlines: result }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
