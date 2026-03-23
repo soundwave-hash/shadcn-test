@@ -115,6 +115,7 @@ export default function NewsTicker({ country, T }) {
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
         setStreamText(accumulated)
+        await new Promise(r => setTimeout(r, 40))
       }
 
       setParsedInsight(parseInsightText(accumulated))
