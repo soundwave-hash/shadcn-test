@@ -277,7 +277,7 @@ export default function NewsTicker({ country, T }) {
               {parsedInsight.bullets.map((b, i) => (
                 <div key={i} style={{ display:'flex', gap: 9, alignItems:'flex-start' }}>
                   <span style={{ color: T.tabActive, fontSize: 11, flexShrink: 0, marginTop: 1 }}>▸</span>
-                  <span style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.55 }}>{b}</span>
+                  <span style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.55 }}>{b}</span>
                 </div>
               ))}
             </div>
