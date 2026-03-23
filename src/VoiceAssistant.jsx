@@ -2,6 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Mic, X, Clipboard, Check, Languages } from 'lucide-react'
 import { CATEGORIES } from './data/groceryProducts'
+import { DEPT_CONVERSATIONS_ES } from './dept_conversations_es'
+import { DEPT_CONVERSATIONS_DE } from './dept_conversations_de'
+import { DEPT_CONVERSATIONS_JA } from './dept_conversations_ja'
+import { DEPT_CONVERSATIONS_KO } from './dept_conversations_ko'
+import { DEPT_CONVERSATIONS_ZH } from './dept_conversations_zh'
 
 // ── Country metadata ────────────────────────────────────────────────────────
 const COUNTRY_META = {
@@ -216,6 +221,14 @@ const DEPT_CONVERSATIONS = {
   ],
 }
 
+const DEPT_CONVERSATIONS_BY_COUNTRY = {
+  Mexico:  DEPT_CONVERSATIONS_ES,
+  Germany: DEPT_CONVERSATIONS_DE,
+  Japan:   DEPT_CONVERSATIONS_JA,
+  Korea:   DEPT_CONVERSATIONS_KO,
+  China:   DEPT_CONVERSATIONS_ZH,
+}
+
 const ENGLISH_ONLY = new Set(['United States', 'Canada'])
 const NATIVE_LABEL = { Mexico: 'Spanish', Germany: 'German', Japan: 'Japanese', Korea: 'Korean', China: 'Mandarin' }
 
@@ -393,7 +406,9 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
   }, [selectedDept])
 
   const activeConversation = selectedDept !== '"AMA"'
-    ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+    ? (!ENGLISH_ONLY.has(country) && !translated
+        ? ((DEPT_CONVERSATIONS_BY_COUNTRY[country] || {})[selectedDept] || DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+        : (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments']))
     : (!ENGLISH_ONLY.has(country) && translated
         ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
         : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
