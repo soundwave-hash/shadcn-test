@@ -202,11 +202,11 @@ export default function NewsTicker({ country, T }) {
   // Apply spring tension to backward (rightward) drags
   function applyTension(delta) {
     if (delta <= 0) return delta                        // forward: 1:1
-    return Math.pow(delta, 0.65) * 3.5                 // backward: dampened pull
+    return Math.pow(delta, 0.65) * 2.0                 // backward: dampened pull
   }
 
   function springBack(el, targetOffset) {
-    el.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)'
+    el.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.02, 0.64, 1)'
     el.style.transform = `translateX(${targetOffset}px)`
     setTimeout(() => {
       el.style.transition = ''
