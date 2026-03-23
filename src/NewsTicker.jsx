@@ -246,7 +246,7 @@ export default function NewsTicker({ country, T }) {
           </div>
 
           {/* Headline quote */}
-          <div style={{ fontSize: 11, color: T.textDim, fontStyle: 'italic', marginBottom: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: T.textDim, marginBottom: 12, lineHeight: 1.5 }}>
             "{currentHeadline}"
           </div>
 
