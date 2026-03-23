@@ -18,6 +18,9 @@ export default async function handler(req, res) {
 
     const headlines = gnewsData.articles.map(a => a.title)
 
+    // TEMP: return raw GNews headlines without Claude filter
+    return res.status(200).json({ headlines: headlines.slice(0, 6) })
+
     // Claude Haiku second-pass filter
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
