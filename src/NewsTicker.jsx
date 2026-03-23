@@ -51,36 +51,41 @@ export default function NewsTicker({ country, T }) {
   useEffect(() => {
     const cacheKey = `newsTicker_headlines_${country}`
     setLoadingNews(true)
+    // Normalize raw items — handles both new {headline,impact} objects and old string format
+    function normalize(items) {
+      const seen = new Set()
+      return items
+        .map(item => typeof item === 'string' ? { headline: item, impact: 'Moderate' } : item)
+        .filter(item => {
+          if (!item.headline || seen.has(item.headline)) return false
+          seen.add(item.headline)
+          return true
+        })
+    }
+
+    function loadCache() {
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const { headlines: h } = JSON.parse(cached)
+          if (h?.length) { setHeadlines(normalize(h)); setHeadlineIdx(0) }
+        }
+      } catch {}
+    }
+
     fetch(`/api/news?country=${encodeURIComponent(country)}`)
       .then(r => r.json())
       .then(data => {
         if (data.headlines?.length) {
-          const seen = new Set()
-          const unique = data.headlines.filter(item => {
-            if (seen.has(item.headline)) return false
-            seen.add(item.headline)
-            return true
-          })
+          const unique = normalize(data.headlines)
           setHeadlines(unique)
           setHeadlineIdx(0)
           localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
         } else {
-          // API returned empty — try cache
-          const cached = localStorage.getItem(cacheKey)
-          if (cached) {
-            const { headlines: h } = JSON.parse(cached)
-            if (h?.length) { setHeadlines(h); setHeadlineIdx(0) }
-          }
+          loadCache()
         }
       })
-      .catch(() => {
-        // Network/API error — try cache
-        const cached = localStorage.getItem(cacheKey)
-        if (cached) {
-          const { headlines: h } = JSON.parse(cached)
-          if (h?.length) { setHeadlines(h); setHeadlineIdx(0) }
-        }
-      })
+      .catch(loadCache)
       .finally(() => setLoadingNews(false))
   }, [country])
 
