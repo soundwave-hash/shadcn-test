@@ -1199,7 +1199,7 @@ export default function App() {
             }}>{r}</button>
           ))}
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:'auto' }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1276,7 +1276,7 @@ export default function App() {
             onClick={() => setVoiceOpen(o => !o)}
             title="WarehouseIQ Agent"
             style={{
-              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 'auto',
+              width: 28, height: 28, borderRadius: 7, cursor: 'pointer',
               border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`,
               background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
