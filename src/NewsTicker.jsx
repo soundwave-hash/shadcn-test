@@ -170,11 +170,7 @@ export default function NewsTicker({ country, T }) {
         </div>
 
         {/* Scrolling headline text */}
-        <div
-          style={{ flex: 1, overflow: 'hidden', cursor: 'pointer', minWidth: 0 }}
-          title="Click for AI analysis"
-          onClick={openInsight}
-        >
+        <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
           {loadingNews ? (
             <span style={{ fontSize: 11, color: T.textMuted }}>Loading live headlines…</span>
           ) : (
@@ -186,9 +182,15 @@ export default function NewsTicker({ country, T }) {
               animation: showPanel ? 'none' : 'wiq-ticker 110s linear infinite',
             }}>
               {doubled.map((h, i) => {
+                const realIdx = i % headlines.length
                 const imp = IMPACT[classifyImpact(h)]
                 return (
-                  <span key={i}>
+                  <span
+                    key={i}
+                    onClick={() => { setHeadlineIdx(realIdx); fetchInsight(realIdx) }}
+                    title="Click for AI analysis"
+                    style={{ cursor: 'pointer' }}
+                  >
                     <span style={{
                       display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
                       backgroundColor: imp.color, marginRight: 6, verticalAlign: 'middle',
