@@ -196,8 +196,23 @@ export default function NewsTicker({ country, T }) {
     el.style.animation = `wiq-ticker ${durationRef.current}s linear -${elapsed}s infinite`
   }
 
+  // Apply spring tension to backward (rightward) drags
+  function applyTension(delta) {
+    if (delta <= 0) return delta                        // forward: 1:1
+    return Math.pow(delta, 0.65) * 3.5                 // backward: dampened pull
+  }
+
+  function springBack(el, targetOffset) {
+    el.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)'
+    el.style.transform = `translateX(${targetOffset}px)`
+    setTimeout(() => {
+      el.style.transition = ''
+      if (!showPanel) resumeAnimation(el, targetOffset)
+      else el.style.animation = 'none'
+    }, 450)
+  }
+
   function handleMouseDown(e) {
-    // Only left button
     if (e.button !== 0) return
     const el = tickerRef.current
     if (!el) return
@@ -207,7 +222,7 @@ export default function NewsTicker({ country, T }) {
     el.style.animation = 'none'
     el.style.transform = `translateX(${currentX}px)`
 
-    dragRef.current = { isDragging: true, startX: e.clientX, startOffset: currentX, hasDragged: false }
+    dragRef.current = { isDragging: true, startX: e.clientX, startOffset: currentX, hasDragged: false, isBackward: false }
 
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
@@ -221,10 +236,10 @@ export default function NewsTicker({ country, T }) {
 
     const delta = e.clientX - drag.startX
     if (Math.abs(delta) > 4) drag.hasDragged = true
+    drag.isBackward = delta > 0
 
     const halfWidth = el.scrollWidth / 2
-    let newOffset = drag.startOffset + delta
-    // Wrap within [-halfWidth, 0]
+    let newOffset = drag.startOffset + applyTension(delta)
     newOffset = newOffset % halfWidth
     if (newOffset > 0) newOffset -= halfWidth
 
@@ -243,7 +258,9 @@ export default function NewsTicker({ country, T }) {
 
     if (el) {
       el.style.cursor = ''
-      if (!showPanel) {
+      if (drag.hasDragged && drag.isBackward) {
+        springBack(el, drag.startOffset)           // snap back with spring bounce
+      } else if (!showPanel) {
         resumeAnimation(el, getTranslateX(el))
       } else {
         el.style.animation = 'none'
@@ -259,7 +276,7 @@ export default function NewsTicker({ country, T }) {
     const currentX = getTranslateX(el)
     el.style.animation = 'none'
     el.style.transform = `translateX(${currentX}px)`
-    dragRef.current = { isDragging: true, startX: touch.clientX, startOffset: currentX, hasDragged: false }
+    dragRef.current = { isDragging: true, startX: touch.clientX, startOffset: currentX, hasDragged: false, isBackward: false }
   }
 
   function handleTouchMove(e) {
@@ -270,8 +287,9 @@ export default function NewsTicker({ country, T }) {
     const touch = e.touches[0]
     const delta = touch.clientX - drag.startX
     if (Math.abs(delta) > 4) drag.hasDragged = true
+    drag.isBackward = delta > 0
     const halfWidth = el.scrollWidth / 2
-    let newOffset = drag.startOffset + delta
+    let newOffset = drag.startOffset + applyTension(delta)
     newOffset = newOffset % halfWidth
     if (newOffset > 0) newOffset -= halfWidth
     el.style.transform = `translateX(${newOffset}px)`
@@ -282,8 +300,11 @@ export default function NewsTicker({ country, T }) {
     if (!drag.isDragging) return
     const el = tickerRef.current
     drag.isDragging = false
-    if (el && !showPanel) resumeAnimation(el, getTranslateX(el))
-    else if (el) el.style.animation = 'none'
+    if (el) {
+      if (drag.hasDragged && drag.isBackward) springBack(el, drag.startOffset)
+      else if (!showPanel) resumeAnimation(el, getTranslateX(el))
+      else el.style.animation = 'none'
+    }
   }
 
   // When panel opens/closes, sync animation state
