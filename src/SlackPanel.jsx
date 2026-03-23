@@ -55,7 +55,7 @@ function TypingBubble({ user, isMine, dark, border, text }) {
         .slack-dot:nth-child(2) { animation-delay: 0.2s; }
         .slack-dot:nth-child(3) { animation-delay: 0.4s; }
       `}</style>
-      <div style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 8 }}>
         <UserAvatar user={user} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: 3 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: isMine ? '#00bcd4' : text }}>
@@ -279,7 +279,7 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
             const user   = USERS.find(u => u.id === msg.userId)
             const isMine = msg.userId === activeUserId
             return (
-              <div key={i} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
+              <div key={i} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 8 }}>
                 <UserAvatar user={user} />
                 <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: 3 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexDirection: isMine ? 'row-reverse' : 'row' }}>

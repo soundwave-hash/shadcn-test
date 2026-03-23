@@ -389,6 +389,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
   const [visible, setVisible] = useState(false)
   const [started, setStarted] = useState(false)
   const [translated, setTranslated] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
   const [pos, setPos] = useState(DEFAULT_POS)
   const [dragging, setDragging] = useState(false)
   const dragOffset = useRef({ x: 0, y: 0 })
@@ -699,24 +700,28 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
               <button
                 onClick={() => {
                   const newTranslated = !translated
-                  setTranslated(newTranslated)
-                  if (started && messages.length > 0) {
-                    const newConv = selectedDept !== '"AMA"'
-                      ? (newTranslated
-                          ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
-                          : ((DEPT_CONVERSATIONS_BY_COUNTRY[country] || {})[selectedDept] || DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments']))
-                      : (!ENGLISH_ONLY.has(country) && newTranslated
-                          ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
-                          : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
-                    setMessages(newConv.slice(0, messages.length))
-                  } else {
-                    setMessages([])
-                    setStarted(false)
-                  }
+                  setIsTranslating(true)
+                  setTimeout(() => {
+                    setTranslated(newTranslated)
+                    if (started && messages.length > 0) {
+                      const newConv = selectedDept !== '"AMA"'
+                        ? (newTranslated
+                            ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+                            : ((DEPT_CONVERSATIONS_BY_COUNTRY[country] || {})[selectedDept] || DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments']))
+                        : (!ENGLISH_ONLY.has(country) && newTranslated
+                            ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
+                            : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
+                      setMessages(newConv.slice(0, messages.length))
+                    } else {
+                      setMessages([])
+                      setStarted(false)
+                    }
+                    setTimeout(() => setIsTranslating(false), 200)
+                  }, 200)
                 }}
                 onMouseDown={e => e.stopPropagation()}
                 style={{
-                  width: 24, height: 24, borderRadius: 6, cursor: 'pointer',
+                  width: 32, height: 32, borderRadius: 8, cursor: 'pointer',
                   border: `1px solid ${translated ? 'rgba(201,106,74,0.4)' : T.border}`,
                   background: translated ? 'rgba(201,106,74,0.1)' : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -801,6 +806,8 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
             padding: '14px 16px 20px',
             display: 'flex', flexDirection: 'column', gap: 20,
             scrollbarWidth: 'thin',
+            opacity: isTranslating ? 0 : 1,
+            transition: 'opacity 200ms ease',
           }}
         >
           {messages.length === 0 && !typingRole && !started && (
@@ -839,7 +846,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                 {isUser && activeUser && (
                   <div style={{
                     width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                    overflow: 'hidden', alignSelf: 'flex-end',
+                    overflow: 'hidden', alignSelf: 'flex-start',
                   }}>
                     <img src={activeUser.src} alt={activeUser.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', ...(activeUser.imgStyle ?? {}) }} />
                   </div>
