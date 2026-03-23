@@ -52,12 +52,14 @@ export default function NewsTicker({ country, T }) {
   const [streamText, setStreamText]       = useState('')
   const [isStreaming, setIsStreaming]     = useState(false)
   const [parsedInsight, setParsedInsight] = useState(null)
+  const [headlineImpacts, setHeadlineImpacts] = useState({})
   const abortRef = useRef(null)
 
   // Fetch live headlines on mount / country change
   useEffect(() => {
     const cacheKey = `newsTicker_headlines_${country}`
     setLoadingNews(true)
+    setHeadlineImpacts({})
     fetch(`/api/news?country=${encodeURIComponent(country)}`)
       .then(r => r.json())
       .then(data => {
@@ -119,7 +121,9 @@ export default function NewsTicker({ country, T }) {
         await new Promise(r => setTimeout(r, 40))
       }
 
-      setParsedInsight(parseInsightText(accumulated))
+      const insight = parseInsightText(accumulated)
+      setParsedInsight(insight)
+      setHeadlineImpacts(prev => ({ ...prev, [idx]: insight.impact }))
     } catch (err) {
       if (err.name !== 'AbortError') {
         setParsedInsight({ impact: 'Moderate', bullets: ['Unable to generate analysis. Please try again.'] })
@@ -183,7 +187,7 @@ export default function NewsTicker({ country, T }) {
             }}>
               {doubled.map((h, i) => {
                 const realIdx = i % headlines.length
-                const imp = IMPACT[classifyImpact(h)]
+                const imp = IMPACT[headlineImpacts[realIdx] ?? classifyImpact(h)]
                 return (
                   <span
                     key={i}
