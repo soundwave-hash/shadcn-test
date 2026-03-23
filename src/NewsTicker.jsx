@@ -73,20 +73,26 @@ export default function NewsTicker({ country, T }) {
       } catch {}
     }
 
-    fetch(`/api/news?country=${encodeURIComponent(country)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.headlines?.length) {
-          const unique = normalize(data.headlines)
-          setHeadlines(unique)
-          setHeadlineIdx(0)
-          localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
-        } else {
-          loadCache()
-        }
-      })
-      .catch(loadCache)
-      .finally(() => setLoadingNews(false))
+    function fetchHeadlines() {
+      fetch(`/api/news?country=${encodeURIComponent(country)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.headlines?.length) {
+            const unique = normalize(data.headlines)
+            setHeadlines(unique)
+            setHeadlineIdx(0)
+            localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
+          } else {
+            loadCache()
+          }
+        })
+        .catch(loadCache)
+        .finally(() => setLoadingNews(false))
+    }
+
+    fetchHeadlines()
+    const interval = setInterval(fetchHeadlines, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [country])
 
   async function fetchInsight(idx) {
