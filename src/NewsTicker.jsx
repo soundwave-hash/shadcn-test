@@ -45,7 +45,15 @@ export default function NewsTicker({ country, T }) {
   const [streamText, setStreamText]       = useState('')
   const [isStreaming, setIsStreaming]     = useState(false)
   const [parsedInsight, setParsedInsight] = useState(null)
+  const [lastUpdated, setLastUpdated]     = useState(null)
+  const [, setTick] = useState(0)
   const abortRef = useRef(null)
+
+  // Re-render every minute so "X min ago" stays current
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 60 * 1000)
+    return () => clearInterval(t)
+  }, [])
 
   // Fetch live headlines on mount / country change
   useEffect(() => {
@@ -81,6 +89,7 @@ export default function NewsTicker({ country, T }) {
             const unique = normalize(data.headlines)
             setHeadlines(unique)
             setHeadlineIdx(0)
+            setLastUpdated(Date.now())
             localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
           } else {
             loadCache()
@@ -229,6 +238,13 @@ export default function NewsTicker({ country, T }) {
           <Zap size={9} color={T.tabActive} />
           <span style={{ fontSize: 9, fontWeight: 700, color: T.tabActive, letterSpacing: '0.06em' }}>AI</span>
         </div>
+
+        {/* Last updated */}
+        {lastUpdated && (
+          <span style={{ flexShrink: 0, fontSize: 9, color: T.textMuted, whiteSpace: 'nowrap' }}>
+            · {Math.max(0, Math.floor((Date.now() - lastUpdated) / 60000))}m ago
+          </span>
+        )}
       </div>
 
       {/* ── AI Insight panel   fixed below nav, centered ── */}
