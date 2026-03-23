@@ -23,7 +23,7 @@ export default async function handler(req) {
     const gnewsData = await gnewsRes.json()
 
     if (!gnewsData.articles?.length) {
-      return new Response(JSON.stringify({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY }), {
+      return new Response(JSON.stringify({ headlines: [], debug: gnewsData, keyPresent: !!process.env.GNEWS_API_KEY, anthropicKeyPresent: !!process.env.ANTHROPIC_API_KEY }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     }
