@@ -791,6 +791,8 @@ export default function App() {
   const [selectedCities, setSelectedCities] = useState([])   // [] = "All"
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
   const [view, setView] = useState('dashboard')
+  const [navKey, setNavKey] = useState(0)
+  const [slideDir, setSlideDir] = useState(null)
   const [selectedKpiLabel, setSelectedKpiLabel] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [dateRange, setDateRange] = useState('1M')
@@ -814,6 +816,30 @@ export default function App() {
     const t = setTimeout(() => setKpiLoading(false), 400)
     return () => clearTimeout(t)
   }, [country, selectedCities])
+
+  // ── Screen transition ──
+  const SCREEN_ORDER = ['dashboard', 'detail', 'geo', 'inventory']
+  useEffect(() => {
+    const id = 'screen-transition-styles'
+    if (document.getElementById(id)) return
+    const el = document.createElement('style')
+    el.id = id
+    el.textContent = `
+      @keyframes slideInFromRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      @keyframes slideInFromLeft  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    `
+    document.head.appendChild(el)
+    return () => { const e = document.getElementById(id); if (e) e.remove() }
+  }, [])
+  function navigateTo(newView) {
+    if (newView === view) return
+    const cur = SCREEN_ORDER.indexOf(view)
+    const next = SCREEN_ORDER.indexOf(newView)
+    setSlideDir(next > cur ? 'left' : 'right')
+    setNavKey(k => k + 1)
+    if (newView === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)')
+    setView(newView)
+  }
 
   // ── Carrier chart: fix tooltip position to top bar (highest orders) ──
   const [carrierTipPos, setCarrierTipPos] = useState(null)
@@ -977,6 +1003,10 @@ export default function App() {
     setChartPressedIdx(null)
   }
 
+  const slideAnimation = slideDir === 'left' ? 'slideInFromRight 0.35s ease forwards'
+    : slideDir === 'right' ? 'slideInFromLeft 0.35s ease forwards'
+    : 'none'
+
   const cityScale = getMultiCityScale(country, selectedCities)
   const locationLabel = selectedCities.length === 0
     ? 'All'
@@ -1004,13 +1034,13 @@ export default function App() {
   if (view === 'geo') {
     return (
       <>
-      <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
+      <div key={navKey} style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden', animation: slideAnimation }}>
         {/* ── Menu bar ── */}
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
           {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
-            <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
+            <button key={tab.id} onClick={() => navigateTo(tab.id)} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
               color: view === tab.id ? T.tabActive : T.textMuted,
@@ -1110,24 +1140,26 @@ export default function App() {
   if (view === 'inventory') {
     return (
       <>
-      <InventoryScreen
-        theme={theme}
-        T={T}
-        country={country}
-        selectedCities={selectedCities}
-        countries={COUNTRIES}
-        cities={CITY_LISTS[country]}
-        onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
-        onLocationChange={setSelectedCities}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        setView={setView}
-        onThemeToggle={toggleTheme}
-        activeUser={activeUser}
-        onUserSwitch={setActiveUser}
-        voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
-        slackOpen={slackOpen} setSlackOpen={setSlackOpen}
-      />
+      <div key={navKey} style={{ height: '100vh', overflow: 'hidden', animation: slideAnimation }}>
+        <InventoryScreen
+          theme={theme}
+          T={T}
+          country={country}
+          selectedCities={selectedCities}
+          countries={COUNTRIES}
+          cities={CITY_LISTS[country]}
+          onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
+          onLocationChange={setSelectedCities}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          setView={navigateTo}
+          onThemeToggle={toggleTheme}
+          activeUser={activeUser}
+          onUserSwitch={setActiveUser}
+          voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
+          slackOpen={slackOpen} setSlackOpen={setSlackOpen}
+        />
+      </div>
       <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
       <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
       </>
@@ -1140,25 +1172,27 @@ export default function App() {
       .find(k => k.label === kpiLabel) || kpiCards[0]
     return (
       <>
-      <KpiDetailPage
-        kpi={currentKpi}
-        country={country}
-        selectedCities={selectedCities}
-        cities={CITY_LISTS[country]}
-        cityScales={CITY_SCALES}
-        countries={COUNTRIES}
-        onBack={(target) => { if (dateRange === '1D') setDateRange('1M'); setView(target ?? 'dashboard') }}
-        onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
-        onLocationChange={setSelectedCities}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        activeUser={activeUser}
-        onUserSwitch={setActiveUser}
-        voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
-        slackOpen={slackOpen} setSlackOpen={setSlackOpen}
-      />
+      <div key={navKey} style={{ height: '100vh', overflow: 'hidden', animation: slideAnimation }}>
+        <KpiDetailPage
+          kpi={currentKpi}
+          country={country}
+          selectedCities={selectedCities}
+          cities={CITY_LISTS[country]}
+          cityScales={CITY_SCALES}
+          countries={COUNTRIES}
+          onBack={(target) => { if (dateRange === '1D') setDateRange('1M'); navigateTo(target ?? 'dashboard') }}
+          onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
+          onLocationChange={setSelectedCities}
+          theme={theme}
+          onThemeToggle={toggleTheme}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          activeUser={activeUser}
+          onUserSwitch={setActiveUser}
+          voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
+          slackOpen={slackOpen} setSlackOpen={setSlackOpen}
+        />
+      </div>
       <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
       <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
       </>
@@ -1167,7 +1201,7 @@ export default function App() {
 
   return (
     <>
-    <div style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden' }}>
+    <div key={navKey} style={{ backgroundColor: T.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Inter, system-ui, sans-serif', color: T.text, overflow:'hidden', animation: slideAnimation }}>
 
       {/* ── Menu bar ── */}
       <div style={{ position:'sticky', top:0, zIndex:10, backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:24 }}>
@@ -1176,7 +1210,7 @@ export default function App() {
         </span>
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
         {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
-          <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
+          <button key={tab.id} onClick={() => navigateTo(tab.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: view === tab.id ? 700 : 400,
             color: view === tab.id ? T.tabActive : T.textMuted,
@@ -1377,7 +1411,7 @@ export default function App() {
                     onDragOver:  e => handleDragOver(e, i),
                     onDrop:      e => handleDrop(e, i),
                     onDragEnd:   handleDragEnd,
-                    onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); setView('detail') },
+                    onDoubleClick: () => { setSelectedKpiLabel('Unit Sales'); navigateTo('detail') },
                   }}
                 />
               ))
