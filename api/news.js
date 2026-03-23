@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   try {
     const gnewsRes = await fetch(
-      `https://gnews.io/api/v4/search?q=${q}&lang=en&country=any&max=10&apikey=${process.env.GNEWS_API_KEY}`
+      `https://gnews.io/api/v4/search?q=${q}&lang=en&max=10&apikey=${process.env.GNEWS_API_KEY}`
     )
     const gnewsData = await gnewsRes.json()
 
