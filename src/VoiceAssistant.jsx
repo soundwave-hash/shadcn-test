@@ -292,7 +292,7 @@ function TypewriterText({ text, color, onDone, onChar, instant }) {
       setDisplayed(text.slice(0, i))
       onChar?.()
       if (i >= text.length) { clearInterval(id); onDone?.() }
-    }, isCJK ? 100 : 65)
+    }, isCJK ? 70 : 30)
     return () => clearInterval(id)
   }, [text])
   return (
@@ -349,7 +349,7 @@ function WordByWordText({ text, segments, onDone, onWord, instant }) {
       setCount(i)
       onWord?.()
       if (i >= tokens.length) { clearInterval(id); onDone?.() }
-    }, isCJK ? 60 : 90)
+    }, isCJK ? 40 : 45)
     return () => clearInterval(id)
   }, [effectKey])
   if (isCJK && !segments) return <span>{tokens.slice(0, count).map(t => t.tok).join('')}</span>
