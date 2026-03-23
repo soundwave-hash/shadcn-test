@@ -40,10 +40,10 @@ export default async function handler(req) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
+        max_tokens: 768,
         messages: [{
           role: 'user',
-          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 8-10 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, global supply chain stability, or global conflicts that could disrupt trade routes, shipping lanes, or regional supply chains (e.g. wars, blockades, military escalations, sanctions regimes).\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+          content: `You are filtering news headlines for operations managers in grocery distribution and supply chain. Review these headlines and select the 8-10 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, global supply chain stability, or global conflicts that could disrupt trade routes, shipping lanes, or regional supply chains.\n\nFor each selected headline also assign an impact level:\n- High: immediate, direct disruption risk to grocery supply chains\n- Moderate: indirect or developing risk that warrants monitoring\n- Low: background context with minor operational relevance\n\nReturn ONLY a valid JSON array of objects in this exact format, nothing else:\n[{"headline": "...", "impact": "High|Moderate|Low"}, ...]\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
         }]
       })
     })
@@ -53,12 +53,25 @@ export default async function handler(req) {
 
     try {
       const filtered = JSON.parse(text)
+      if (Array.isArray(filtered) && filtered.length && typeof filtered[0] === 'object') {
+        // New format: [{ headline, impact }]
+        const seen = new Set()
+        const result = filtered.filter(item => {
+          if (!item.headline || seen.has(item.headline)) return false
+          seen.add(item.headline)
+          return true
+        })
+        return new Response(JSON.stringify({ headlines: result }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        })
+      }
+      // Fallback: plain string array (old format)
       const result = [...new Set(Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 10))]
-      return new Response(JSON.stringify({ headlines: result }), {
+      return new Response(JSON.stringify({ headlines: result.map(h => ({ headline: h, impact: 'Moderate' })) }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     } catch {
-      return new Response(JSON.stringify({ headlines: headlines.slice(0, 10) }), {
+      return new Response(JSON.stringify({ headlines: headlines.slice(0, 10).map(h => ({ headline: h, impact: 'Moderate' })) }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     }

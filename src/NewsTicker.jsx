@@ -3,11 +3,11 @@ import { X, Zap, Loader2 } from 'lucide-react'
 
 // ── Fallback static headlines if API unavailable ──────────────────────────────
 const DEFAULT_HEADLINES = [
-  'Global freight rates stabilize after Q3 volatility   analysts project flat Q4',
-  'Air cargo demand up 6.1% YoY driven by electronics and pharmaceutical sectors',
-  'Ocean carrier blank sailing rate rises to 18%   capacity management in effect',
-  'Last mile delivery costs reach record $10.10 per parcel average globally',
-  'Blockchain based freight tracking adoption accelerates among top 20 3PLs',
+  { headline: 'Global freight rates stabilize after Q3 volatility   analysts project flat Q4', impact: 'Moderate' },
+  { headline: 'Air cargo demand up 6.1% YoY driven by electronics and pharmaceutical sectors', impact: 'Low' },
+  { headline: 'Ocean carrier blank sailing rate rises to 18%   capacity management in effect', impact: 'Moderate' },
+  { headline: 'Last mile delivery costs reach record $10.10 per parcel average globally', impact: 'Moderate' },
+  { headline: 'Blockchain based freight tracking adoption accelerates among top 20 3PLs', impact: 'Low' },
 ]
 
 // ── Impact palette ─────────────────────────────────────────────────────────────
@@ -17,13 +17,6 @@ const IMPACT = {
   Low:      { color: '#00897b', bg: 'rgba(0,137,123,0.10)',  border: 'rgba(0,137,123,0.30)'  },
 }
 
-// ── Keyword-based risk classifier for ticker dots ──────────────────────────
-function classifyImpact(headline) {
-  const h = headline.toLowerCase()
-  if (/war|conflict|blockade|attack|missile|invasion|crisis|sanction|tariff|ban|embargo|collapse|strike|hurricane|typhoon|earthquake|shortage|halt|freeze/.test(h)) return 'High'
-  if (/inflation|delay|disruption|freight|logistics|supply chain|port|fuel|drought|flood|labor|recall|price rise|congestion/.test(h)) return 'Moderate'
-  return 'Low'
-}
 
 function parseInsightText(text) {
   const lines = text.trim().split('\n').filter(l => l.trim())
@@ -52,19 +45,22 @@ export default function NewsTicker({ country, T }) {
   const [streamText, setStreamText]       = useState('')
   const [isStreaming, setIsStreaming]     = useState(false)
   const [parsedInsight, setParsedInsight] = useState(null)
-  const [headlineImpacts, setHeadlineImpacts] = useState({})
   const abortRef = useRef(null)
 
   // Fetch live headlines on mount / country change
   useEffect(() => {
     const cacheKey = `newsTicker_headlines_${country}`
     setLoadingNews(true)
-    setHeadlineImpacts({})
     fetch(`/api/news?country=${encodeURIComponent(country)}`)
       .then(r => r.json())
       .then(data => {
         if (data.headlines?.length) {
-          const unique = [...new Set(data.headlines)]
+          const seen = new Set()
+          const unique = data.headlines.filter(item => {
+            if (seen.has(item.headline)) return false
+            seen.add(item.headline)
+            return true
+          })
           setHeadlines(unique)
           setHeadlineIdx(0)
           localStorage.setItem(cacheKey, JSON.stringify({ headlines: unique, ts: Date.now() }))
@@ -89,8 +85,9 @@ export default function NewsTicker({ country, T }) {
   }, [country])
 
   async function fetchInsight(idx) {
-    const headline = headlines[idx] ?? headlines[0]
-    if (!headline) return
+    const item = headlines[idx] ?? headlines[0]
+    if (!item) return
+    const headline = item.headline
 
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
@@ -121,9 +118,7 @@ export default function NewsTicker({ country, T }) {
         await new Promise(r => setTimeout(r, 40))
       }
 
-      const insight = parseInsightText(accumulated)
-      setParsedInsight(insight)
-      setHeadlineImpacts(prev => ({ ...prev, [idx]: insight.impact }))
+      setParsedInsight(parseInsightText(accumulated))
     } catch (err) {
       if (err.name !== 'AbortError') {
         setParsedInsight({ impact: 'Moderate', bullets: ['Unable to generate analysis. Please try again.'] })
@@ -148,7 +143,7 @@ export default function NewsTicker({ country, T }) {
     if (abortRef.current) abortRef.current.abort()
   }
 
-  const currentHeadline = headlines[headlineIdx] || ''
+  const currentHeadline = headlines[headlineIdx]?.headline || ''
   const doubled = [...headlines, ...headlines]
   const imp = IMPACT[parsedInsight?.impact] ?? IMPACT.Moderate
 
@@ -185,9 +180,9 @@ export default function NewsTicker({ country, T }) {
               fontSize: 11,
               animation: showPanel ? 'none' : 'wiq-ticker 110s linear infinite',
             }}>
-              {doubled.map((h, i) => {
+              {doubled.map((item, i) => {
                 const realIdx = i % headlines.length
-                const imp = IMPACT[headlineImpacts[realIdx] ?? classifyImpact(h)]
+                const imp = IMPACT[item.impact] ?? IMPACT.Moderate
                 return (
                   <span
                     key={i}
@@ -200,7 +195,7 @@ export default function NewsTicker({ country, T }) {
                       backgroundColor: imp.color, marginRight: 6, verticalAlign: 'middle',
                       flexShrink: 0,
                     }} />
-                    <span style={{ color: T.textMuted }}>{h}</span>
+                    <span style={{ color: T.textMuted }}>{item.headline}</span>
                     <span style={{ color: T.text, margin: '0 14px' }}>|</span>
                   </span>
                 )
