@@ -14,7 +14,7 @@ export default async function handler(req) {
   const { searchParams } = new URL(req.url)
   const country = searchParams.get('country') || 'United States'
 
-  const q = encodeURIComponent('tariffs OR trade OR inflation OR oil OR shipping OR freight OR weather OR labor OR economy OR sanctions')
+  const q = encodeURIComponent('tariffs OR "freight rates" OR "supply chain" OR "port congestion" OR "fuel prices" OR shipping OR logistics OR "food prices" OR drought OR hurricane OR "labor strike" OR sanctions OR conflict OR war OR blockade OR "trade route" OR "Red Sea" OR "Strait of Hormuz" OR "military escalation"')
 
   try {
     const gnewsRes = await fetch(
@@ -43,7 +43,7 @@ export default async function handler(req) {
         max_tokens: 512,
         messages: [{
           role: 'user',
-          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 8-10 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, or global supply chain stability. Cast a wide net — macro economic and geopolitical news counts if it has downstream operational consequences.\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 8-10 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, global supply chain stability, or global conflicts that could disrupt trade routes, shipping lanes, or regional supply chains (e.g. wars, blockades, military escalations, sanctions regimes).\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
         }]
       })
     })
