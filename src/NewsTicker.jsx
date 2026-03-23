@@ -48,6 +48,7 @@ export default function NewsTicker({ country, T }) {
 
   // Fetch live headlines on mount / country change
   useEffect(() => {
+    const cacheKey = `newsTicker_headlines_${country}`
     setLoadingNews(true)
     fetch(`/api/news?country=${encodeURIComponent(country)}`)
       .then(r => r.json())
@@ -55,9 +56,24 @@ export default function NewsTicker({ country, T }) {
         if (data.headlines?.length) {
           setHeadlines(data.headlines)
           setHeadlineIdx(0)
+          localStorage.setItem(cacheKey, JSON.stringify({ headlines: data.headlines, ts: Date.now() }))
+        } else {
+          // API returned empty — try cache
+          const cached = localStorage.getItem(cacheKey)
+          if (cached) {
+            const { headlines: h } = JSON.parse(cached)
+            if (h?.length) { setHeadlines(h); setHeadlineIdx(0) }
+          }
         }
       })
-      .catch(() => {}) // keep DEFAULT_HEADLINES on failure
+      .catch(() => {
+        // Network/API error — try cache
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const { headlines: h } = JSON.parse(cached)
+          if (h?.length) { setHeadlines(h); setHeadlineIdx(0) }
+        }
+      })
       .finally(() => setLoadingNews(false))
   }, [country])
 
