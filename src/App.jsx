@@ -1030,7 +1030,7 @@ export default function App() {
               }}>{r}</button>
             ))}
           </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginLeft:'auto' }}>
             <button onClick={() => setVoiceOpen(o => !o)} title="WarehouseIQ Agent" style={{ width:28, height:28, borderRadius:7, cursor:'pointer', border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`, background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'), display:'flex', alignItems:'center', justifyContent:'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: voiceOpen ? '#c96a4a' : (theme === 'dark' ? '#fff' : '#3F3F46'), display:'block' }}>
                 <line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -1276,7 +1276,7 @@ export default function App() {
             onClick={() => setVoiceOpen(o => !o)}
             title="WarehouseIQ Agent"
             style={{
-              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 4,
+              width: 28, height: 28, borderRadius: 7, cursor: 'pointer', marginLeft: 'auto',
               border: voiceOpen ? '1px solid #c96a4a' : `1px solid ${theme === 'dark' ? T.inputBorder : 'hsl(220, 13%, 80%)'}`,
               background: voiceOpen ? 'rgba(201,106,74,0.12)' : (theme === 'dark' ? '#1c1c1c' : 'hsl(220, 8%, 91%)'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
