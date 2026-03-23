@@ -202,7 +202,7 @@ export default function NewsTicker({ country, T }) {
               width: 'max-content',
               whiteSpace: 'nowrap',
               fontSize: 11,
-              animation: showPanel ? 'none' : 'wiq-ticker 110s linear infinite',
+              animation: showPanel ? 'none' : 'wiq-ticker 70s linear infinite',
             }}>
               {doubled.map((item, i) => {
                 const realIdx = i % headlines.length
