@@ -256,7 +256,7 @@ export default function NewsTicker({ country, T }) {
         {/* Last updated */}
         {lastUpdated != null && (
           <span style={{ flexShrink: 0, fontSize: 9, color: T.textMuted, whiteSpace: 'nowrap' }}>
-            · updated {Math.max(0, Math.floor((Date.now() - lastUpdated) / 60000))}m ago
+            Updated {Math.max(0, Math.floor((Date.now() - lastUpdated) / 60000))}m ago
           </span>
         )}
       </div>
