@@ -702,7 +702,9 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                   setTranslated(newTranslated)
                   if (started && messages.length > 0) {
                     const newConv = selectedDept !== '"AMA"'
-                      ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+                      ? (newTranslated
+                          ? (DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments'])
+                          : ((DEPT_CONVERSATIONS_BY_COUNTRY[country] || {})[selectedDept] || DEPT_CONVERSATIONS[selectedDept] || DEPT_CONVERSATIONS['All Departments']))
                       : (!ENGLISH_ONLY.has(country) && newTranslated
                           ? (CONVERSATIONS_EN[country] || CONVERSATIONS['United States'])
                           : (CONVERSATIONS[country] || CONVERSATIONS['United States']))
