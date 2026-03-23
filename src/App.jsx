@@ -1122,6 +1122,8 @@ export default function App() {
         onThemeToggle={toggleTheme}
         activeUser={activeUser}
         onUserSwitch={setActiveUser}
+        voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
+        slackOpen={slackOpen} setSlackOpen={setSlackOpen}
       />
     )
   }
@@ -1147,6 +1149,8 @@ export default function App() {
         onDateRangeChange={setDateRange}
         activeUser={activeUser}
         onUserSwitch={setActiveUser}
+        voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
+        slackOpen={slackOpen} setSlackOpen={setSlackOpen}
       />
     )
   }

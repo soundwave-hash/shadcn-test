@@ -339,9 +339,15 @@ export default function InventoryScreen({
   onCountryChange, onLocationChange, dateRange, onDateRangeChange,
   setView, onThemeToggle,
   activeUser, onUserSwitch,
+  voiceOpen: voiceOpenProp, setVoiceOpen: setVoiceOpenProp,
+  slackOpen: slackOpenProp, setSlackOpen: setSlackOpenProp,
 }) {
-  const [voiceOpen, setVoiceOpen]         = useState(false)
-  const [slackOpen, setSlackOpen]         = useState(false)
+  const [voiceOpenLocal, setVoiceOpenLocal] = useState(false)
+  const [slackOpenLocal, setSlackOpenLocal] = useState(false)
+  const voiceOpen    = voiceOpenProp    ?? voiceOpenLocal
+  const setVoiceOpen = setVoiceOpenProp ?? setVoiceOpenLocal
+  const slackOpen    = slackOpenProp    ?? slackOpenLocal
+  const setSlackOpen = setSlackOpenProp ?? setSlackOpenLocal
   const [selDepts, setSelDepts]           = useState(new Set())  // empty = All
   const [selSubs,  setSelSubs]            = useState(new Set())  // empty = All
   const [sortCol, setSortCol]             = useState('weeklySales')

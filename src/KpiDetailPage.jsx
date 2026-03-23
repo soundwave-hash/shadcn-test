@@ -853,6 +853,8 @@ export default function KpiDetailPage({
   theme = 'dark', onThemeToggle,
   dateRange = '1M', onDateRangeChange,
   activeUser, onUserSwitch,
+  voiceOpen: voiceOpenProp, setVoiceOpen: setVoiceOpenProp,
+  slackOpen: slackOpenProp, setSlackOpen: setSlackOpenProp,
 }) {
   const T = THEME[theme]
   const panel  = { backgroundColor:T.panelBg, border:`1px solid ${T.chartBorder ?? T.border}`, borderRadius:8, padding:'14px 16px', boxShadow: T.chartShadow ?? T.cardShadow }
@@ -861,8 +863,12 @@ export default function KpiDetailPage({
 
   const period    = dateRange
   const setPeriod = onDateRangeChange ?? (() => {})
-  const [slackOpen, setSlackOpen] = useState(false)
-  const [voiceOpen, setVoiceOpen] = useState(false)
+  const [slackOpenLocal, setSlackOpenLocal] = useState(false)
+  const [voiceOpenLocal, setVoiceOpenLocal] = useState(false)
+  const slackOpen    = slackOpenProp    ?? slackOpenLocal
+  const setSlackOpen = setSlackOpenProp ?? setSlackOpenLocal
+  const voiceOpen    = voiceOpenProp    ?? voiceOpenLocal
+  const setVoiceOpen = setVoiceOpenProp ?? setVoiceOpenLocal
   const [activeTooltip, setActiveTooltip] = useState(null)
   const chartContainerRef = useRef(null)
   const pageRef = useRef(null)
