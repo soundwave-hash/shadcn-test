@@ -189,15 +189,14 @@ export default function SlackPanel({ open, onClose, theme, activeUser }) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — visual dim only, non-interactive so nav and screen content remain clickable */}
       <div
-        onClick={onClose}
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.35)',
           zIndex: 199,
           opacity: open ? 1 : 0,
-          pointerEvents: open ? 'auto' : 'none',
+          pointerEvents: 'none',
           transition: 'opacity 300ms ease',
         }}
       />
