@@ -149,7 +149,9 @@ export default function NewsTicker({ country, T }) {
         await new Promise(r => setTimeout(r, 40))
       }
 
-      setParsedInsight(parseInsightText(accumulated))
+      const parsed = parseInsightText(accumulated)
+      parsed.impact = item.impact  // always use pre-classified impact as source of truth
+      setParsedInsight(parsed)
     } catch (err) {
       if (err.name !== 'AbortError') {
         setParsedInsight({ impact: 'Moderate', bullets: ['Unable to generate analysis. Please try again.'] })
