@@ -268,7 +268,7 @@ export default function NewsTicker({ country, T }) {
 
           {/* Streaming / parsed content */}
           {isStreaming && !parsedInsight ? (
-            <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
               {streamText || 'Analyzing…'}
               <span style={{ animation: 'wiq-live-pulse 1s ease-in-out infinite', display: 'inline-block', marginLeft: 2 }}>▌</span>
             </div>
