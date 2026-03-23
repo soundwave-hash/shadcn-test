@@ -18,7 +18,7 @@ export default async function handler(req) {
 
   try {
     const gnewsRes = await fetch(
-      `https://gnews.io/api/v4/search?q=${q}&lang=en&max=10&apikey=${process.env.GNEWS_KEY}`
+      `https://gnews.io/api/v4/search?q=${q}&lang=en&max=20&apikey=${process.env.GNEWS_KEY}`
     )
     const gnewsData = await gnewsRes.json()
 
@@ -43,7 +43,7 @@ export default async function handler(req) {
         max_tokens: 512,
         messages: [{
           role: 'user',
-          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 5-6 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, or global supply chain stability. Cast a wide net — macro economic and geopolitical news counts if it has downstream operational consequences.\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 8-10 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, or global supply chain stability. Cast a wide net — macro economic and geopolitical news counts if it has downstream operational consequences.\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
         }]
       })
     })
@@ -53,12 +53,12 @@ export default async function handler(req) {
 
     try {
       const filtered = JSON.parse(text)
-      const result = Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 6)
+      const result = Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 10)
       return new Response(JSON.stringify({ headlines: result }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     } catch {
-      return new Response(JSON.stringify({ headlines: headlines.slice(0, 6) }), {
+      return new Response(JSON.stringify({ headlines: headlines.slice(0, 10) }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     }
