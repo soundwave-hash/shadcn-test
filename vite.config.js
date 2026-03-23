@@ -15,8 +15,9 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://shadcn-test-howardogawa-8486s-projects.vercel.app',
         changeOrigin: true,
+        secure: true,
       },
     },
   },
