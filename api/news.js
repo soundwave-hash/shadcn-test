@@ -28,6 +28,8 @@ export default async function handler(req) {
       })
     }
 
+    const urlMap = {}
+    gnewsData.articles.forEach(a => { if (a.title) urlMap[a.title] = a.url })
     const headlines = [...new Set(gnewsData.articles.map(a => a.title))]
 
     // Claude Haiku — filter and reframe for shipping, logistics & grocery operations
@@ -60,7 +62,7 @@ export default async function handler(req) {
           if (!item.headline || seen.has(item.headline)) return false
           seen.add(item.headline)
           return true
-        })
+        }).map(item => ({ ...item, url: urlMap[item.headline] || null }))
         return new Response(JSON.stringify({ headlines: result }), {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         })

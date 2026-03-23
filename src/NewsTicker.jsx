@@ -334,6 +334,7 @@ export default function NewsTicker({ country, T }) {
   }, [showPanel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentHeadline = headlines[headlineIdx]?.headline || ''
+  const currentHeadlineUrl = headlines[headlineIdx]?.url || null
   const doubled = [...headlines, ...headlines]
   const imp = IMPACT[parsedInsight?.impact] ?? IMPACT.Moderate
 
@@ -478,7 +479,16 @@ export default function NewsTicker({ country, T }) {
 
           {/* Headline quote */}
           <div style={{ fontSize: 13, color: '#ffffff', marginBottom: 12, lineHeight: 1.5 }}>
-            "{currentHeadline}"
+            "{currentHeadline}"{currentHeadlineUrl && (
+              <a
+                href={currentHeadlineUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ marginLeft: 8, fontSize: 12, color: '#4fc3f7', textDecoration: 'none', fontWeight: 500 }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+              >source</a>
+            )}
           </div>
 
           {/* Streaming / parsed content */}
