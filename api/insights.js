@@ -26,13 +26,13 @@ export default async function handler(req) {
       stream: true,
       messages: [{
         role: 'user',
-        content: `You are an AI assistant for a grocery distribution warehouse manager in ${country || 'the United States'}.
+        content: `You are an AI assistant for operations managers in shipping, logistics, and grocery distribution in ${country || 'the United States'}.
 
 Analyze this news headline and provide operational insights in EXACTLY this format with no extra text:
 IMPACT: [High|Moderate|Low]
-• [Specific actionable recommendation in one sentence]
-• [Specific actionable recommendation in one sentence]
-• [Specific actionable recommendation in one sentence]
+• [Specific actionable recommendation relevant to shipping, freight, or grocery distribution in one sentence]
+• [Specific actionable recommendation relevant to inventory, sourcing, or cost management in one sentence]
+• [Specific actionable recommendation relevant to risk mitigation or contingency planning in one sentence]
 
 Headline: "${headline}"`
       }]

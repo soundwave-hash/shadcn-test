@@ -4,7 +4,7 @@ export default async function handler(req, res) {
 
   const country = req.query.country || 'United States'
 
-  const q = encodeURIComponent('supply chain OR grocery OR freight OR tariffs OR inflation OR food prices')
+  const q = encodeURIComponent('tariffs OR trade OR inflation OR oil OR shipping OR freight OR weather OR labor OR economy OR sanctions')
 
   try {
     const gnewsRes = await fetch(
@@ -18,10 +18,7 @@ export default async function handler(req, res) {
 
     const headlines = gnewsData.articles.map(a => a.title)
 
-    // TEMP: return raw GNews headlines without Claude filter
-    return res.status(200).json({ headlines: headlines.slice(0, 6) })
-
-    // Claude Haiku second-pass filter
+    // Claude Haiku — filter and reframe for shipping, logistics & grocery operations
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -34,7 +31,7 @@ export default async function handler(req, res) {
         max_tokens: 512,
         messages: [{
           role: 'user',
-          content: `You are filtering news headlines for a grocery warehouse distribution manager in ${country}. Review these headlines and return ONLY the 5-6 most operationally relevant ones. A headline is relevant if it has direct or indirect implications for: supply chain costs, inventory availability, transportation delays, food prices, labor disruptions, weather affecting distribution, fuel/energy costs, trade/tariffs, or food safety. Political, social, or weather news is relevant ONLY if it has downstream operational impact.\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+          content: `You are filtering news headlines for operations managers in shipping, logistics, and grocery distribution. Review these headlines and return ONLY the 5-6 most operationally relevant ones. A headline is relevant if it has any direct or indirect impact on: transportation costs, fuel prices, port or freight delays, trade policy, labor availability, weather disruptions, food or consumer goods pricing, or global supply chain stability. Cast a wide net — macro economic and geopolitical news counts if it has downstream operational consequences.\n\nReturn ONLY a valid JSON array of strings (the selected headline titles), nothing else.\n\nHeadlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
         }]
       })
     })
@@ -44,7 +41,7 @@ export default async function handler(req, res) {
 
     try {
       const filtered = JSON.parse(text)
-      return res.status(200).json({ headlines: Array.isArray(filtered) ? filtered : headlines.slice(0, 6) })
+      return res.status(200).json({ headlines: Array.isArray(filtered) && filtered.length ? filtered : headlines.slice(0, 6) })
     } catch {
       return res.status(200).json({ headlines: headlines.slice(0, 6) })
     }
