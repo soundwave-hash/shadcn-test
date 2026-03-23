@@ -75,8 +75,12 @@ export default function NewsTicker({ country, T }) {
       try {
         const cached = localStorage.getItem(cacheKey)
         if (cached) {
-          const { headlines: h } = JSON.parse(cached)
-          if (h?.length) { setHeadlines(normalize(h)); setHeadlineIdx(0) }
+          const { headlines: h, ts } = JSON.parse(cached)
+          if (h?.length) {
+            setHeadlines(normalize(h))
+            setHeadlineIdx(0)
+            if (ts) setLastUpdated(ts)
+          }
         }
       } catch {}
     }
@@ -96,7 +100,7 @@ export default function NewsTicker({ country, T }) {
           }
         })
         .catch(loadCache)
-        .finally(() => setLoadingNews(false))
+        .finally(() => { setLoadingNews(false); setLastUpdated(prev => prev ?? Date.now()) })
     }
 
     fetchHeadlines()
@@ -240,9 +244,9 @@ export default function NewsTicker({ country, T }) {
         </div>
 
         {/* Last updated */}
-        {lastUpdated && (
+        {lastUpdated != null && (
           <span style={{ flexShrink: 0, fontSize: 9, color: T.textMuted, whiteSpace: 'nowrap' }}>
-            · {Math.max(0, Math.floor((Date.now() - lastUpdated) / 60000))}m ago
+            · updated {Math.max(0, Math.floor((Date.now() - lastUpdated) / 60000))}m ago
           </span>
         )}
       </div>
