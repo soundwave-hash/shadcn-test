@@ -4,14 +4,7 @@ export default async function handler(req, res) {
 
   const country = req.query.country || 'United States'
 
-  const q = encodeURIComponent(
-    '"supply chain" OR "food prices" OR "grocery" OR "freight" OR "port delays" OR ' +
-    '"fuel prices" OR "gas prices" OR "oil prices" OR "food recall" OR "crop" OR ' +
-    '"cold storage" OR "trade tariffs" OR "flooding" OR "hurricane" OR "drought" OR ' +
-    '"winter storm" OR "wildfire" OR "inflation" OR "tariffs" OR "trade war" OR ' +
-    '"sanctions" OR "strike" OR "labor shortage" OR "minimum wage" OR "immigration" OR ' +
-    '"border" OR "election" OR "geopolitical" OR "OPEC" OR "Red Sea" OR "shipping lanes"'
-  )
+  const q = encodeURIComponent('supply chain OR grocery OR freight OR tariffs OR inflation OR food prices')
 
   try {
     const gnewsRes = await fetch(
