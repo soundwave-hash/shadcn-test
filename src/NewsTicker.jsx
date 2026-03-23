@@ -47,6 +47,8 @@ export default function NewsTicker({ country, T }) {
   const [parsedInsight, setParsedInsight] = useState(null)
   const [lastUpdated, setLastUpdated]     = useState(null)
   const [, setTick] = useState(0)
+  const [tickerDuration, setTickerDuration] = useState(70)
+  const tickerRef = useRef(null)
   const abortRef = useRef(null)
 
   // Re-render every minute so "X min ago" stays current
@@ -167,6 +169,14 @@ export default function NewsTicker({ country, T }) {
     if (abortRef.current) abortRef.current.abort()
   }
 
+  // Recalculate duration whenever headlines change so speed stays constant (px/s)
+  useEffect(() => {
+    if (tickerRef.current) {
+      const halfWidth = tickerRef.current.scrollWidth / 2
+      setTickerDuration(Math.round(halfWidth / 120)) // 120px per second
+    }
+  }, [headlines])
+
   const currentHeadline = headlines[headlineIdx]?.headline || ''
   const doubled = [...headlines, ...headlines]
   const imp = IMPACT[parsedInsight?.impact] ?? IMPACT.Moderate
@@ -197,12 +207,12 @@ export default function NewsTicker({ country, T }) {
           {loadingNews ? (
             <span style={{ fontSize: 11, color: T.textMuted }}>Loading live headlines…</span>
           ) : (
-            <div style={{
+            <div ref={tickerRef} style={{
               display: 'inline-block',
               width: 'max-content',
               whiteSpace: 'nowrap',
               fontSize: 11,
-              animation: showPanel ? 'none' : 'wiq-ticker 70s linear infinite',
+              animation: showPanel ? 'none' : `wiq-ticker ${tickerDuration}s linear infinite`,
             }}>
               {doubled.map((item, i) => {
                 const realIdx = i % headlines.length
