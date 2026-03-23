@@ -214,54 +214,60 @@ export default function NewsTicker({ country, T }) {
     }, 450)
   }
 
+  const DRAG_THRESHOLD = 6 // px of movement before committing to drag
+
   function handleMouseDown(e) {
     if (e.button !== 0) return
     const el = tickerRef.current
     if (!el) return
-    e.preventDefault()
-
-    const currentX = getTranslateX(el)
-    el.style.animation = 'none'
-    el.style.transform = `translateX(${currentX}px)`
-
-    dragRef.current = { isDragging: true, startX: e.clientX, startOffset: currentX, hasDragged: false, isBackward: false }
-
+    // Don't preventDefault or touch animation — wait to confirm it's a drag
+    dragRef.current = { isDragging: false, startX: e.clientX, startOffset: null, hasDragged: false, isBackward: false }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
   }
 
   function handleMouseMove(e) {
     const drag = dragRef.current
-    if (!drag.isDragging) return
     const el = tickerRef.current
     if (!el) return
 
     const delta = e.clientX - drag.startX
-    if (Math.abs(delta) > 4) drag.hasDragged = true
-    drag.isBackward = delta > 0
 
+    if (!drag.isDragging) {
+      if (Math.abs(delta) < DRAG_THRESHOLD) return
+      // Threshold crossed — commit to drag, NOW freeze animation
+      const currentX = getTranslateX(el)
+      drag.startOffset = currentX
+      drag.isDragging = true
+      drag.hasDragged = true
+      el.style.animation = 'none'
+      el.style.transform = `translateX(${currentX}px)`
+    }
+
+    drag.isBackward = delta > 0
     const halfWidth = el.scrollWidth / 2
     let newOffset = drag.startOffset + applyTension(delta)
     newOffset = newOffset % halfWidth
     if (newOffset > 0) newOffset -= halfWidth
-
     el.style.transform = `translateX(${newOffset}px)`
     el.style.cursor = 'grabbing'
   }
 
   function handleMouseUp() {
     const drag = dragRef.current
-    if (!drag.isDragging) return
-    const el = tickerRef.current
-
-    drag.isDragging = false
     window.removeEventListener('mousemove', handleMouseMove)
     window.removeEventListener('mouseup', handleMouseUp)
 
+    const el = tickerRef.current
+    if (el) el.style.cursor = ''
+
+    if (!drag.isDragging) return  // was a clean click — animation untouched
+
+    drag.isDragging = false
+
     if (el) {
-      el.style.cursor = ''
-      if (drag.hasDragged && drag.isBackward) {
-        springBack(el, drag.startOffset)           // snap back with spring bounce
+      if (drag.isBackward) {
+        springBack(el, drag.startOffset)
       } else if (!showPanel) {
         resumeAnimation(el, getTranslateX(el))
       } else {
@@ -275,20 +281,26 @@ export default function NewsTicker({ country, T }) {
     const el = tickerRef.current
     if (!el) return
     const touch = e.touches[0]
-    const currentX = getTranslateX(el)
-    el.style.animation = 'none'
-    el.style.transform = `translateX(${currentX}px)`
-    dragRef.current = { isDragging: true, startX: touch.clientX, startOffset: currentX, hasDragged: false, isBackward: false }
+    dragRef.current = { isDragging: false, startX: touch.clientX, startOffset: null, hasDragged: false, isBackward: false }
   }
 
   function handleTouchMove(e) {
     const drag = dragRef.current
-    if (!drag.isDragging) return
     const el = tickerRef.current
     if (!el) return
     const touch = e.touches[0]
     const delta = touch.clientX - drag.startX
-    if (Math.abs(delta) > 4) drag.hasDragged = true
+
+    if (!drag.isDragging) {
+      if (Math.abs(delta) < DRAG_THRESHOLD) return
+      const currentX = getTranslateX(el)
+      drag.startOffset = currentX
+      drag.isDragging = true
+      drag.hasDragged = true
+      el.style.animation = 'none'
+      el.style.transform = `translateX(${currentX}px)`
+    }
+
     drag.isBackward = delta > 0
     const halfWidth = el.scrollWidth / 2
     let newOffset = drag.startOffset + applyTension(delta)
@@ -299,11 +311,11 @@ export default function NewsTicker({ country, T }) {
 
   function handleTouchEnd() {
     const drag = dragRef.current
-    if (!drag.isDragging) return
     const el = tickerRef.current
+    if (!drag.isDragging) return
     drag.isDragging = false
     if (el) {
-      if (drag.hasDragged && drag.isBackward) springBack(el, drag.startOffset)
+      if (drag.isBackward) springBack(el, drag.startOffset)
       else if (!showPanel) resumeAnimation(el, getTranslateX(el))
       else el.style.animation = 'none'
     }
