@@ -146,8 +146,11 @@ const DEPT_CONVERSATIONS = {
     { role: 'ai',   text: "Three levers: first, run a markdown promotion on Peaches and Blueberries today at 20% off to drive velocity before shelf life expires. Second, reduce the inbound order on Blueberries by 30% for the next cycle given the low turns. Third, shift Strawberry receiving from twice weekly to three times weekly in smaller batches to keep product fresher on shelf." },
     { role: 'user', text: 'What should we do right now?' },
     { role: 'ai',   text: "• Order 2,000 units Bananas and 1,500 units Roma Tomatoes today (3 day lead time)\n• Order 600 units Baby Spinach and 400 units Cucumber before end of day\n• Mark down Peaches 25% and Blueberries 20% immediately to cut spoilage\n• Reduce next Blueberry inbound order by 30% to match current turn rate\n• Raise Strawberry reorder point by 20% ahead of spring demand increase" },
-    { role: 'user', text: 'Approved, push changes to the ordering and pricing teams.' },
-    { role: 'ai',   pause: 2000, text: "Done. Ordering team notified with updated quantities for Bananas (2,000 units), Roma Tomatoes (1,500 units), Baby Spinach (600 units), and Cucumber (400 units). Pricing team flagged to apply 25% markdown on Peaches and 20% markdown on Blueberries effective today. Strawberry reorder point updated to +20% in the system." },
+    { role: 'user', text: 'Approved, push changes to the ordering and pricing teams, but reject the suggestion regarding reordering Strawberries' },
+    { role: 'ai',   pause: 2000, segments: [
+      { text: "Done. Ordering team notified with updated quantities for Bananas (2,000 units), Roma Tomatoes (1,500 units), Baby Spinach (600 units), and Cucumber (400 units). Pricing team flagged to apply 25% markdown on Peaches and 20% markdown on Blueberries effective today." },
+      { text: "\nStrawberry reorder suggestion rejected per your instruction.", color: '#ff6b6b' },
+    ]},
   ],
   'Dairy & Eggs': [
     { role: 'user', text: 'Which dairy SKUs have the highest spoilage exposure right now?' },
@@ -320,11 +323,22 @@ function AnthropicSpinner({ active }) {
 }
 
 // ── Word-by-word text (AI messages) ──────────────────────────────────────────
-function WordByWordText({ text, onDone, onWord }) {
-  const isCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(text)
-  // Split on whitespace (spaces and newlines) preserving newline tokens for line-break rendering
-  const tokens = isCJK ? [...text] : text.split(/(\n)/).flatMap(seg => seg === '\n' ? ['\n'] : seg.split(' ').filter(Boolean))
+// Accepts either `text` (string) or `segments` ([{text, color?}]) for colored inline runs
+function WordByWordText({ text, segments, onDone, onWord }) {
+  const src = segments || [{ text }]
+  const isCJK = src.some(({ text: t }) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(t))
+  // Build flat token list with optional per-token color
+  const tokens = src.flatMap(({ text: t, color }) =>
+    isCJK
+      ? [...t].map(c => ({ tok: c, color: color ?? null }))
+      : t.split(/(\n)/).flatMap(seg =>
+          seg === '\n'
+            ? [{ tok: '\n', color: null }]
+            : seg.split(' ').filter(Boolean).map(w => ({ tok: w, color: color ?? null }))
+        )
+  )
   const [count, setCount] = useState(0)
+  const effectKey = segments ? segments.map(s => s.text).join('\x00') : text
   useEffect(() => {
     setCount(0)
     let i = 0
@@ -335,12 +349,15 @@ function WordByWordText({ text, onDone, onWord }) {
       if (i >= tokens.length) { clearInterval(id); onDone?.() }
     }, isCJK ? 60 : 90)
     return () => clearInterval(id)
-  }, [text])
-  if (isCJK) return <span>{tokens.slice(0, count).join('')}</span>
+  }, [effectKey])
+  if (isCJK && !segments) return <span>{tokens.slice(0, count).map(t => t.tok).join('')}</span>
   return (
     <span>
-      {tokens.slice(0, count).map((tok, i) =>
-        tok === '\n' ? <br key={i} /> : (i > 0 && tokens[i - 1] !== '\n' ? ' ' : '') + tok
+      {tokens.slice(0, count).map((item, i) =>
+        item.tok === '\n' ? <br key={i} /> :
+        item.color
+          ? <span key={i} style={{ color: item.color, fontWeight: 'normal' }}>{(i > 0 && tokens[i - 1]?.tok !== '\n' ? ' ' : '') + item.tok}</span>
+          : (i > 0 && tokens[i - 1]?.tok !== '\n' ? ' ' : '') + item.tok
       )}
     </span>
   )
@@ -456,7 +473,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
 
   function handleCopy() {
     if (!messages.length) return
-    const text = messages.map(m => `${m.role === 'user' ? 'You' : 'Assistant'}: ${m.text}`).join('\n\n')
+    const text = messages.map(m => `${m.role === 'user' ? 'You' : 'Assistant'}: ${m.segments ? m.segments.map(s => s.text).join('') : m.text}`).join('\n\n')
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -814,7 +831,7 @@ export default function VoiceAssistant({ open, onClose, theme, country, activeUs
                     maxWidth: '72%', fontSize: 13, lineHeight: 1.6,
                     color: T.text, alignSelf: 'flex-start', whiteSpace: 'pre-line',
                   }}>
-                    <WordByWordText text={msg.text} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null; scrollToBottom() }} />
+                    <WordByWordText text={msg.text} segments={msg.segments} onWord={scrollToBottom} onDone={() => { aiWritingDoneRef.current?.(); aiWritingDoneRef.current = null; scrollToBottom() }} />
                   </div>
                 )}
                 {isUser && activeUser && (

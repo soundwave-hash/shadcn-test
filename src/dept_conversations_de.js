@@ -20,8 +20,11 @@ export const DEPT_CONVERSATIONS_DE = {
     { role: 'ai',   text: "Drei Ansätze: Erstens, heute eine Preissenkungsaktion für Peaches und Blueberries um 20% starten, um den Abverkauf vor Ablauf der Haltbarkeit zu beschleunigen. Zweitens, die eingehende Bestellung für Blueberries im nächsten Zyklus um 30% reduzieren angesichts der niedrigen Umschlagsrate. Drittens, den Strawberry-Wareneingang von zweimal wöchentlich auf dreimal wöchentlich in kleineren Mengen umstellen, um das Produkt frischer im Regal zu halten." },
     { role: 'user', text: 'Was sollten wir jetzt sofort tun?' },
     { role: 'ai',   text: "• Heute 2.000 Einheiten Bananen und 1.500 Einheiten Roma-Tomaten bestellen (3 Tage Lieferzeit)\n• Vor Ende des Tages 600 Einheiten Baby Spinach und 400 Einheiten Cucumber bestellen\n• Peaches sofort um 25% und Blueberries um 20% reduzieren, um Verderb zu begrenzen\n• Nächste Blueberry-Eingangsbestellung um 30% reduzieren, um der aktuellen Umschlagsrate zu entsprechen\n• Strawberry-Nachbestellpunkt um 20% erhöhen vor dem saisonalen Frühjahrsanstieg der Nachfrage" },
-    { role: 'user', text: 'Genehmigt, Änderungen an die Bestell- und Preisteams weitergeben.' },
-    { role: 'ai',   pause: 2000, text: "Erledigt. Bestellteam über aktualisierte Mengen informiert: Bananen (2.000 Einheiten), Roma-Tomaten (1.500 Einheiten), Baby Spinach (600 Einheiten) und Cucumber (400 Einheiten). Preisteam angewiesen, 25% Preissenkung auf Peaches und 20% Preissenkung auf Blueberries ab heute umzusetzen. Strawberry-Nachbestellpunkt im System auf +20% aktualisiert." },
+    { role: 'user', text: 'Genehmigt, Änderungen an die Bestell- und Preisteams weitergeben, aber den Vorschlag zur Erdbeeren-Nachbestellung ablehnen' },
+    { role: 'ai',   pause: 2000, segments: [
+      { text: "Erledigt. Bestellteam über aktualisierte Mengen informiert: Bananen (2.000 Einheiten), Roma-Tomaten (1.500 Einheiten), Baby Spinach (600 Einheiten) und Cucumber (400 Einheiten). Preisteam angewiesen, 25% Preissenkung auf Peaches und 20% Preissenkung auf Blueberries ab heute umzusetzen." },
+      { text: "\nVorschlag zur Erdbeeren-Nachbestellung gemäß Ihrer Anweisung abgelehnt.", color: '#ff6b6b' },
+    ]},
   ],
   'Dairy & Eggs': [
     { role: 'user', text: 'Welche Molkerei-SKUs haben aktuell das höchste Verderb-Risiko?' },

@@ -20,8 +20,11 @@ export const DEPT_CONVERSATIONS_ES = {
     { role: 'ai',   text: "Tres palancas: primero, ejecutar una promoción de descuento del 20% en Duraznos y Arándanos hoy para impulsar la velocidad antes de que expire la vida útil. Segundo, reducir el pedido entrante de Arándanos en un 30% para el próximo ciclo dado el bajo nivel de rotaciones. Tercero, cambiar la recepción de Fresas de dos veces por semana a tres veces por semana en lotes más pequeños para mantener el producto más fresco en el estante." },
     { role: 'user', text: '¿Qué debemos hacer ahora mismo?' },
     { role: 'ai',   text: "• Pedir 2,000 unidades de Plátanos y 1,500 unidades de Tomates Roma hoy (3 días de plazo de entrega)\n• Pedir 600 unidades de Baby Spinach y 400 unidades de Pepino antes del fin del día\n• Aplicar descuento del 25% en Duraznos y 20% en Arándanos de inmediato para reducir el deterioro\n• Reducir el próximo pedido entrante de Arándanos en un 30% para ajustarse a la tasa de rotación actual\n• Aumentar el punto de reorden de Fresas en un 20% antes del incremento estacional de demanda de primavera" },
-    { role: 'user', text: 'Aprobado, envía los cambios a los equipos de pedidos y precios.' },
-    { role: 'ai',   pause: 2000, text: "Listo. Equipo de pedidos notificado con cantidades actualizadas para Plátanos (2,000 unidades), Tomates Roma (1,500 unidades), Baby Spinach (600 unidades) y Pepino (400 unidades). Equipo de precios informado para aplicar descuento del 25% en Duraznos y 20% en Arándanos a partir de hoy. Punto de reorden de Fresas actualizado al +20% en el sistema." },
+    { role: 'user', text: 'Aprobado, envía los cambios a los equipos de pedidos y precios, pero rechaza la sugerencia sobre el reorden de Fresas' },
+    { role: 'ai',   pause: 2000, segments: [
+      { text: "Listo. Equipo de pedidos notificado con cantidades actualizadas para Plátanos (2,000 unidades), Tomates Roma (1,500 unidades), Baby Spinach (600 unidades) y Pepino (400 unidades). Equipo de precios informado para aplicar descuento del 25% en Duraznos y 20% en Arándanos a partir de hoy." },
+      { text: "\nSugerencia de reorden de Fresas rechazada según su instrucción.", color: '#ff6b6b' },
+    ]},
   ],
   'Dairy & Eggs': [
     { role: 'user', text: '¿Qué SKUs de lácteos tienen mayor exposición al deterioro ahora mismo?' },
