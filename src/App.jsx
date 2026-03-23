@@ -1062,13 +1062,13 @@ export default function App() {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button title="Export data" style={{
+                <div title="Export data" style={{
                   width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
                   backgroundColor: theme === 'dark' ? '#1c1c1c' : T.inputBg,
                   display:'flex', alignItems:'center', justifyContent:'center',
                 }}>
                   <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-                </button>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
                 <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
@@ -1203,14 +1203,14 @@ export default function App() {
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
+              <div style={{
                 backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
                 fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer',
                 display:'flex', alignItems:'center', gap:6, height:28,
               }}>
                 {country}
                 <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
-              </button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:160 }}>
               {COUNTRIES.map(c => (
@@ -1232,10 +1232,10 @@ export default function App() {
           <span style={{ fontSize:11, color: T.textDim }}>Location:</span>
           <DropdownMenu open={locationMenuOpen} onOpenChange={setLocationMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6, height:28 }}>
+              <div style={{ backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText, fontSize:12, padding:'4px 10px', borderRadius:4, cursor:'pointer', display:'flex', alignItems:'center', gap:6, height:28 }}>
                 {locationLabel}
                 <span style={{ color: T.textDim, fontSize:10 }}>▼</span>
-              </button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:160 }}>
               <DropdownMenuItem
@@ -1324,7 +1324,7 @@ export default function App() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <div
                 title="Export data"
                 style={{
                   width:28, height:28, borderRadius:7, cursor:'pointer', border:`1px solid ${T.inputBorder}`,
@@ -1333,7 +1333,7 @@ export default function App() {
                 }}
               >
                 <Download size={15} color={theme === 'dark' ? '#fff' : '#333'} />
-              </button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" style={{ backgroundColor: T.dropdownBg, border: `1px solid ${T.dropdownBorder}`, minWidth:180 }}>
               <DropdownMenuItem onClick={exportCSV} style={{ fontSize:12, cursor:'pointer', color: T.textMuted, gap:8 }}>
