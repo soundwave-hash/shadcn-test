@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
-import NewsTicker from './NewsTicker'
 import AccountSwitcher from './AccountSwitcher'
 
 import { PRODUCTS as BASE_ITEMS, CATEGORIES, SUBCATEGORIES_BY_CATEGORY, COUNTRY_SALES_PROFILES, COUNTRY_INV_PROFILES, CITY_FRACTIONS } from './data/groceryProducts'
@@ -289,6 +288,108 @@ function buildUnitSalesSeries(period, cityScale, dailyTotal = LEADERBOARD_DAILY_
     const ty      = Math.max(0, Math.round(tyRaw * scale))
     const ly      = Math.max(0, Math.round(lyRaw * scale))
     return { label:lbl(i), thisYear:ty, lastYear:ly, upper:Math.max(ty,ly), lower:Math.min(ty,ly) }
+  })
+}
+
+// ── Rolling 9-month trends: 3 months history + 6 months forecast ─────────────
+const TRENDS_HISTORY_COUNT  = 3
+const TRENDS_FORECAST_COUNT = 6
+// How far through the current month we are (e.g. Mar 23 of 31 = 0.74)
+const _DAYS_IN_CUR_MONTH  = new Date(_TODAY.getFullYear(), _TODAY.getMonth() + 1, 0).getDate()
+const _MONTH_ELAPSED_FRAC = _TODAY.getDate() / _DAYS_IN_CUR_MONTH
+
+// Labels: 3 history months + "Today" + current month end + 5 future = 10 points
+const TRENDS_MONTH_LABELS = (() => {
+  const labels = []
+  let prevYear = null
+  for (let offset = -TRENDS_HISTORY_COUNT; offset < 0; offset++) {
+    const d  = new Date(_TODAY.getFullYear(), _TODAY.getMonth() + offset, 1)
+    const yr = d.getFullYear()
+    labels.push(yr !== prevYear
+      ? `${_MONTHS[d.getMonth()]} '${String(yr).slice(2)}`
+      : _MONTHS[d.getMonth()])
+    prevYear = yr
+  }
+  labels.push('Today')
+  for (let offset = 0; offset < TRENDS_FORECAST_COUNT; offset++) {
+    const d  = new Date(_TODAY.getFullYear(), _TODAY.getMonth() + offset, 1)
+    const yr = d.getFullYear()
+    labels.push(yr !== prevYear
+      ? `${_MONTHS[d.getMonth()]} '${String(yr).slice(2)}`
+      : _MONTHS[d.getMonth()])
+    prevYear = yr
+  }
+  return labels
+})()
+const TRENDS_TODAY_IDX = TRENDS_HISTORY_COUNT
+const TRENDS_NOW_LABEL = 'Today'
+
+// ── Realistic grocery retail seasonality (Jan–Dec, annual avg = 1.0) ──────────
+// Reflects holiday peaks (Nov/Dec), post-holiday dip (Jan), summer lift (Jun–Aug)
+// Source: national US grocery chain unit sales model (LY Sales.xlsx / TY Sales.xlsx)
+// LY Annual Total: 24,000,000,000 units | TY: +2.5% YoY = 24,600,000,000 units
+const LY_ANNUAL  = 24_000_000_000
+const TY_GROWTH  = 0.025
+const TY_ANNUAL  = Math.round(LY_ANNUAL * (1 + TY_GROWTH))
+
+// Monthly % of annual units + seasonality notes — directly from Excel model
+const MONTH_DATA = [
+  { pct: 0.075, note: 'Post-holiday; weakest month'              },  // Jan
+  { pct: 0.075, note: "Short month; Valentine's modest lift"     },  // Feb
+  { pct: 0.085, note: 'Spring reset; Easter shift'               },  // Mar
+  { pct: 0.082, note: 'Easter (floater); spring fresh uptick'    },  // Apr
+  { pct: 0.085, note: "Mother's Day; Memorial Day grilling"      },  // May
+  { pct: 0.083, note: 'Summer begins; steady'                    },  // Jun
+  { pct: 0.085, note: 'Peak summer; 4th of July'                 },  // Jul
+  { pct: 0.088, note: 'Back-to-school pantry stock-up'           },  // Aug
+  { pct: 0.083, note: 'Labor Day; back-to-routine cooking'       },  // Sep
+  { pct: 0.085, note: 'Halloween; fall entertaining'             },  // Oct
+  { pct: 0.092, note: 'Thanksgiving — biggest grocery week'      },  // Nov
+  { pct: 0.085, note: 'Holiday baking; some shift to foodservice'},  // Dec
+]
+
+// Deterministic noise — stable across renders, unique per point + country
+function _pointNoise(seed, amp) {
+  const v = Math.sin(seed * 127.1 + 311.7) * 43758.5453
+  return (v - Math.floor(v) - 0.5) * 2 * amp
+}
+
+function buildTrends9MSeries(dailyTotal, country) {
+  return TRENDS_MONTH_LABELS.map((label, i) => {
+    const isToday    = label === 'Today'
+    const isHistory  = i < TRENDS_TODAY_IDX
+    const isForecast = i > TRENDS_TODAY_IDX
+
+    // forecast offset is 0-based from current month: i=4 → Mar(0), i=5 → Apr(1) …
+    const monthOffset = isToday ? 0 : isHistory ? i - TRENDS_HISTORY_COUNT : i - TRENDS_TODAY_IDX - 1
+    const d           = new Date(_TODAY.getFullYear(), _TODAY.getMonth() + monthOffset, 1)
+    const monthIdx    = d.getMonth()
+    const { pct, note } = MONTH_DATA[monthIdx]
+
+    // Base monthly units straight from Excel: annual × month %
+    // Forecast compounds growth forward; Mar end (step 0) = no compound yet
+    const forecastSlope = isForecast ? Math.pow(1 + TY_GROWTH / 12, i - TRENDS_TODAY_IDX - 1) : 1
+    const tyBase = TY_ANNUAL * pct * forecastSlope
+    const lyBase = LY_ANNUAL * pct
+
+    // Mild deterministic noise for history actuals; forecast stays smooth
+    const noiseAmp = (isHistory || isToday) ? 0.012 : 0.003
+    const seed     = monthIdx * 17 + country.length * 3 + i
+    const tyRaw    = tyBase * (1 + _pointNoise(seed, noiseAmp))
+    const lyRaw    = lyBase * (1 + _pointNoise(seed + 1000, noiseAmp))
+
+    const ty = Math.max(0, Math.round(tyRaw))
+    const ly = Math.max(0, Math.round(lyRaw))
+
+    return {
+      label, note,
+      thisYear: ty,
+      lastYear: ly,
+      upper:    ty,
+      lower:    ly,
+      actual:   (isHistory || isToday) ? ty : null,
+      forecast: (!isHistory || isToday) ? ty : null,
+    }
   })
 }
 
@@ -737,7 +838,7 @@ function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }
   const labelStyle = { fontSize:10, fontWeight:700, letterSpacing:'0.12em', color: T.textDim, marginBottom:2 }
 
   return (
-    <div style={{ display:'flex', height: TLDR_HEIGHT, overflow:'hidden', marginTop:'-0.35em' }}>
+    <div style={{ display:'flex', height: '100%', overflow:'hidden', marginTop:'-0.35em' }}>
       <style>{`
         @keyframes tldr-dot-pulse {
           0%, 100% { opacity: 0.2; transform: translateY(0); }
@@ -745,17 +846,17 @@ function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }
         }
         @keyframes tldr-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes tldr-facts-fadein { from { opacity: 0; } to { opacity: 1; } }
-        .tldr-scroll::-webkit-scrollbar { width: 4px; }
-        .tldr-scroll::-webkit-scrollbar-track { background: transparent; }
-        .tldr-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-        .tldr-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        .tldr-scroll::-webkit-scrollbar { width: 6px; }
+        .tldr-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 3px; }
+        .tldr-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 3px; }
+        .tldr-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,188,212,0.5); }
       `}</style>
 
       {/* Left: scrollable text column */}
       <div
         ref={scrollRef}
         className="tldr-scroll"
-        style={{ maxWidth:'calc(30vw + 30px)', overflowY:'auto', fontSize:14, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
+        style={{ flex:1, overflowY:'auto', fontSize:13, color: T.textMuted, lineHeight:1.7, paddingRight:12, boxSizing:'border-box' }}
       >
         {phase === 'thinking' ? (
           <span style={{ color:'#ffffff', fontWeight:400, fontSize:12, display:'inline-flex', alignItems:'baseline', gap:1, animation:'tldr-fade-in 2s ease forwards' }}>
@@ -804,6 +905,23 @@ function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }
               }
               return renderBodyText(phase === 'typing-body' ? body.slice(0, bodyLen) : body)
             })()}
+
+            {/* Fact chips — fade in contextually as the RISK section starts typing */}
+            {riskFired && bullets?.length > 0 && (
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:14, marginBottom:4, animation:'tldr-facts-fadein 900ms ease forwards' }}>
+                {bullets.map((b, idx) => (
+                  <div key={idx} style={{
+                    backgroundColor: 'rgba(0,188,212,0.06)',
+                    border: '1px solid rgba(0,188,212,0.18)',
+                    borderRadius: 6,
+                    padding: '7px 9px',
+                  }}>
+                    <span style={{ fontSize:11, color: T.textMuted, lineHeight:1.5 }}>{b}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {(phase === 'typing-rec' || phase === 'typing-forecast' || phase === 'done') && rec && (
               <>
                 <div style={{ height:'1.1em' }} />
@@ -826,7 +944,7 @@ function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }
         )}
       </div>
 
-      {/* Right: persistent FACTS column — border always present, content fades in when risk starts */}
+      {/* Right: FACTS column — stored for future use, hidden for now
       {bullets?.length > 0 && (
         <>
           <div style={{ width:1, backgroundColor: T.border, flexShrink:0, margin:'0 8px', alignSelf:'stretch' }} />
@@ -841,6 +959,7 @@ function TldrPanel({ body, rec, forecast, bullets, T, triggerKey, riskStartPos }
           </div>
         </>
       )}
+      */}
     </div>
   )
 }
@@ -904,8 +1023,6 @@ export default function KpiDetailPage({
   const [locationMenuOpen, setLocationMenuOpen] = useState(false)
   const [linesVisible, setLinesVisible] = useState(false)
   const [lineAnimKey,  setLineAnimKey]  = useState(0)
-  const [maxVarHovered, setMaxVarHovered] = useState(false)
-  const maxVarDotPos = useRef({ cx: 0, cy: 0 })
   const prevCheckedSizeRef = useRef(checked.size)
   const [tldrReady, setTldrReady] = useState(checked.size > 0)
   const [forecastTipHovered, setForecastTipHovered] = useState(null)
@@ -982,63 +1099,35 @@ export default function KpiDetailPage({
   )
 
   // Max variance callout. Find the data point where |thisYear - lastYear| is largest
-  const maxVariancePt = useMemo(() => {
-    if (checked.size === 0) return null
-    let best = null
-    for (const pt of seriesDisplay) {
-      const ty = pt.actual ?? pt.thisYear
-      const ly = pt.lastYear
-      if (ty == null || ly == null) continue
-      const diff = ty - ly
-      if (!best || Math.abs(diff) > Math.abs(best.diff)) best = { label: pt.label, diff, ty, ly }
-    }
-    return best
-  }, [checked, seriesDisplay])
+  // ── 9-month rolling trends chart (always-on, independent of period picker) ──
+  const trendsSeries = useMemo(
+    () => buildTrends9MSeries(selectedDailyTotal, country),
+    [selectedDailyTotal, country]
+  )
+  const trendsYDomain = useMemo(() => {
+    if (!trendsSeries.length) return [0, 100]
+    const vals = trendsSeries.flatMap(d => [d.thisYear, d.lastYear].filter(v => v != null))
+    const lo = Math.min(...vals)
+    const hi = Math.max(...vals)
+    if (hi === 0) return [0, 10]
+    const step = 250_000_000
+    const pad  = step * 0.5
+    const domLo = Math.floor((lo - pad) / step) * step
+    const domHi = Math.ceil((hi + pad) / step) * step
+    return [domLo, domHi]
+  }, [trendsSeries])
 
-  const varColor = !maxVariancePt || maxVariancePt.diff >= 0 ? '#4caf50' : '#f44336'
-
-  const MAX_VAR_TIPS_POS = [
-    "A regional promo on dairy and produce pulled 3 weeks of demand into this window, spiking units well above the prior year baseline.",
-    "Early seasonal stocking ahead of a holiday weekend inflated velocity significantly above what was ordered in the same period last year.",
-    "A key competitor ran out of stock across multiple retail locations, redirecting demand to this assortment for several consecutive weeks.",
-    "New DC capacity added mid-period introduced incremental order flow that had no prior year equivalent in this region.",
-  ]
-  const MAX_VAR_TIPS_NEG = [
-    "Port congestion at the primary inbound hub delayed 4 loads, pulling available units well below the prior year fulfillment level.",
-    "A cold front disrupted ground freight across the region, extending inbound lead times by 3 to 4 days and compressing fill rates.",
-    "A supplier quality hold on two high-velocity SKUs reduced fill rates for 10 consecutive days vs the same window last year.",
-    "Carrier capacity tightened ahead of peak season, pushing allocation below contracted volumes and limiting units available this period.",
-  ]
-
-  // Custom dot renderer. Normal dot for every point, pulsing ring + chip at max variance point
-  const renderMaxVarDot = (dotProps, baseR, baseFill) => {
-    const { cx, cy, payload } = dotProps
-    if (!linesVisible || !maxVariancePt || payload.label !== maxVariancePt.label)
-      return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={baseR} fill={baseFill} />
-    maxVarDotPos.current = { cx, cy }
-    const diff = maxVariancePt.diff
-    const absDiff = Math.abs(diff)
-    const num = absDiff >= 1e6
-      ? `${(absDiff / 1e6).toFixed(1)}M`
-      : absDiff >= 1e3
-        ? `${(absDiff / 1e3).toFixed(1)}K`
-        : String(Math.round(absDiff))
-    const chip = `${diff >= 0 ? '▲ +' : '▼ '}${num} vs LY`
-    const chipW = 92, chipH = 18, chipX = cx - chipW / 2, chipY = cy - 38
-    return (
-      <g key={`maxvar-${cx}-${cy}`} className="maxvar-callout"
-        onMouseEnter={() => setMaxVarHovered(true)}
-        onMouseLeave={() => setMaxVarHovered(false)}
-        style={{ cursor: 'default' }}
-      >
-        <circle cx={cx} cy={cy} r={13} fill="none" stroke={varColor} strokeWidth={2} className="maxvar-ring" />
-        <circle cx={cx} cy={cy} r={baseR + 1} fill={varColor} />
-        <rect x={chipX} y={chipY} width={chipW} height={chipH} rx={4} fill={varColor} fillOpacity={0.92} />
-        <text x={cx} y={chipY + 13} textAnchor="middle" fontSize={10} fontWeight="700" fill="#fff">{chip}</text>
-      </g>
-    )
-  }
-
+  const trendsYTicks = useMemo(() => {
+    const step = 250_000_000
+    const [domLo, domHi] = trendsYDomain
+    const ticks = []
+    for (let v = domLo; v <= domHi; v += step) ticks.push(v)
+    return ticks
+  }, [trendsYDomain])
+  const trendsForecastLabels = useMemo(
+    () => new Set(trendsSeries.filter(p => p.forecast != null).map(p => p.label)),
+    [trendsSeries]
+  )
   // Inventory health stats for context panel
   const healthRows = useMemo(() => {
     const all = buildLeaderboard(period, 'wos', true, country, selectedCities)
@@ -1317,11 +1406,7 @@ export default function KpiDetailPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period, country, selectedCitiesKey])
 
-  const fmtAxis = v => {
-    if (v>=1e6) return `${(v/1e6).toFixed(1)}M`
-    if (v>=1e3) return `${(v/1e3).toFixed(1)}K`
-    return String(Math.round(v))
-  }
+  const fmtAxis = v => v >= 1e9 ? `${(v/1e9).toFixed(2).replace(/\.?0+$/,'')}B` : v >= 1e6 ? `${(v/1e6).toFixed(0)}M` : `${Math.round(v/1e3)}K`
 
   const dropBtn = {
     backgroundColor: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.inputText,
@@ -1339,27 +1424,12 @@ export default function KpiDetailPage({
         {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}, {id:'trends', label:'Trends'}].map(tab => (
           <button key={tab.id} onClick={() => tab.id === 'dashboard' ? onBack() : onBack(tab.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize:12, fontWeight: tab.id === 'detail' ? 700 : 400,
-            color: tab.id === 'detail' ? T.tabActive : T.textMuted,
-            borderBottom: tab.id === 'detail' ? `2px solid ${T.tabActive}` : '2px solid transparent',
+            fontSize:12, fontWeight: tab.id === 'trends' ? 700 : 400,
+            color: tab.id === 'trends' ? T.tabActive : T.textMuted,
+            borderBottom: tab.id === 'trends' ? `2px solid ${T.tabActive}` : '2px solid transparent',
             padding: '0 4px', height:48,
           }}>{tab.label}</button>
         ))}
-        <span style={{ color: T.sep }}>|</span>
-        <div style={{ display:'flex', gap:4 }}>
-          {['1D','5D','1M','6M','YTD'].map(r => (
-            <button key={r} onClick={() => onDateRangeChange(r)} style={{
-              background: r === dateRange ? '#00bcd4' : 'transparent',
-              color:      r === dateRange ? '#111' : T.textDim,
-              border: `1px solid #00bcd4`, fontSize:12, padding:'3px 0', width:42, textAlign:'center',
-              borderRadius:4, cursor:'pointer', fontWeight: r === dateRange ? 700 : 400,
-              transition:'all 0.15s',
-            }}>{r}</button>
-          ))}
-        </div>
-        <span style={{ color: T.sep, fontSize:12 }}>|</span>
-        <NewsTicker country={country} T={T} />
-        <span style={{ color: T.sep, fontSize:12 }}>|</span>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
@@ -1480,66 +1550,13 @@ export default function KpiDetailPage({
         </div>
       </div>
 
-      {/* ── Title bar ── */}
-      <div style={{ padding:'8px 16px', borderBottom:`1px solid ${T.borderLight}`, flexShrink:0 }}>
-        <div style={{ fontSize:11, color: T.textFaint }}>{selectedCities.length === 0 ? country : selectedCities.length === 1 ? `${country} › ${selectedCities[0]}` : `${country} +${selectedCities.length}`}</div>
-        <div style={{ fontSize:16, fontWeight:700, marginTop:1 }}>{kpi.label}</div>
-      </div>
-
       {/* ── Main content ── */}
       <div style={{ flex:1, display:'flex', gap:10, padding:'10px 12px', minHeight:0, overflow:'hidden' }}>
 
-        {/* LEFT: Leaderboard */}
-        <div style={{ width:340, flexShrink:0, display:'flex', flexDirection:'column' }}>
-          <Leaderboard period={period} country={country} selectedCities={selectedCities} checked={checked} onCheckedChange={setChecked} T={T}/>
-        </div>
+        {/* LEFT: Leaderboard — hidden, reserved for drawer. Component + buildLeaderboard kept below. */}
 
-        {/* RIGHT: Meter + Chart */}
-        <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, minWidth:0 }}>
-
-          {/* Meter + TL;DR row */}
-          <div style={{ display:'flex', gap:10, flexShrink:0 }}>
-
-            {/* Health Meter module */}
-            <div style={{ ...panel, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, padding:'2px 20px 22px', flexShrink:0, width:450, height:313, overflow:'hidden' }}>
-              <MetricGauge period={period} country={country} selectedCities={selectedCities} checked={checked} T={T}/>
-              {/* Health range legend */}
-              <div style={{ width:'100%', display:'flex', flexDirection:'column', alignItems:'center' }}>
-                <div style={{ fontSize:10, color: T.textDim, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6, textAlign:'center' }}>Health Ranges</div>
-                <div style={{ display:'grid', gridTemplateColumns:'60px auto auto', gap:'4px 8px', alignItems:'center', width:'fit-content' }}>
-                  {[
-                    ['#4caf50', 'Healthy',  '≥ 67%', 'Most items adequately stocked'],
-                    ['#ff9800', 'At Risk',  '34–66%', 'Multiple items running low'],
-                    ['#f44336', 'Critical', '< 34%',  'Immediate restocking required'],
-                  ].map(([color, label, range, desc]) => (
-                    <React.Fragment key={label}>
-                      <div style={{ width:60, backgroundColor: label === healthZone ? color+'66' : color+'22', border:`1px solid ${color}`, borderRadius:6, padding:'4px 10px', textAlign:'left' }}>
-                        <div style={{ fontSize:10, fontWeight:700, color, lineHeight:1.2 }}>{range}</div>
-                      </div>
-                      <span style={{ fontSize:10, color, fontWeight:600 }}>{label}</span>
-                      <span style={{ fontSize:10, color: T.textFaint }}>{desc}</span>
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* TL;DR module. Panel always rendered; content gated on selections */}
-            <div style={{ ...panel, flex:1, padding:'27px 20px 12px', height:313, overflow:'hidden' }}>
-{checked.size > 0 && tldrReady && (
-                <TldrPanel
-                  body={tldrBody}
-                  rec={tldrRec}
-                  forecast={_forecast}
-                  bullets={tldrBullets}
-                  T={T}
-                  triggerKey={`${country}-${selectedCitiesKey}`}
-                  riskStartPos={_signal.length + 2}
-                />
-              )}
-            </div>
-
-          </div>
+        {/* Chart — full width */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
 
           {/* Line Chart */}
           <div style={{ ...panel, flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
@@ -1547,12 +1564,7 @@ export default function KpiDetailPage({
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, marginBottom:8 }}>
               <div>
                 <span style={{ fontSize:12, fontWeight:600 }}>
-                  {kpi.label}. Trend {locationLabel}
-                  {checked.size === 1
-                    ? `, ${[...checked][0]}`
-                    : !allItemsChecked && checked.size > 1
-                      ? ` (${checked.size} items selected)`
-                      : ''}
+                  Unit Sales by Month — {locationLabel}
                 </span>
               </div>
               <div style={{ display:'flex', gap:14, alignItems:'center', marginBottom:2 }}>
@@ -1560,7 +1572,7 @@ export default function KpiDetailPage({
                   {[
                     ['This Year','#00bcd4','solid'],
                     ['Last Year','#ff9800','dashed'],
-                    ...(['YTD','1D'].includes(period) ? [['Forecast','#00bcd4','dotted']] : []),
+                    ['Forecast','#00bcd4','dotted'],
                   ].map(([l,c,d])=>(
                     <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:c }}>
                       <svg width={22} height={10}>
@@ -1581,146 +1593,123 @@ export default function KpiDetailPage({
 
             {/* Chart */}
             <div ref={chartContainerRef} style={{ flex:1, minHeight:0, position:'relative' }}>
-              <style>{`
-                @keyframes maxvar-pulse {
-                  0%   { transform: scale(1);   opacity: 0.75; }
-                  70%  { transform: scale(2.0); opacity: 0;    }
-                  100% { transform: scale(2.0); opacity: 0;    }
-                }
-                @keyframes maxvar-fadein {
-                  0%   { opacity: 0; }
-                  100% { opacity: 1; }
-                }
-                .maxvar-ring    { transform-box: fill-box; transform-origin: center; animation: maxvar-pulse 1.8s ease-out infinite; }
-                .maxvar-callout { animation: maxvar-fadein 0.5s ease-in forwards; }
-              `}</style>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
-                  data={seriesDisplay}
-                  margin={{ top:18, right:16, bottom: period === '1D' ? 40 : 8, left:8 }}
+                  data={trendsSeries}
+                  margin={{ top:18, right:40, bottom:8, left:24 }}
                   onMouseMove={e => {
                     if (e?.activePayload?.length) {
-                      const ty = e.activePayload.find(p => ['thisYear','actual','forecast'].includes(p.dataKey))?.value
-                      const ly = e.activePayload.find(p=>p.dataKey==='lastYear')?.value
-                      setActiveTooltip({ label: e.activeLabel, ty, ly, x: e.activeCoordinate?.x })
+                      const ty   = e.activePayload.find(p => ['thisYear','actual','forecast'].includes(p.dataKey))?.value
+                      const ly   = e.activePayload.find(p => p.dataKey === 'lastYear')?.value
+                      const note = e.activePayload[0]?.payload?.note ?? ''
+                      setActiveTooltip({ label: e.activeLabel, ty, ly, note, x: e.activeCoordinate?.x })
                     }
                   }}
                   onMouseLeave={() => setActiveTooltip(null)}
                 >
                   <XAxis dataKey="label" stroke={T.border} interval={0} tickLine={false} tick={({ x, y, payload }) => {
-                    const isNow = (period === '1D'  && payload.value === CURRENT_LABEL_1D)
-                               || (period === 'YTD' && payload.value === CURRENT_LABEL_YTD)
-                    const isForecast = ['YTD','1D'].includes(period) && forecastLabels.has(payload.value)
-                    const shouldAngle = period === '1D' || (period === 'YTD' && isForecast)
-                    const textEl = (
+                    const isNow     = payload.value === TRENDS_NOW_LABEL
+                    const isForecast = trendsForecastLabels.has(payload.value)
+                    return (
                       <text
                         x={x} y={y + 4}
-                        textAnchor={shouldAngle ? 'end' : 'middle'}
+                        textAnchor="middle"
                         fontSize={11}
                         fill={isNow ? '#00bcd4' : isForecast ? 'rgba(0,188,212,0.65)' : T.axTick}
                         fontWeight={isNow ? 700 : 400}
-                        transform={shouldAngle ? `rotate(-35, ${x}, ${y + 4})` : undefined}
                       >
                         {payload.value}
                       </text>
                     )
-                    return textEl
                   }}/>
-                  <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={46} domain={yDomain}/>
+                  <YAxis stroke={T.border} tick={axTick} tickFormatter={fmtAxis} width={62} domain={trendsYDomain} ticks={trendsYTicks}/>
                   <Tooltip content={() => null} cursor={<ExtendedCursor />}/>
                   {/* Shading band. Drawn before grid so grid renders on top */}
                   {/* fill opacity 0.12 in light mode with new teal PRIMARY, 0.15 in dark */}
-                  <Area type="monotone" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(14,138,122,0.12)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
-                  <Area type="monotone" dataKey="lower" fill={T.chartMask}          stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={yDomain[0]}/>
+                  <Area type="linear" dataKey="upper" fill={theme === 'dark' ? 'rgba(0,188,212,0.15)' : 'rgba(14,138,122,0.12)'} stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={trendsYDomain[0]}/>
+                  <Area type="linear" dataKey="lower" fill={T.chartMask}             stroke="none" fillOpacity={1} isAnimationActive={false} activeDot={false} dot={false} baseValue={trendsYDomain[0]}/>
                   {/* Grid on top of fill so lines show through */}
                   <CartesianGrid strokeDasharray="3 3" stroke={T.chartGrid} vertical={false}/>
-                  {/* Lines. Always render all three; use hide to toggle so recharts doesn't lose track */}
-                  {/* last year line: desaturated amber in light mode (was #ff9800 — too vivid on white) */}
-                  <Line key={`ly-${lineAnimKey}`} type="monotone" dataKey="lastYear" stroke={theme === 'dark' ? '#ff9800' : 'hsl(38, 75%, 50%)'} strokeWidth={1.5}
+                  {/* Now boundary: vertical reference line removed */}
+                  {/* Lines */}
+                  {/* last year line: desaturated amber in light mode */}
+                  <Line key={`ly-${lineAnimKey}`} type="linear" dataKey="lastYear" stroke={theme === 'dark' ? '#ff9800' : 'hsl(38, 75%, 50%)'} strokeWidth={1.5}
                     dot={{ r:2.5, fill: theme === 'dark' ? '#ff9800' : 'hsl(38, 75%, 50%)', strokeWidth:0 }} activeDot={{ r:4 }} name="Last Year"
                     animationDuration={3800} animationEasing="ease-in-out"
                     hide={!linesVisible}/>
-                  <Line key={`ty-${lineAnimKey}`} type="monotone" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
-                    dot={(p) => renderMaxVarDot(p, 3, '#00bcd4')} activeDot={{ r:5 }} name="This Year"
+                  {/* thisYear hidden — always use actual/forecast split */}
+                  <Line key={`ty-${lineAnimKey}`} type="linear" dataKey="thisYear" stroke="#00bcd4" strokeWidth={2}
+                    dot={false} activeDot={false} name="This Year"
                     animationDuration={3800} animationEasing="ease-in-out"
-                    hide={!linesVisible || ['YTD','1D'].includes(period)}/>
-                  <Line key={`ac-${lineAnimKey}`} type="monotone" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
-                    dot={(p) => renderMaxVarDot(p, 3, '#00bcd4')} activeDot={{ r:5 }} name="This Year"
+                    hide={true}/>
+                  <Line key={`ac-${lineAnimKey}`} type="linear" dataKey="actual" stroke="#00bcd4" strokeWidth={2}
+                    dot={{ r:3, fill:'#00bcd4', strokeWidth:0 }} activeDot={{ r:5 }} name="This Year"
                     connectNulls={false} animationDuration={3800} animationEasing="ease-in-out"
-                    hide={!linesVisible || !['YTD','1D'].includes(period)}/>
-                  <Line key={`fc-${lineAnimKey}`} type="monotone" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
+                    hide={!linesVisible}/>
+                  <Line key={`fc-${lineAnimKey}`} type="linear" dataKey="forecast" stroke="#00bcd4" strokeWidth={1.5}
                     strokeDasharray="4 4" strokeOpacity={0.55}
                     dot={{ r:2.5, fill:'#00bcd4', strokeWidth:0, fillOpacity:0.5 }} activeDot={{ r:4 }} name="Forecast"
                     connectNulls={false} animationDuration={3800} animationEasing="ease-in-out"
-                    hide={!linesVisible || !['YTD','1D'].includes(period)}/>
+                    hide={!linesVisible}/>
                 </ComposedChart>
               </ResponsiveContainer>
 
               {/* Inline overlay labels. Float above the highest line at the hovered point */}
               {activeTooltip?.x != null && checked.size > 0 && !forecastTipHovered && (() => {
-                const { ty, ly, x } = activeTooltip
-                const delta      = ty != null && ly != null ? ty - ly : null
+                const { ty, ly, note, label, x } = activeTooltip
+                const pctChange  = ty != null && ly != null && ly !== 0 ? ((ty - ly) / ly) * 100 : null
                 const containerH = chartContainerRef.current?.clientHeight ?? 200
-                const plotH      = containerH - 8 - 8
+                const containerW = chartContainerRef.current?.clientWidth  ?? 400
+                const plotH      = containerH - 18 - 8
                 const maxVal     = Math.max(ty ?? 0, ly ?? 0)
-                const yFrac      = (maxVal - yDomain[0]) / (yDomain[1] - yDomain[0])
-                const yPx        = 8 + plotH * (1 - yFrac)
-                const topPx      = Math.max(2, yPx - 73)
+                const yFrac      = (maxVal - trendsYDomain[0]) / (trendsYDomain[1] - trendsYDomain[0])
+                const yPx        = 18 + plotH * (1 - yFrac)
+                const tipH       = 114  // estimated tooltip height px
+                const tipHalfW   = 104  // half of tooltip min-width (208px)
+                const topPx      = Math.max(4, yPx - tipH - 30)
+                const leftPx     = Math.max(tipHalfW, Math.min(x, containerW - tipHalfW))
+                const fmtK = v => v >= 1e9 ? `${(v/1e9).toFixed(3)}B` : v >= 1e6 ? `${(v/1e6).toFixed(1)}M` : `${(v/1e3).toFixed(1)}K`
                 return (
                   <div style={{
-                    position:'absolute', top: topPx, left:x,
+                    position:'absolute', top: topPx, left: leftPx,
                     transform:'translateX(-50%)',
                     pointerEvents:'none',
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:1,
+                    backgroundColor:'rgba(15,20,30,0.88)',
+                    border:'1px solid rgba(255,255,255,0.1)',
+                    borderRadius:6,
+                    padding:'6px 10px',
+                    display:'flex', flexDirection:'column', alignItems:'flex-start', gap:3,
+                    minWidth:208,
                   }}>
+                    {/* Month label + note */}
+                    <div style={{ marginBottom:2 }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:'#fff' }}>{label}</span>
+                      {note && <span style={{ fontSize:10, color:'rgba(255,255,255,0.45)', marginLeft:5 }}>{note}</span>}
+                    </div>
                     {ty != null && (
-                      <span style={{ fontSize:11, fontWeight:700, color:'#00bcd4', lineHeight:1.3 }}>
-                        {fmtWhole(ty)}
-                      </span>
+                      <div style={{ display:'flex', justifyContent:'space-between', width:'100%', gap:12 }}>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.5)' }}>This Year</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:'#00bcd4' }}>{fmtK(ty)}</span>
+                      </div>
                     )}
                     {ly != null && (
-                      <span style={{ fontSize:11, fontWeight:600, color:'#ff9800', lineHeight:1.3 }}>
-                        {fmtWhole(ly)}
-                      </span>
+                      <div style={{ display:'flex', justifyContent:'space-between', width:'100%', gap:12 }}>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.5)' }}>Last Year</span>
+                        <span style={{ fontSize:11, fontWeight:600, color:'#ff9800' }}>{fmtK(ly)}</span>
+                      </div>
                     )}
-                    {delta != null && (
-                      <span style={{ fontSize:10, fontWeight:700, lineHeight:1.3, color: delta >= 0 ? '#4caf50' : '#f44336' }}>
-                        {delta >= 0 ? '+' : ''}{fmtWhole(delta)}
-                      </span>
+                    {pctChange != null && (
+                      <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:3, marginTop:1, width:'100%', display:'flex', justifyContent:'space-between', gap:12 }}>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.5)' }}>vs Last Year</span>
+                        <span style={{ fontSize:11, fontWeight:700, color: pctChange >= 0 ? '#4caf50' : '#f44336' }}>
+                          {pctChange >= 0 ? '+' : ''}{pctChange.toFixed(1)}%
+                        </span>
+                      </div>
                     )}
                   </div>
                 )
               })()}
 
-              {/* Max variance hover tooltip. Expands above the chip on dot hover */}
-              {maxVarHovered && maxVariancePt && (() => {
-                const { cx, cy } = maxVarDotPos.current
-                const tipIdx = (country.length + period.length) % 4
-                const tip = maxVariancePt.diff >= 0 ? MAX_VAR_TIPS_POS[tipIdx] : MAX_VAR_TIPS_NEG[tipIdx]
-                const title = maxVariancePt.diff >= 0 ? 'Why the gap is up' : 'Why the gap is down'
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    top: Math.max(4, cy - 38 - 96),
-                    left: cx,
-                    transform: 'translateX(-50%)',
-                    pointerEvents: 'none',
-                    backgroundColor: T.panelBg,
-                    border: `1px solid ${varColor}88`,
-                    borderRadius: 7,
-                    padding: '8px 12px',
-                    width: 210,
-                    boxShadow: theme === 'dark' ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.12)',
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: varColor, marginBottom: 5, letterSpacing: '0.03em' }}>
-                      {title}
-                    </div>
-                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.55 }}>
-                      {tip}
-                    </div>
-                  </div>
-                )
-              })()}
 
               {/* Forecast tick hit areas. HTML divs avoid recharts SVG pointer-events:none */}
               {linesVisible && checked.size > 0 && period === 'YTD' && (() => {
@@ -1792,6 +1781,24 @@ export default function KpiDetailPage({
           </div>
 
         </div>
+
+        {/* RIGHT: Analysis panel — reserved, hidden for now */}
+        {/* <div style={{ flex:'0 0 30%', display:'flex', flexDirection:'column', minWidth:0 }}>
+          <div style={{ ...panel, flex:1, padding:'20px 18px', overflow:'hidden' }}>
+            {checked.size > 0 && tldrReady && (
+              <TldrPanel
+                body={tldrBody}
+                rec={tldrRec}
+                forecast={_forecast}
+                bullets={tldrBullets}
+                T={T}
+                triggerKey={`${country}-${selectedCitiesKey}`}
+                riskStartPos={_signal.length + 2}
+              />
+            )}
+          </div>
+        </div> */}
+
       </div>
 
     </div>

@@ -331,6 +331,7 @@ const TABS = [
   { id: 'detail',    label: 'Unit Sales' },
   { id: 'geo',       label: 'Geo' },
   { id: 'inventory', label: 'Inventory' },
+  { id: 'trends',    label: 'Trends' },
 ]
 
 export default function InventoryScreen({
