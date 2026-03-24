@@ -14,7 +14,6 @@ import { Sun, Download } from 'lucide-react'
 import NewsTicker from './NewsTicker'
 import WatchlistRow from './WatchlistRow'
 import KpiDetailPage from './KpiDetailPage'
-import TrendsScreen from './TrendsScreen'
 import GeoScreen from './GeoScreen'
 import InventoryScreen from './InventoryScreen'
 import AccountSwitcher, { USERS } from './AccountSwitcher'
@@ -1010,7 +1009,7 @@ export default function App() {
         <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, boxShadow: T.navShadow, height:48, display:'flex', alignItems:'center', padding:'0 16px', gap:16 }}>
           <span style={{ fontSize:13, fontWeight:700, color: T.text, letterSpacing:'0.02em' }}>WarehouseIQ</span>
           <span style={{ color: T.sep, fontSize:12 }}>|</span>
-          {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}, {id:'trends', label:'Trends'}].map(tab => (
+          {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
             <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize:12, fontWeight: view === tab.id ? 700 : 400,
@@ -1169,36 +1168,6 @@ export default function App() {
     )
   }
 
-  if (view === 'trends') {
-    const kpiLabel = selectedKpiLabel || 'Unit Sales (Daily Avg)'
-    const currentKpi = [...COUNTRY_DATA[country].kpi1, ...COUNTRY_DATA[country].kpi2]
-      .find(k => k.label === kpiLabel) || kpiCards[0]
-    return (
-      <>
-      <TrendsScreen
-        kpi={currentKpi}
-        country={country}
-        selectedCities={selectedCities}
-        cities={CITY_LISTS[country]}
-        cityScales={CITY_SCALES}
-        countries={COUNTRIES}
-        onBack={(target) => { if (dateRange === '1D') setDateRange('1M'); setView(target ?? 'dashboard') }}
-        onCountryChange={c => { setCountry(c); setSelectedCities([]) }}
-        onLocationChange={setSelectedCities}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        activeUser={activeUser}
-        onUserSwitch={setActiveUser}
-        voiceOpen={voiceOpen} setVoiceOpen={setVoiceOpen}
-        slackOpen={slackOpen} setSlackOpen={setSlackOpen}
-      />
-      <SlackPanel open={slackOpen} onClose={() => setSlackOpen(false)} theme={theme} activeUser={activeUser} />
-      <VoiceAssistant open={voiceOpen} onClose={() => setVoiceOpen(false)} theme={theme} country={country} activeUser={activeUser} />
-      </>
-    )
-  }
 
   return (
     <>
@@ -1210,7 +1179,7 @@ export default function App() {
           WarehouseIQ
         </span>
         <span style={{ color: T.sep, fontSize:12 }}>|</span>
-        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}, {id:'trends', label:'Trends'}].map(tab => (
+        {[{id:'dashboard', label:'Dashboard'}, {id:'detail', label:'Unit Sales'}, {id:'geo', label:'Geo'}, {id:'inventory', label:'Inventory'}].map(tab => (
           <button key={tab.id} onClick={() => { if (tab.id === 'detail') setSelectedKpiLabel('Unit Sales (Daily Avg)'); setView(tab.id) }} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize:12, fontWeight: view === tab.id ? 700 : 400,

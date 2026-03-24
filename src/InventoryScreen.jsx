@@ -331,7 +331,6 @@ const TABS = [
   { id: 'detail',    label: 'Unit Sales' },
   { id: 'geo',       label: 'Geo' },
   { id: 'inventory', label: 'Inventory' },
-  { id: 'trends',    label: 'Trends' },
 ]
 
 export default function InventoryScreen({
@@ -561,9 +560,6 @@ export default function InventoryScreen({
             }}>{r}</button>
           ))}
         </div>
-        <span style={{ color: T.sep, fontSize: 12 }}>|</span>
-        <NewsTicker country={country} T={T} />
-        <span style={{ color: T.sep, fontSize: 12 }}>|</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 11, color: T.textDim }}>Country:</span>
           <DropdownMenu>
@@ -654,6 +650,11 @@ export default function InventoryScreen({
           </DropdownMenu>
           {activeUser && <AccountSwitcher activeUser={activeUser} onSwitch={onUserSwitch} T={T} />}
         </div>
+      </div>
+
+      {/* ── News ticker strip ── */}
+      <div style={{ backgroundColor: T.navBg, borderBottom: `1px solid ${T.border}`, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
+        <NewsTicker country={country} T={T} />
       </div>
 
       {/* ── Filters bar ── */}

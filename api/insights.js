@@ -13,6 +13,10 @@ export default async function handler(req) {
 
   const { headline, country } = await req.json()
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return new Response('Missing ANTHROPIC_API_KEY', { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
+
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -38,6 +42,11 @@ Headline: "${headline}"`
       }]
     })
   })
+
+  if (!claudeRes.ok) {
+    const errText = await claudeRes.text()
+    return new Response(`Anthropic error ${claudeRes.status}: ${errText}`, { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
 
   const reader = claudeRes.body.getReader()
   const encoder = new TextEncoder()
