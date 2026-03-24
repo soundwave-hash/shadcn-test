@@ -151,7 +151,6 @@ export default function NewsTicker({ country, T }) {
       }
 
       const parsed = parseInsightText(accumulated)
-      parsed.impact = item.impact  // use news.js pre-classified rating as source of truth
       setParsedInsight(parsed)
     } catch (err) {
       if (err.name !== 'AbortError') {
